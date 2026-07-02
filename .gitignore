@@ -1,0 +1,19 @@
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Python (if we ever run a small helper)
+__pycache__/
+*.pyc
+.venv/
+
+# Node (defensive — v1 has no node but don't let it leak in)
+node_modules/
+package-lock.json
+
+# Local-only: rendered test output, screenshots
+out/
+*.png
+!lakes/*.png
