@@ -2,6 +2,11 @@ const CACHE_KEY = 'windmap:nws:hourly:v1';
 const CACHE_TTL_MS = 60 * 60 * 1000;
 
 let lakeConfig = null;
+let cells = [];
+let windValues = null;
+let projectedOutline = [];
+let projTreePolys = [];
+let projElevPolys = [];
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -14,7 +19,17 @@ async function init() {
     return;
   }
 
+  const clon = lakeConfig.center[1], clat = lakeConfig.center[0];
+  projectedOutline = lakeConfig.outline.map(p => project(p[0], p[1], clon, clat));
+  projTreePolys = (lakeConfig.tree_polygons || []).map(poly =>
+    poly.polygon.map(pt => project(pt[0], pt[1], clon, clat))
+  );
+  projElevPolys = (lakeConfig.elevation_polygons || []).map(poly =>
+    poly.polygon.map(pt => project(pt[0], pt[1], clon, clat))
+  );
+
   renderMap();
+  buildCellGrid();
   await loadNWS();
 }
 
@@ -28,16 +43,16 @@ function project(lon, lat, centerLon, centerLat) {
 }
 
 function renderMap() {
-  const { center, outline, boat_launches } = lakeConfig;
+  const { boat_launches } = lakeConfig;
+  const clon = lakeConfig.center[1], clat = lakeConfig.center[0];
 
-  const projected = outline.map(p => project(p[0], p[1], center[1], center[0]));
   const projectedLaunches = boat_launches.map(l => {
-    const p = project(l.lon, l.lat, center[1], center[0]);
+    const p = project(l.lon, l.lat, clon, clat);
     return { ...l, x: p.x, y: p.y };
   });
 
-  const xs = projected.map(p => p.x);
-  const ys = projected.map(p => p.y);
+  const xs = projectedOutline.map(p => p.x);
+  const ys = projectedOutline.map(p => p.y);
   const M = 40;
   const minX = Math.min(...xs) - M;
   const minY = Math.min(...ys) - M;
@@ -47,7 +62,11 @@ function renderMap() {
   const svg = document.getElementById('map');
   svg.setAttribute('viewBox', `${minX} ${minY} ${maxX - minX} ${maxY - minY}`);
 
-  const d = projected.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ') + ' Z';
+  const cellsG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  cellsG.setAttribute('id', 'cells');
+  svg.appendChild(cellsG);
+
+  const d = projectedOutline.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ') + ' Z';
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   path.setAttribute('d', d);
   path.setAttribute('fill', '#e8f1f8');
@@ -66,6 +85,130 @@ function renderMap() {
     c.appendChild(t);
     svg.appendChild(c);
   });
+}
+
+// ── Wind model ────────────────────────────────────────────────
+
+function pointInPolygon(px, py, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const xi = poly[i].x, yi = poly[i].y, xj = poly[j].x, yj = poly[j].y;
+    if ((yi > py) !== (yj > py) && px < ((xj - xi) * (py - yi)) / (yj - yi) + xi) inside = !inside;
+  }
+  return inside;
+}
+
+function findNearestPointOnPolygon(px, py, poly) {
+  let minD2 = Infinity, nearX = poly[0].x, nearY = poly[0].y;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const ax = poly[j].x, ay = poly[j].y, bx = poly[i].x, by = poly[i].y;
+    const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+    if (l2 < 1e-8) continue;
+    let t = ((px - ax) * dx + (py - ay) * dy) / l2;
+    t = Math.max(0, Math.min(1, t));
+    const nx = ax + t * dx, ny = ay + t * dy;
+    const d2 = (px - nx) * (px - nx) + (py - ny) * (py - ny);
+    if (d2 < minD2) { minD2 = d2; nearX = nx; nearY = ny; }
+  }
+  return { x: nearX, y: nearY };
+}
+
+function windDirToUnit(cardinal) {
+  if (!cardinal || typeof cardinal !== 'string') return { x: 0, y: 0 };
+  const deg = CARDINAL_DEG[cardinal.toUpperCase()];
+  if (deg === undefined) return { x: 0, y: 0 };
+  // Wind "from NW" blows TOWARD SE. In our coord system: +x = east, +y = south (since y
+  // is the negation of lat offset to match SVG's +y-down convention). So SE = (+, +).
+  // Standard sin/cos gives north-positive; we flip y to get south-positive.
+  const to = (deg + 180) % 360, r = to * Math.PI / 180;
+  return { x: Math.sin(r), y: -Math.cos(r) };
+}
+
+function computeFetchFactor(cx, cy, wux, wuy, outline) {
+  const near = findNearestPointOnPolygon(cx, cy, outline);
+  const dx = cx - near.x, dy = cy - near.y;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len < 0.001) return 0.2;
+  return Math.max(0.2, wux * (dx / len) + wuy * (dy / len));
+}
+
+function computeTerrainAttenuation(cx, cy, wux, wuy, treePolys, elevPolys) {
+  const dx = -wux, dy = -wuy;
+  for (let s = 1; s <= 60; s++) {
+    const px = cx + dx * 5 * s, py = cy + dy * 5 * s;
+    for (const poly of elevPolys) { if (pointInPolygon(px, py, poly)) return 0.10; }
+    for (const poly of treePolys) { if (pointInPolygon(px, py, poly)) return 0.25; }
+  }
+  return 1.0;
+}
+
+function windColor(mph) {
+  if (mph < 6) return 'var(--slack)';
+  if (mph < 8) return 'var(--marginal)';
+  if (mph < 15) return 'var(--choppy)';
+  return 'var(--noggo)';
+}
+
+function buildCellGrid() {
+  const xs = projectedOutline.map(p => p.x), ys = projectedOutline.map(p => p.y);
+  const minX = Math.min(...xs), maxX = Math.max(...xs);
+  const minY = Math.min(...ys), maxY = Math.max(...ys);
+  const cols = 100, rows = 250, cellW = (maxX - minX) / cols, cellH = (maxY - minY) / rows;
+  cells = [];
+  for (let r = 0; r < rows; r++) {
+    for (let c = 0; c < cols; c++) {
+      const cx = minX + (c + 0.5) * cellW, cy = minY + (r + 0.5) * cellH;
+      if (pointInPolygon(cx, cy, projectedOutline)) {
+        cells.push({ x: cx - cellW / 2, y: cy - cellH / 2, w: cellW, h: cellH });
+      }
+    }
+  }
+  windValues = new Float32Array(cells.length);
+}
+
+function renderCellColors() {
+  const svg = document.getElementById('map');
+  let cellsG = document.getElementById('cells');
+  if (!cellsG) {
+    cellsG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    cellsG.setAttribute('id', 'cells');
+    svg.insertBefore(cellsG, svg.firstChild);
+  }
+  const path = svg.querySelector('path');
+  if (path) path.setAttribute('fill', 'none');
+  while (cellsG.firstChild) cellsG.removeChild(cellsG.firstChild);
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < cells.length; i++) {
+    const c = cells[i];
+    const r = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    r.setAttribute('x', c.x);
+    r.setAttribute('y', c.y);
+    r.setAttribute('width', c.w);
+    r.setAttribute('height', c.h);
+    r.setAttribute('fill', windColor(windValues[i]));
+    const t = document.createElementNS('http://www.w3.org/2000/svg', 'title');
+    t.textContent = windValues[i].toFixed(1) + ' mph';
+    r.appendChild(t);
+    frag.appendChild(r);
+  }
+  cellsG.appendChild(frag);
+}
+
+function recomputeCells(period) {
+  if (!period || !windValues || cells.length === 0) return;
+  const speed = parseWindSpeed(period.windSpeed);
+  if (speed === null || speed === 0) {
+    for (let i = 0; i < cells.length; i++) windValues[i] = 0;
+    renderCellColors();
+    return;
+  }
+  const w = windDirToUnit(period.windDirection);
+  for (let i = 0; i < cells.length; i++) {
+    const cx = cells[i].x + cells[i].w / 2, cy = cells[i].y + cells[i].h / 2;
+    windValues[i] = speed * computeFetchFactor(cx, cy, w.x, w.y, projectedOutline)
+      * computeTerrainAttenuation(cx, cy, w.x, w.y, projTreePolys, projElevPolys);
+  }
+  renderCellColors();
 }
 
 // ── NWS helpers ──────────────────────────────────────────────
@@ -153,7 +296,7 @@ async function loadNWS() {
 
   if (cached && isFresh(cached)) {
     const period = findCurrentPeriod(cached.data.properties.periods);
-    if (period) renderConditions(period, cached.timestamp);
+    if (period) { renderConditions(period, cached.timestamp); recomputeCells(period); }
     return;
   }
 
@@ -177,12 +320,12 @@ async function loadNWS() {
     setCache(hrData);
 
     const period = findCurrentPeriod(hrData.properties.periods);
-    if (period) renderConditions(period, Date.now());
+    if (period) { renderConditions(period, Date.now()); recomputeCells(period); }
   } catch (e) {
     console.error('NWS fetch failed:', e);
     if (cached) {
       const period = findCurrentPeriod(cached.data.properties.periods);
-      if (period) renderConditions(period, cached.timestamp);
+      if (period) { renderConditions(period, cached.timestamp); recomputeCells(period); }
       showStalePill();
       return;
     }

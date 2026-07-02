@@ -104,9 +104,10 @@ Build a tool the user can check before driving to Blue Lake (Zimmerman, MN) to f
 - [x] 3. Autoplan — DONE (REVIEW.md)
 - [x] 4. Spec addenda — 10 edge cases (E1 critical) + T1/T2 folded into SPEC.md
 - [x] 5. Design pass — DONE. Vercel+Stripe fusion, off-white, Inter, 4-band wind scale, mobile-first single-column
-- [ ] 6. Phase 1: scaffold + first slice
-- [ ] 6. Phase 2: core feature
-- [ ] 7. Phase 3: polish
-- [ ] 8. QA
-- [ ] 9. Ship
-- [ ] 10. Reflect + save as skill
+- [x] 6. Phase 1.1 — scaffold + lake SVG + NWS fetch (DONE, 2 commits)
+- [~] 7. Phase 1.2 — wind model (fetch factor + ray-cast shadow) + colored cells
+- [ ] 8. Phase 1.3 — time slider + best-window chip + refresh button + offline cache
+- [ ] 9. Phase 2: polish + edge cases
+- [ ] 10. Phase 3: GitHub Pages setup (T2) + ship
+- [ ] 11. QA
+- [ ] 12. Reflect + save as skill
