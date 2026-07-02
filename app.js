@@ -49,6 +49,25 @@ function project(lon, lat, centerLon, centerLat) {
   };
 }
 
+function renderTrees(svg) {
+  // Render tree polygons as semi-transparent green shapes (per SPEC §3.1).
+  // Drawn between cells (bottom) and outline (top) so cells show through the
+  // tree fill and the outline stroke stays crisp on top.
+  if (!projTreePolys || projTreePolys.length === 0) return;
+  const treesG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+  treesG.setAttribute('id', 'trees');
+  for (const poly of projTreePolys) {
+    const d = poly.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ') + ' Z';
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', d);
+    path.setAttribute('fill', 'rgba(98, 130, 89, 0.35)');
+    path.setAttribute('stroke', 'rgba(60, 90, 50, 0.6)');
+    path.setAttribute('stroke-width', '1');
+    treesG.appendChild(path);
+  }
+  svg.appendChild(treesG);
+}
+
 function renderMap() {
   const { boat_launches } = lakeConfig;
   const clon = lakeConfig.center[1], clat = lakeConfig.center[0];
@@ -72,6 +91,8 @@ function renderMap() {
   const cellsG = document.createElementNS('http://www.w3.org/2000/svg', 'g');
   cellsG.setAttribute('id', 'cells');
   svg.appendChild(cellsG);
+
+  renderTrees(svg);
 
   const d = projectedOutline.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(' ') + ' Z';
   const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
@@ -292,6 +313,26 @@ function fmtShortTime(date) {
   return `${h} ${d}`;
 }
 
+function fmtRelative(ms) {
+  // "just now", "3m ago", "2h ago", "5h ago"
+  const s = Math.max(0, Math.floor(ms / 1000));
+  if (s < 60) return 'just now';
+  const m = Math.floor(s / 60);
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  return `${d}d ago`;
+}
+
+function updateUpdatedLine(timestamp, isStale) {
+  // Footer line: source + freshness, so the user knows what they're looking at.
+  const elapsed = Date.now() - timestamp;
+  const rel = fmtRelative(elapsed);
+  const stale = isStale ? ' · stale' : '';
+  document.getElementById('updated').textContent = `NWS · ${rel}${stale}`;
+}
+
 function updateConditionsForPeriod(period) {
   const windSpeed = parseWindSpeed(period.windSpeed);
   const dir = period.windDirection || '';
@@ -443,7 +484,7 @@ async function onRefresh() {
     setCache(hrData);
     lastFetchTimestamp = Date.now();
     initSlider(hrData.properties.periods, findCurrentPeriodIdx(hrData.properties.periods));
-    document.getElementById('updated').textContent = `Updated ${fmtTime(new Date(lastFetchTimestamp))}`;
+    updateUpdatedLine(lastFetchTimestamp, false);
     clearMapError();
   } catch (e) {
     console.error('Refresh failed:', e);
@@ -480,7 +521,7 @@ async function loadNWS() {
     const periods = cached.data.properties.periods;
     const idx = findCurrentPeriodIdx(periods);
     initSlider(periods, idx);
-    document.getElementById('updated').textContent = `Updated ${fmtTime(new Date(lastFetchTimestamp))}`;
+    updateUpdatedLine(lastFetchTimestamp, false);
     return;
   }
 
@@ -507,14 +548,14 @@ async function loadNWS() {
     const periods = hrData.properties.periods;
     const idx = findCurrentPeriodIdx(periods);
     initSlider(periods, idx);
-    document.getElementById('updated').textContent = `Updated ${fmtTime(new Date(lastFetchTimestamp))}`;
+    updateUpdatedLine(lastFetchTimestamp, false);
   } catch (e) {
     console.error('NWS fetch failed:', e);
     if (cached) {
       const periods = cached.data.properties.periods;
       const idx = findCurrentPeriodIdx(periods);
       initSlider(periods, idx);
-      document.getElementById('updated').textContent = `Updated ${fmtTime(new Date(cached.timestamp))}`;
+      updateUpdatedLine(cached.timestamp, true);
       showStalePill();
       return;
     }
