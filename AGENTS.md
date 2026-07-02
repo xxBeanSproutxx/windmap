@@ -103,7 +103,7 @@ Build a tool the user can check before driving to Blue Lake (Zimmerman, MN) to f
 - [x] 2. Spec — DONE (SPEC.md)
 - [x] 3. Autoplan — DONE (REVIEW.md)
 - [x] 4. Spec addenda — 10 edge cases (E1 critical) + T1/T2 folded into SPEC.md
-- [ ] 5. Design pass — 20-min inline (font/scale, hierarchy, empty states, mobile viewport, T2 chip) — still open
+- [x] 5. Design pass — DONE. Vercel+Stripe fusion, off-white, Inter, 4-band wind scale, mobile-first single-column
 - [ ] 6. Phase 1: scaffold + first slice
 - [ ] 6. Phase 2: core feature
 - [ ] 7. Phase 3: polish
