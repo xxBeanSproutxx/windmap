@@ -194,6 +194,81 @@ If any of those fail, Phase 1 is not done. Don't move to Phase 2 (polish + edge 
 - **MnTOPO LiDAR for elevation:** deferred unless the 2D terrain polygons prove insufficient.
 - **Multiple lakes:** the JSON config makes it a copy-paste exercise. The hard part is the terrain data per lake.
 - **"Fishable %" headline number:** easy to add once the map works. Just count green+yellow cells.
+- **Cell hover/tap tooltip (exact mph):** ~10 lines, defer to v2.
+
+---
+
+## 4.5 Edge-case addenda (from `REVIEW.md` eng E1–E10 + design T1/T2)
+
+These pin down the details the original spec glossed over. Every item here is required reading before phase-1 code lands.
+
+### Wind direction convention (E1 — critical)
+NWS `windDirection` is a cardinal string (e.g. `"W"`, `"NW"`) representing where the wind is *coming from*. Conversion:
+- `"N"` → wind from north, unit vector toward wind = `(0, -1)` (north-up coordinate)
+- `"E"` → `(1, 0)`
+- `"S"` → `(0, 1)`
+- `"W"` → `(-1, 0)`
+- Intercardinals (NE, SE, SW, NW): unit vector at 45° between the two cardinals.
+- The unit vector we use for the model is the *direction the wind is going to* — i.e. the *negation* of "where it's coming from."
+
+The ray-cast casts from each cell in this "going to" direction (so it hits obstacles *upwind* of the cell). **Implementing this backwards puts every shadow on the wrong side of every tree.**
+
+### windSpeed range parsing (E2)
+NWS `windSpeed` is a range string. Examples: `"10 mph"`, `"10 to 15 mph"`, `"Calm"`, `"5 to 10 mph"`. Parse rule:
+- One number → use that number.
+- Two numbers ("X to Y") → use the average `((X+Y)/2)`.
+- `"Calm"` → `0`.
+- Empty / unparseable → skip that period (don't render a time-slider tick).
+
+### Calm / zero-wind handling (E3)
+`windSpeed = 0` is a real and frequent value. When `nws_wind_mph === 0`:
+- `effective_wind = 0` for every cell (no need to run the model).
+- All cells render green. No division-by-zero risk in the model.
+
+### 2D-only polygon treatment (E4)
+The KML polygon has `Z=0` on every vertex. **Ignore Z, treat the polygon as 2D.** A future maintainer should not try to parse Z. Add a one-line comment in the KML parser.
+
+### Geometry projection (E5, E6)
+- All geometry — lake outline, tree polygons, cell centers, ray-cast steps — is projected from lat/lon to local meters using an equirectangular projection centered on the lake's centroid.
+- At 45°N latitude and a 1.4km × 3.5km lake, the equirectangular approximation introduces <0.5% error at the corners. Fine for v1.
+- Projection must be applied to **all** geometry in the same coordinate system, or the ray-cast is meaningless.
+
+### Ray-cast algorithm (E6)
+For each cell:
+1. From the cell center, step 5m in the upwind direction (toward where the wind is *coming from* — opposite of the unit vector used for fetch factor).
+2. Max 60 steps = 300m.
+3. At each step, do a point-in-polygon test against every `tree_polygon`. If a tree polygon contains the step, that's a hit.
+4. First hit wins:
+   - If a `tree_polygon` hit → `terrain_attenuation = 0.25`
+   - If an `elevation_polygon` hit → `terrain_attenuation = 0.10`
+   - If no hit in 300m → `terrain_attenuation = 1.0`
+- Tie-breaker: elevation polygons checked first, then tree polygons (elevation is a stronger attenuator).
+
+### First-paint performance (E7)
+The 25,000-cell grid geometry is computed **once on first load** and held in memory. Time-slider drag and refresh only re-run the *wind lookup + color step*, not the geometry step. Target: time-slider drag < 200ms.
+
+### `file://` mode and CORS (E9)
+NWS API supports CORS (`Access-Control-Allow-Origin: *`) so `http://` works. `file://` mode will fail the NWS fetch:
+- If `localStorage` has cached data → render the cache, show "showing cached data" badge.
+- If no cache → show a friendly "serve this folder over http — try `python3 -m http.server 8000`" message instead of the map.
+
+Recommended dev workflow: `cd /home/reid/projects/windmap && python3 -m http.server 8000`, then open `http://localhost:8000` on the phone (via Tailscale) or laptop.
+
+### Refresh race (E10, doc-only)
+Manual "Refresh now" and the hourly timer can fire concurrently. NWS tolerates the duplicate. Do not add a mutex; this is a 1-in-1000 edge case for a personal tool.
+
+### Wind arrow in header (CEO T1)
+A single SVG arrow in the header showing current wind direction — i.e. pointing in the direction the wind is *going to*. Updates with the time slider. Drawn at 24px, neutral gray, in the same line as the wind speed text. Zero extra real estate; completes the "wind awareness" picture.
+
+### "Best window" chip near the slider (Design T2)
+The time slider by itself is just a control. To make it answer the user's actual question ("when should I go?"):
+- Scan the next 48h of the NWS forecast.
+- Find the 2-3 hour contiguous window with the **lowest mean effective-wind** across the lake.
+- Render as a small chip near the slider, e.g. "Best window: 7am–10am."
+- Tapping the chip moves the slider to the start of that window.
+- If no forecast is available (NWS down), don't render the chip.
+
+This is ~20 lines of JS (find min-wind window + render chip) and ~5 lines of CSS. **In v1, not v2.** It's the second half of the product.
 
 ---
 
