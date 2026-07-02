@@ -71,6 +71,94 @@ This is a personal-utility project. The "blocker" is real: every missed-OK day w
 
 ## 3. Technical Design
 
+### Visual design (D7 — Vercel + Stripe fusion)
+
+Source-of-truth for the visual language. Borrowed from the `popular-web-designs` skill (Vercel template + Stripe gradient discipline), customized for a single-lake, single-purpose tool.
+
+**Canvas:**
+- Page background: `#fafafa` (off-white, "gray 50" — warmer than pure white, easier on the eye for outdoor check)
+- Card / map surface: `#ffffff` with the Vercel shadow-as-border treatment: `box-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 2px 2px rgba(0,0,0,0.04), 0 8px 8px -8px rgba(0,0,0,0.04)`
+- Outer body: zero margin, `min-height: 100vh`, single column on mobile, max 720px wide on desktop (this is a *tool*, not a *page*)
+
+**Typography:**
+- Primary: Inter (Geist substitute, available on Google Fonts), weights 400 / 500 / 600
+- Mono: JetBrains Mono (for the wind speed / "X.X mph" readout)
+- Hierarchy: one heading only (lake name + current conditions, 24-32px, weight 600), no sub-heads, body text 14-16px
+- Tracking: -0.01em on the heading, normal elsewhere. No aggressive negative tracking (this is not a marketing site)
+
+**Color palette (the wind scale is the *only* chromatic decision):**
+- Background: `#fafafa`
+- Surface: `#ffffff`
+- Text primary: `#171717`
+- Text secondary: `#666666`
+- Text muted: `#999999`
+- Border (via shadow): `rgba(0,0,0,0.08)`
+- Lake water fill: `#e8f1f8` (very pale blue, so cells stand out)
+- Lake outline: `#93b6cf` (medium blue, the user's "blue lake" cue)
+- Wind scale bands:
+  - Slack (<6 mph): `#7ec47e` (sage green)
+  - Marginal (6-8 mph): `#f5d76e` (warm yellow)
+  - Choppy (8-15 mph): `#f59e63` (warm orange)
+  - No go (>15 mph): `#e26464` (soft red, not garish)
+- Tree polygons: `rgba(98, 130, 89, 0.35)` (forest green, semi-transparent so cells near trees are still visible)
+- Boat launches: `#1e6091` (deep blue dots, 4px radius)
+
+**Layout (mobile-first, single column):**
+```
++--------------------------------+
+| [lake name, 24px]              |  ← header, weight 600
+| 12 mph W • 38°F • 10:14 AM     |  ← meta line, mono, 14px
+|                                |
+|  +--------------------------+  |
+|  |                          |  |
+|  |    [map of lake,         |  |  ← the map. The hero. ~70% of the
+|  |     colored cells,       |  |    viewport. Drop-shadowed card.
+|  |     tree polygons        |  |    Hover/tap a cell to see exact
+|  |     behind, boat         |  |    effective-wind mph. Wind arrow
+|  |     launches marked]     |  |    icon top-right of the map.
+|  |                          |  |
+|  +--------------------------+  |
+|                                |
+| [●———————————●—————]  2pm       |  ← time slider, full width
+| Best: 7am-9am                   |  ← "best window" chip, pill shape
+|                                |
+| [↻ Refresh]      Updated 10:14 |  ← footer line, 12px muted
++--------------------------------+
+```
+
+**Interactions:**
+- Time slider drag: re-runs wind lookup + recolors cells, <200ms target. No debounce — modern browsers handle the throughput.
+- Slider tap on the "Best: 7am-9am" chip: moves slider to start of best window.
+- Cell tap (touch) / hover (mouse): shows exact effective-wind mph in a small tooltip anchored to the cell.
+- Refresh button: small, 32px, ghost button (white surface, shadow-as-border), shows spinner during fetch.
+- Wind arrow in header: 20px SVG, neutral gray, rotates with the time slider.
+
+**Empty / error states:**
+- First paint (NWS still fetching): the map shows the lake outline in a neutral pale blue (no cells yet), with a small "Loading wind data..." caption in the header meta line.
+- NWS down, no cache: the map shows the lake outline + a centered message: "Couldn't reach the National Weather Service. Try refreshing, or check your connection."
+- NWS down, cache available: map renders the cached data, header shows a small "stale" pill (yellow, 12px) next to the timestamp.
+- `file://` mode, no cache: same as "NWS down, no cache" but the message says "Serve this folder over http — `python3 -m http.server 8000`."
+
+**Spacing:**
+- 8px base unit. Generous padding inside the map card (24px). Header padding 16px. Slider padding 12px.
+- No sections fighting for attention. The map is the only visual hero; everything else is supporting.
+
+**What this is NOT:**
+- Not a marketing page. No hero text, no "Sign up" CTA, no carousel.
+- Not a dashboard. No charts, no tables, no metrics.
+- Not dark mode. The user is checking this in daylight, on a phone, before driving to a lake.
+- Not "AI-generated pretty." No card grids, no 3-column features, no hero illustration. The map is the only visual.
+
+**Shadows / depth philosophy:**
+- One signature card shadow on the map (the Vercel multi-layer).
+- Everything else (chips, buttons, slider) uses the shadow-as-border treatment.
+- The 4-band wind colors are flat fills, no gradients on the cells (gradients would muddy the cell boundaries and the user needs to see distinct zones).
+- One allowed gradient: the lake water fill, a very subtle vertical `#e8f1f8` → `#dde9f1` over 200px. Almost imperceptible; just enough to make the water feel like water, not a flat shape.
+
+**Font loading:**
+- Google Fonts: `<link rel="preconnect" href="https://fonts.googleapis.com">` and Inter + JetBrains Mono weights.
+- If the page loads slow on a phone (the user is sometimes in low-signal areas on the way to the lake), fall back to system stack — the design works fine with `-apple-system, Segoe UI, Roboto`.
+
 ### Stack
 - **Frontend:** single `index.html` + `app.js` + `style.css`. Vanilla JS, no framework. SVG for the map.
 - **Lake config:** `lakes/blue-lake.json` (outline + terrain polygons + boat launches). Trivially extensible to other lakes.

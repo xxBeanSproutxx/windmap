@@ -91,16 +91,20 @@ Build a tool the user can check before driving to Blue Lake (Zimmerman, MN) to f
   - Tree attenuation: 0.25x (quarter-wind behind trees)
   - Elevation attenuation: 0.10x (one-tenth-wind behind bluffs)
   - Color thresholds: <6mph green, 6-8mph yellow, 8-15mph orange, >15mph red
-  - **User note:** "8mph marginal" — on a 15mph day the slack water felt like ~5mph max (could be contrast effect with surrounding chop). Tune from real-world feedback in v2.
+  - **User note:** "8mph marginal" — on a 15mph day the slack water felt like ~5mph (could be contrast effect with surrounding chop). Tune from real-world feedback in v2.
+- **T1 (tree data source) → hand-curated JSON.** Smallest, most honest, guaranteed to work for v1. OSM Overpass query for tree data remains a v2 upgrade path.
+- **T2 (hosting) → GitHub Pages.** v1 ships as a public GitHub Pages site, accessible from the user's phone. Personal tool, public repo is fine.
+- **D7 (design vibe, from user) → "clean and simple, off-white page, blue lake outline, wind overlay, compass/direction arrow with speed and temp. Clean gradients, drop shadows. Simple designs you hardly notice are the best."** No DESIGN.md system, no brand. ~1 page of inline design spec.
 
 ## Pipeline (gstack)
 - [x] 0. Load gstack
 - [~] 1. Office hours — pressure-test the idea (D1-D4: status quo, model, data, success moment)
 - [x] 1. Office hours — DONE
 - [x] 2. Spec — DONE (SPEC.md)
-- [x] 3. Autoplan — DONE (REVIEW.md). Status: 10 spec additions + 20-min design pass before build
-- [~] 4. Stack + design system — fold REVIEW's 10 spec additions into SPEC.md, then add 1-page design section
-- [ ] 5. Phase 1: scaffold + first slice
+- [x] 3. Autoplan — DONE (REVIEW.md)
+- [x] 4. Spec addenda — 10 edge cases (E1 critical) + T1/T2 folded into SPEC.md
+- [ ] 5. Design pass — 20-min inline (font/scale, hierarchy, empty states, mobile viewport, T2 chip) — still open
+- [ ] 6. Phase 1: scaffold + first slice
 - [ ] 6. Phase 2: core feature
 - [ ] 7. Phase 3: polish
 - [ ] 8. QA
