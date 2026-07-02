@@ -7,6 +7,11 @@ let windValues = null;
 let projectedOutline = [];
 let projTreePolys = [];
 let projElevPolys = [];
+let allPeriods = null;
+let currentPeriodIndex = 0;
+let periodMeanWinds = null;
+let bestWindow = null;
+let lastFetchTimestamp = null;
 
 document.addEventListener('DOMContentLoaded', init);
 
@@ -30,6 +35,8 @@ async function init() {
 
   renderMap();
   buildCellGrid();
+  setupSlider();
+  setupRefresh();
   await loadNWS();
 }
 
@@ -117,19 +124,8 @@ function windDirToUnit(cardinal) {
   if (!cardinal || typeof cardinal !== 'string') return { x: 0, y: 0 };
   const deg = CARDINAL_DEG[cardinal.toUpperCase()];
   if (deg === undefined) return { x: 0, y: 0 };
-  // Wind "from NW" blows TOWARD SE. In our coord system: +x = east, +y = south (since y
-  // is the negation of lat offset to match SVG's +y-down convention). So SE = (+, +).
-  // Standard sin/cos gives north-positive; we flip y to get south-positive.
   const to = (deg + 180) % 360, r = to * Math.PI / 180;
   return { x: Math.sin(r), y: -Math.cos(r) };
-}
-
-function computeFetchFactor(cx, cy, wux, wuy, outline) {
-  const near = findNearestPointOnPolygon(cx, cy, outline);
-  const dx = cx - near.x, dy = cy - near.y;
-  const len = Math.sqrt(dx * dx + dy * dy);
-  if (len < 0.001) return 0.2;
-  return Math.max(0.2, wux * (dx / len) + wuy * (dy / len));
 }
 
 function computeTerrainAttenuation(cx, cy, wux, wuy, treePolys, elevPolys) {
@@ -159,7 +155,16 @@ function buildCellGrid() {
     for (let c = 0; c < cols; c++) {
       const cx = minX + (c + 0.5) * cellW, cy = minY + (r + 0.5) * cellH;
       if (pointInPolygon(cx, cy, projectedOutline)) {
-        cells.push({ x: cx - cellW / 2, y: cy - cellH / 2, w: cellW, h: cellH });
+        const near = findNearestPointOnPolygon(cx, cy, projectedOutline);
+        const dx = cx - near.x, dy = cy - near.y;
+        const len = Math.sqrt(dx * dx + dy * dy);
+        cells.push({
+          x: cx - cellW / 2, y: cy - cellH / 2, w: cellW, h: cellH,
+          cx, cy,
+          _nx: len < 0.001 ? 0 : dx / len,
+          _ny: len < 0.001 ? 0 : dy / len,
+          _len: len
+        });
       }
     }
   }
@@ -194,6 +199,12 @@ function renderCellColors() {
   cellsG.appendChild(frag);
 }
 
+function getCellEffectiveWind(cx, cy, wux, wuy, speed, cell) {
+  const ff = cell._len < 0.001 ? 0.2 : Math.max(0.2, wux * cell._nx + wuy * cell._ny);
+  const ta = computeTerrainAttenuation(cx, cy, wux, wuy, projTreePolys, projElevPolys);
+  return speed * ff * ta;
+}
+
 function recomputeCells(period) {
   if (!period || !windValues || cells.length === 0) return;
   const speed = parseWindSpeed(period.windSpeed);
@@ -204,11 +215,22 @@ function recomputeCells(period) {
   }
   const w = windDirToUnit(period.windDirection);
   for (let i = 0; i < cells.length; i++) {
-    const cx = cells[i].x + cells[i].w / 2, cy = cells[i].y + cells[i].h / 2;
-    windValues[i] = speed * computeFetchFactor(cx, cy, w.x, w.y, projectedOutline)
-      * computeTerrainAttenuation(cx, cy, w.x, w.y, projTreePolys, projElevPolys);
+    const c = cells[i];
+    windValues[i] = getCellEffectiveWind(c.cx, c.cy, w.x, w.y, speed, c);
   }
   renderCellColors();
+}
+
+function computeMeanEffectiveWind(period) {
+  const speed = parseWindSpeed(period.windSpeed);
+  if (speed === null || speed === 0) return 0;
+  const w = windDirToUnit(period.windDirection);
+  let total = 0;
+  for (let i = 0; i < cells.length; i++) {
+    const c = cells[i];
+    total += getCellEffectiveWind(c.cx, c.cy, w.x, w.y, speed, c);
+  }
+  return total / cells.length;
 }
 
 // ── NWS helpers ──────────────────────────────────────────────
@@ -220,10 +242,14 @@ function getCache() {
   } catch { return null; }
 }
 
-function setCache(data) {
+function setCache(data, ts) {
   try {
-    localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+    localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: ts !== undefined ? ts : Date.now() }));
   } catch { /* localStorage full or unavailable */ }
+}
+
+function clearCache() {
+  try { localStorage.removeItem(CACHE_KEY); } catch {}
 }
 
 function isFresh(cached) {
@@ -246,34 +272,33 @@ const CARDINAL_DEG = {
   W: 270, WNW: 292.5, NW: 315, NNW: 337.5
 };
 
-function findCurrentPeriod(periods) {
+function findCurrentPeriodIdx(periods) {
   const now = Date.now();
-  for (const p of periods) {
-    const start = new Date(p.startTime).getTime();
-    const end = new Date(p.endTime).getTime();
-    if (now >= start && now < end) return p;
+  for (let i = 0; i < periods.length; i++) {
+    const start = new Date(periods[i].startTime).getTime();
+    const end = new Date(periods[i].endTime).getTime();
+    if (now >= start && now < end) return i;
   }
-  return periods[0];
+  return 0;
 }
 
 function fmtTime(date) {
   return date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
 }
 
-function renderConditions(period, cacheTimestamp) {
+function fmtShortTime(date) {
+  const h = date.toLocaleTimeString('en-US', { hour: 'numeric' });
+  const d = date.toLocaleDateString('en-US', { weekday: 'short' });
+  return `${h} ${d}`;
+}
+
+function updateConditionsForPeriod(period) {
   const windSpeed = parseWindSpeed(period.windSpeed);
   const dir = period.windDirection || '';
   const temp = period.temperature;
-  const now = new Date();
-
   const speedText = windSpeed !== null ? `${Math.round(windSpeed)} mph` : '--';
   const tempText = temp != null ? `${temp}°F` : '--';
-
-  document.getElementById('conditions').textContent = `${speedText} ${dir} • ${tempText} • ${fmtTime(now)}`;
-
-  if (cacheTimestamp) {
-    document.getElementById('updated').textContent = `Updated ${fmtTime(new Date(cacheTimestamp))}`;
-  }
+  document.getElementById('conditions').textContent = `${speedText} ${dir} • ${tempText}`;
 
   const deg = CARDINAL_DEG[dir];
   if (deg !== undefined) {
@@ -282,10 +307,166 @@ function renderConditions(period, cacheTimestamp) {
 }
 
 function showStalePill() {
-  const pill = document.createElement('span');
-  pill.className = 'stale-pill';
-  pill.textContent = 'stale';
-  document.getElementById('conditions').appendChild(pill);
+  document.getElementById('stale-pill').style.display = '';
+}
+
+// ── Best window ─────────────────────────────────────────────
+
+function precomputePeriodMeans(periods) {
+  const count = Math.min(periods.length, 48);
+  const means = new Float32Array(count);
+  for (let i = 0; i < count; i++) {
+    if (parseWindSpeed(periods[i].windSpeed) === null) {
+      means[i] = 1e10;
+    } else {
+      means[i] = computeMeanEffectiveWind(periods[i]);
+    }
+  }
+  return means;
+}
+
+function findBestWindow(periods, means) {
+  const count = means.length;
+  let bestStart = 0, bestEnd = 0, bestMean = Infinity;
+  for (const size of [3, 2]) {
+    for (let i = 0; i <= count - size; i++) {
+      let sum = 0;
+      for (let j = 0; j < size; j++) sum += means[i + j];
+      const mean = sum / size;
+      if (mean < bestMean) {
+        bestMean = mean;
+        bestStart = i;
+        bestEnd = i + size - 1;
+      }
+    }
+  }
+  return { startIdx: bestStart, endIdx: bestEnd, mean: bestMean };
+}
+
+function renderBestWindow() {
+  const chip = document.getElementById('best-window');
+  if (!bestWindow || !allPeriods) {
+    chip.style.display = 'none';
+    return;
+  }
+  chip.style.display = '';
+  chip.classList.remove('dim');
+
+  const startPeriod = allPeriods[bestWindow.startIdx];
+  const endPeriod = allPeriods[bestWindow.endIdx];
+  const startTime = new Date(startPeriod.startTime);
+  const endTime = new Date(endPeriod.endTime);
+
+  const hoursAway = (startTime.getTime() - Date.now()) / (1000 * 60 * 60);
+  const fmt = (d) => d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+  if (hoursAway > 6) {
+    chip.textContent = `Best in ${Math.round(hoursAway)}h: ${fmt(startTime)}–${fmt(endTime)}`;
+    chip.classList.add('dim');
+  } else {
+    chip.textContent = `Best: ${fmt(startTime)}–${fmt(endTime)}`;
+  }
+}
+
+// ── Time slider ─────────────────────────────────────────────
+
+function setupSlider() {
+  const slider = document.getElementById('time-slider');
+  slider.addEventListener('input', onTimeSliderChange);
+  document.getElementById('best-window').addEventListener('click', () => {
+    if (bestWindow) {
+      slider.value = bestWindow.startIdx;
+      onTimeSliderChange();
+    }
+  });
+}
+
+function onTimeSliderChange() {
+  const idx = parseInt(document.getElementById('time-slider').value, 10);
+  const period = allPeriods[idx];
+  if (!period) return;
+  currentPeriodIndex = idx;
+  clearMapError();
+  recomputeCells(period);
+  updateConditionsForPeriod(period);
+  document.getElementById('time-display').textContent = fmtShortTime(new Date(period.startTime));
+}
+
+function initSlider(periods, currentIdx) {
+  allPeriods = periods;
+  const slider = document.getElementById('time-slider');
+  const count = Math.min(periods.length, 48);
+  slider.max = count - 1;
+  slider.value = Math.min(currentIdx, count - 1);
+  document.getElementById('slider-section').style.display = '';
+  document.getElementById('stale-pill').style.display = 'none';
+
+  console.time('best-window-scan');
+  periodMeanWinds = precomputePeriodMeans(periods);
+  bestWindow = findBestWindow(periods, periodMeanWinds);
+  console.timeEnd('best-window-scan');
+  renderBestWindow();
+  onTimeSliderChange();
+}
+
+// ── Refresh ─────────────────────────────────────────────────
+
+function setupRefresh() {
+  document.getElementById('refresh').addEventListener('click', onRefresh);
+}
+
+async function onRefresh() {
+  const cached = getCache();
+  const btn = document.getElementById('refresh');
+  const failMsg = document.getElementById('refresh-fail');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner">↻</span>';
+
+  clearCache();
+
+  try {
+    const center = lakeConfig.center;
+    const ptsResp = await fetch(
+      `https://api.weather.gov/points/${center[0]},${center[1]}`,
+      { headers: { 'User-Agent': 'windmap/1.0 (bluelake-zimmerman)' } }
+    );
+    if (!ptsResp.ok) throw new Error(`NWS points fetch: ${ptsResp.status}`);
+    const ptsData = await ptsResp.json();
+    const hourlyUrl = ptsData.properties.forecastHourly;
+
+    const hrResp = await fetch(hourlyUrl, {
+      headers: { 'User-Agent': 'windmap/1.0 (bluelake-zimmerman)' }
+    });
+    if (!hrResp.ok) throw new Error(`NWS hourly fetch: ${hrResp.status}`);
+    const hrData = await hrResp.json();
+
+    setCache(hrData);
+    lastFetchTimestamp = Date.now();
+    initSlider(hrData.properties.periods, findCurrentPeriodIdx(hrData.properties.periods));
+    document.getElementById('updated').textContent = `Updated ${fmtTime(new Date(lastFetchTimestamp))}`;
+    clearMapError();
+  } catch (e) {
+    console.error('Refresh failed:', e);
+    if (cached) setCache(cached.data, cached.timestamp);
+    failMsg.textContent = 'Refresh failed';
+    failMsg.style.opacity = 1;
+    setTimeout(() => { failMsg.style.opacity = 0; }, 3000);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '↻ Refresh';
+  }
+}
+
+// ── Error handling ──────────────────────────────────────────
+
+function showMapError(html) {
+  const div = document.getElementById('map-error');
+  div.innerHTML = html;
+  div.style.display = '';
+}
+
+function clearMapError() {
+  document.getElementById('map-error').style.display = 'none';
 }
 
 // ── NWS fetch ───────────────────────────────────────────────
@@ -295,8 +476,11 @@ async function loadNWS() {
   const cached = getCache();
 
   if (cached && isFresh(cached)) {
-    const period = findCurrentPeriod(cached.data.properties.periods);
-    if (period) { renderConditions(period, cached.timestamp); recomputeCells(period); }
+    lastFetchTimestamp = cached.timestamp;
+    const periods = cached.data.properties.periods;
+    const idx = findCurrentPeriodIdx(periods);
+    initSlider(periods, idx);
+    document.getElementById('updated').textContent = `Updated ${fmtTime(new Date(lastFetchTimestamp))}`;
     return;
   }
 
@@ -318,16 +502,27 @@ async function loadNWS() {
     const hrData = await hrResp.json();
 
     setCache(hrData);
+    lastFetchTimestamp = Date.now();
 
-    const period = findCurrentPeriod(hrData.properties.periods);
-    if (period) { renderConditions(period, Date.now()); recomputeCells(period); }
+    const periods = hrData.properties.periods;
+    const idx = findCurrentPeriodIdx(periods);
+    initSlider(periods, idx);
+    document.getElementById('updated').textContent = `Updated ${fmtTime(new Date(lastFetchTimestamp))}`;
   } catch (e) {
     console.error('NWS fetch failed:', e);
     if (cached) {
-      const period = findCurrentPeriod(cached.data.properties.periods);
-      if (period) { renderConditions(period, cached.timestamp); recomputeCells(period); }
+      const periods = cached.data.properties.periods;
+      const idx = findCurrentPeriodIdx(periods);
+      initSlider(periods, idx);
+      document.getElementById('updated').textContent = `Updated ${fmtTime(new Date(cached.timestamp))}`;
       showStalePill();
       return;
+    }
+    document.getElementById('conditions').textContent = '';
+    if (location.protocol === 'file:') {
+      showMapError('Serve this folder over http: <code>python3 -m http.server 8000</code>');
+    } else {
+      showMapError('Couldn\'t reach the National Weather Service. Try refreshing, or check your connection.');
     }
   }
 }

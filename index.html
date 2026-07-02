@@ -18,13 +18,22 @@
         <path d="M12 2 L4 20 L12 14 L20 20 Z" fill="#666"/>
       </svg>
       <span id="conditions">Loading wind data...</span>
+      <span id="stale-pill" class="stale-pill" style="display:none">stale</span>
     </div>
   </header>
   <div id="map-card">
     <svg id="map" width="100%" height="100%"></svg>
+    <div id="map-error"></div>
+  </div>
+  <div id="slider-section" style="display:none">
+    <div id="time-display">--</div>
+    <input type="range" id="time-slider" min="0" max="47" value="0" step="1" aria-label="Forecast time">
+    <div id="best-window"></div>
   </div>
   <footer>
+    <button id="refresh">↻ Refresh</button>
     <span id="updated"></span>
+    <span id="refresh-fail"></span>
   </footer>
 </div>
 <script src="app.js"></script>
