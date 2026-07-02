@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Windmap — Blue Lake</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>Blue Lake</h1>
+    <div id="meta">
+      <svg id="wind-arrow" width="20" height="20" viewBox="0 0 24 24" aria-label="Wind direction">
+        <path d="M12 2 L4 20 L12 14 L20 20 Z" fill="#666"/>
+      </svg>
+      <span id="conditions">Loading wind data...</span>
+    </div>
+  </header>
+  <div id="map-card">
+    <svg id="map" width="100%" height="100%"></svg>
+  </div>
+  <footer>
+    <span id="updated"></span>
+  </footer>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
