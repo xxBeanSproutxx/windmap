@@ -106,8 +106,8 @@ Build a tool the user can check before driving to Blue Lake (Zimmerman, MN) to f
 - [x] 5. Design pass — DONE. Vercel+Stripe fusion, off-white, Inter, 4-band wind scale, mobile-first single-column
 - [x] 6. Phase 1.1 — scaffold + lake SVG + NWS fetch (DONE)
 - [x] 7. Phase 1.2 — wind model (fetch factor + ray-cast) + colored cells (DONE; caught + fixed a wind-direction sign bug before commit)
-- [~] 8. Phase 1.3 — time slider + best-window chip + refresh button + offline cache
-- [ ] 9. Phase 2: polish + edge cases
+- [x] 8. Phase 1.3 — time slider + best-window chip + refresh button + offline polish (DONE, commit 0a97272)
+- [~] 9. Phase 2: visual QA on the live page + polish
 - [ ] 10. Phase 3: GitHub Pages setup (T2) + ship
 - [ ] 11. QA
 - [ ] 12. Reflect + save as skill
