@@ -2,9 +2,11 @@
   "name": "Blue Lake Wave Forecast",
   "short_name": "Blue Lake",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#533afd",
+  "prefer_related_applications": false,
   "icons": [
     {
       "src": "/icon-192.png",

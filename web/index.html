@@ -1054,6 +1054,59 @@
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('/sw.js').catch(function() {});
       }
+
+      // ── PWA install prompt ──
+      let deferredPrompt = null;
+      const installPrompt = document.getElementById('pwa-install-prompt');
+      const installBtn = document.getElementById('pwa-install-btn');
+      const dismissBtn = document.getElementById('pwa-dismiss-btn');
+      const diagEl = document.getElementById('pwa-diag');
+
+      // Check manifest detection
+      if (document.querySelector('link[rel="manifest"]')) {
+        diagEl.textContent = '\u2713 manifest linked';
+      } else {
+        diagEl.textContent = '\u2717 manifest NOT linked';
+      }
+
+      // Check SW registration
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.ready.then(function() {
+          diagEl.textContent += ' \u00b7 \u2713 SW active';
+        }).catch(function() {
+          diagEl.textContent += ' \u00b7 \u2717 SW failed';
+        });
+      } else {
+        diagEl.textContent += ' \u00b7 \u2717 no SW support';
+      }
+
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        installPrompt.style.display = 'block';
+        diagEl.textContent += ' \u00b7 \u2713 install prompt available';
+      });
+
+      installBtn.addEventListener('click', async function() {
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          const result = await deferredPrompt.userChoice;
+          diagEl.textContent += ' \u00b7 user: ' + result.outcome;
+          deferredPrompt = null;
+          installPrompt.style.display = 'none';
+        }
+      });
+
+      dismissBtn.addEventListener('click', function() {
+        installPrompt.style.display = 'none';
+      });
+
+      // Fallback: show after 3 seconds if beforeinstallprompt never fired
+      setTimeout(function() {
+        if (!deferredPrompt && diagEl.textContent.indexOf('install prompt') === -1) {
+          diagEl.textContent += ' \u00b7 install prompt never fired';
+        }
+      }, 3000);
     }
 
     // Run when DOM is ready
@@ -1065,6 +1118,13 @@
 
   })();
   </script>
+
+<!-- PWA Install Diagnostics -->
+<div id="pwa-install-prompt" style="display:none; position:fixed; bottom:0; left:0; right:0; z-index:9999; background:var(--bg); border-top:1px solid var(--border); padding:16px 20px; box-shadow:var(--card-shadow-lg); text-align:center;">
+  <button id="pwa-install-btn" style="background:var(--accent); color:#fff; border:none; padding:12px 32px; border-radius:100px; font-family:var(--font); font-size:15px; font-weight:600; cursor:pointer;">Install App</button>
+  <button id="pwa-dismiss-btn" style="background:none; border:none; color:var(--body); padding:8px 16px; font-family:var(--font); font-size:13px; cursor:pointer; margin-left:8px;">Dismiss</button>
+  <div id="pwa-diag" style="margin-top:8px; font-size:11px; color:var(--body);"></div>
+</div>
 
 </body>
 </html>
