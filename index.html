@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Blue Lake · Wave Forecast</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --heading: #061b31;
+      --accent: #533afd;
+      --accent-light: #7c6fff;
+      --body: #64748d;
+      --border: #e5edf5;
+      --card-shadow: 0 2px 12px rgba(50,50,93,0.15), 0 1px 2px rgba(0,0,0,0.04);
+      --card-shadow-lg: 0 8px 30px rgba(50,50,93,0.25), 0 2px 8px rgba(0,0,0,0.06);
+      --radius-sm: 4px;
+      --radius: 6px;
+      --radius-lg: 10px;
+      --font: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+      --font-mono: 'Source Code Pro', 'SF Mono', monospace;
+      --impact-high: #ea2261;
+      --impact-medium: #f59e0b;
+      --impact-low: #15be53;
+    }
+
+    html, body {
+      height: 100%;
+      width: 100%;
+      font-family: var(--font);
+      font-weight: 400;
+      color: var(--body);
+      background: var(--bg);
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Header ── */
+    .header {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      box-shadow: 0 1px 3px rgba(50,50,93,0.08);
+      flex-wrap: wrap;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .header-brand .brand-icon {
+      width: 28px;
+      height: 28px;
+      background: linear-gradient(135deg, var(--accent) 0%, #7c6fff 100%);
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      font-family: var(--font);
+      font-weight: 300;
+      font-size: 20px;
+      color: var(--heading);
+      letter-spacing: -0.2px;
+      white-space: nowrap;
+    }
+
+    .header-title .dot {
+      color: var(--accent);
+      font-weight: 400;
+    }
+
+    .header-subtitle {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--body);
+      white-space: nowrap;
+    }
+
+    .header-meta {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-shrink: 0;
+    }
+
+    .header-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 13px;
+      color: var(--body);
+      font-weight: 400;
+    }
+
+    .header-stat svg {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .header-stat .stat-value {
+      font-weight: 600;
+      color: var(--heading);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .header-stat .stat-label {
+      color: var(--body);
+      font-weight: 300;
+      margin-left: 2px;
+    }
+
+    .header-badge {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 4px 10px;
+      border-radius: 100px;
+      background: rgba(83,58,253,0.08);
+      color: var(--accent);
+    }
+
+    /* ── Time Selector ── */
+    .time-selector-bar {
+      position: absolute;
+      top: 82px;
+      left: 0;
+      right: 0;
+      z-index: 999;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      box-shadow: 0 1px 2px rgba(50,50,93,0.04);
+    }
+
+    .time-selector-bar::-webkit-scrollbar { display: none; }
+
+    .time-selector-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--body);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      flex-shrink: 0;
+      margin-right: 6px;
+    }
+
+    .time-pill {
+      flex-shrink: 0;
+      font-family: var(--font);
+      font-size: 13px;
+      font-weight: 400;
+      padding: 6px 14px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--body);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .time-pill:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(83,58,253,0.04);
+    }
+
+    .time-pill.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 2px 6px rgba(83,58,253,0.3);
+      font-weight: 600;
+    }
+
+    .time-pill .pill-speed {
+      display: block;
+      font-size: 10px;
+      opacity: 0.7;
+      margin-top: -1px;
+    }
+
+    /* ── Map Container ── */
+    #map {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1;
+    }
+
+    /* ── Legend ── */
+    .legend {
+      position: absolute;
+      bottom: 28px;
+      left: 24px;
+      z-index: 1000;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 14px 16px;
+      box-shadow: var(--card-shadow-lg);
+      min-width: 180px;
+    }
+
+    .legend-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--body);
+      margin-bottom: 10px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--heading);
+      margin-bottom: 6px;
+    }
+
+    .legend-item:last-child { margin-bottom: 0; }
+
+    .legend-swatch {
+      width: 12px;
+      height: 12px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    /* ── Placeholder / No Data ── */
+    .no-data-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 2000;
+      background: rgba(255,255,255,0.92);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+    }
+
+    .no-data-card {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 40px 48px;
+      text-align: center;
+      box-shadow: var(--card-shadow-lg);
+      max-width: 420px;
+    }
+
+    .no-data-card .icon-circle {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(83,58,253,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+      font-size: 24px;
+    }
+
+    .no-data-card h2 {
+      font-family: var(--font);
+      font-weight: 300;
+      font-size: 20px;
+      color: var(--heading);
+      margin-bottom: 8px;
+    }
+
+    .no-data-card p {
+      font-size: 14px;
+      color: var(--body);
+      line-height: 1.5;
+    }
+
+    .no-data-card code {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      background: #f8fafc;
+      padding: 3px 7px;
+      border-radius: var(--radius-sm);
+      color: var(--accent);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Loading Spinner ── */
+    .loading-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 3000;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), #7c6fff, var(--accent));
+      background-size: 200% 100%;
+      animation: loadingSlide 1.5s ease-in-out infinite;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .loading-bar.visible { opacity: 1; }
+
+    @keyframes loadingSlide {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* ── Wind badge on map ── */
+    .map-wind-indicator {
+      position: absolute;
+      top: 140px;
+      right: 24px;
+      z-index: 1000;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 14px;
+      box-shadow: var(--card-shadow);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--heading);
+    }
+
+    .wind-arrow {
+      width: 24px;
+      height: 24px;
+      transition: transform 0.3s ease;
+    }
+
+    /* ── Grid tooltip overrides ── */
+    .grid-tooltip {
+      background: rgba(255,255,255,0.95) !important;
+      border: 1px solid var(--border) !important;
+      border-radius: var(--radius-sm) !important;
+      box-shadow: var(--card-shadow) !important;
+      padding: 6px 10px !important;
+      font-family: var(--font) !important;
+      font-size: 12px !important;
+      color: var(--heading) !important;
+      line-height: 1.5 !important;
+      font-weight: 400 !important;
+      white-space: nowrap;
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .header {
+        padding: 10px 14px;
+        gap: 8px;
+      }
+      .header-title { font-size: 16px; }
+      .header-subtitle { display: none; }
+      .header-meta { gap: 8px; }
+      .header-stat { font-size: 12px; }
+      .header-stat .stat-label { display: none; }
+      .time-selector-bar {
+        top: 56px;
+        padding: 8px 14px;
+      }
+      .legend {
+        bottom: 16px;
+        left: 12px;
+        padding: 10px 12px;
+        min-width: auto;
+      }
+      .legend-title { font-size: 10px; margin-bottom: 6px; }
+      .legend-item { font-size: 11px; gap: 6px; }
+      .legend-swatch { width: 10px; height: 10px; }
+      .map-wind-indicator { top: 110px; right: 12px; font-size: 11px; padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading bar -->
+  <div class="loading-bar visible" id="loadingBar"></div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-brand">
+      <div class="brand-icon">~</div>
+      <span class="header-title">Blue Lake <span class="dot">·</span> Wave Forecast</span>
+      <span class="header-subtitle">Wave-fetch fishing conditions</span>
+    </div>
+    <div class="header-meta">
+      <div class="header-stat" id="windStat">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 8h10a2 2 0 1 0 0-4H3" stroke-linecap="round"/>
+          <path d="M3 12h8a2 2 0 1 0 0-4H4" stroke-linecap="round"/>
+        </svg>
+        <span class="stat-value" id="windSpeed">—</span>
+        <span class="stat-label">mph</span>
+      </div>
+      <div class="header-stat" id="gustStat">
+        <span class="stat-value" id="windGust">—</span>
+        <span class="stat-label">gust</span>
+      </div>
+      <div class="header-stat" id="dirStat">
+        <span class="stat-value" id="windDir">—</span>
+        <span class="stat-label">°</span>
+      </div>
+      <span class="header-badge" id="impactBadge">—</span>
+    </div>
+  </header>
+
+  <!-- Time selector -->
+  <div class="time-selector-bar" id="timeBar">
+    <span class="time-selector-label">Forecast</span>
+    <div id="timePills" style="display:flex;gap:8px;"></div>
+  </div>
+
+  <!-- Map -->
+  <div id="map"></div>
+
+  <!-- Legend -->
+  <div class="legend" id="legend">
+    <div class="legend-title">Surface Impact</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--impact-high)"></span>High (&gt;0.40)</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--impact-medium)"></span>Medium (0.15–0.40)</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:var(--impact-low)"></span>Low (&lt;0.15)</div>
+  </div>
+
+  <!-- Wind indicator card -->
+  <div class="map-wind-indicator" id="windCard" style="display:none;">
+    <svg class="wind-arrow" id="windArrow" viewBox="0 0 24 24" fill="none" stroke="#533afd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <line x1="12" y1="20" x2="12" y2="4"/>
+      <polyline points="7,8 12,4 17,8"/>
+    </svg>
+    <span id="windCardText"></span>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <script>
+  (function() {
+    'use strict';
+
+    // ── Constants ──
+    const BLUE_LAKE_CENTER = [45.491, -93.499];
+    const DEFAULT_ZOOM = 14;
+    const DATA_URL_LIVE = 'lake_data.json';
+    const GRID_CELL_SIZE = 0.0004; // degrees — matches compute engine spacing
+
+    // ── Impact classification ──
+    function classifyImpact(score) {
+      if (score == null || isNaN(score)) return 'low';
+      if (score > 0.40) return 'high';
+      if (score > 0.15) return 'medium';
+      return 'low';
+    }
+
+    function impactColor(category) {
+      const colors = {
+        high:   '#ea2261',
+        medium: '#f59e0b',
+        low:    '#15be53'
+      };
+      return colors[category] || '#15be53';
+    }
+
+    function gridImpactColor(score) {
+      if (score > 0.40) return '#ea2261';
+      if (score > 0.15) return '#f59e0b';
+      return '#15be53';
+    }
+
+    function impactLabel(category) {
+      const labels = { high: 'High Impact', medium: 'Moderate', low: 'Low' };
+      return labels[category] || 'Low';
+    }
+
+    function impactWeight(category) {
+      const weights = { high: 8, medium: 6, low: 4 };
+      return weights[category] || 4;
+    }
+
+    // ── State ──
+    let map = null;
+    let lakePolygonLayer = null;
+    let shorelineLayers = [];
+    let gridHeatmapLayers = [];
+    let data = null;
+    let currentTimeIdx = 0;
+
+    // ── DOM refs ──
+    const $loadingBar = document.getElementById('loadingBar');
+    const $windSpeed = document.getElementById('windSpeed');
+    const $windGust = document.getElementById('windGust');
+    const $windDir = document.getElementById('windDir');
+    const $impactBadge = document.getElementById('impactBadge');
+    const $timePills = document.getElementById('timePills');
+    const $timeBar = document.getElementById('timeBar');
+    const $windCard = document.getElementById('windCard');
+    const $windCardText = document.getElementById('windCardText');
+    const $windArrow = document.getElementById('windArrow');
+
+    // ── Init map ──
+    function initMap() {
+      map = L.map('map', {
+        center: BLUE_LAKE_CENTER,
+        zoom: DEFAULT_ZOOM,
+        zoomControl: false,
+        attributionControl: false
+      });
+
+      // Tile layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
+      }).addTo(map);
+
+      // Zoom control in bottom-right
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      // Subtle attribution
+      L.control.attribution({
+        position: 'bottomright',
+        prefix: false
+      }).addTo(map);
+    }
+
+    // ── Tree-line wind shielding (mirrors Python compute_shield_factor) ──
+    function computeShieldFactor(distanceM, waterNormalDeg, windDirDeg) {
+      const SHIELD_DISTANCE_M = 100;
+      if (distanceM == null || distanceM >= SHIELD_DISTANCE_M) return 1.0;
+
+      // Wind TO direction
+      const windToDeg = (windDirDeg + 180) % 360;
+
+      // Angular difference
+      let diff = Math.abs(windToDeg - waterNormalDeg);
+      if (diff > 180) diff = 360 - diff;
+
+      // Onshore wind (within 90° of water-facing normal)
+      if (diff < 90) {
+        return distanceM / SHIELD_DISTANCE_M;
+      }
+      return 1.0;
+    }
+
+    // ── Grid recoloring (scales impact by wind speed ratio) ──
+    function recolorGridHeatmap(newWindSpeedMph, originalWindSpeedMph) {
+      if (!data || !data.grid_cells || data.grid_cells.length === 0) return;
+
+      const ratio = originalWindSpeedMph > 0 ? (newWindSpeedMph / originalWindSpeedMph) : 1;
+
+      gridHeatmapLayers.forEach((rect, i) => {
+        const cell = data.grid_cells[i];
+        if (!cell) return;
+        const newImpact = cell.impact_score * ratio;
+        const color = gridImpactColor(newImpact);
+        rect.setStyle({ color: color, fillColor: color });
+        rect.setTooltipContent(
+          '<strong>Fetch:</strong> ' + (cell.fetch_km || 0).toFixed(3) + ' km<br>' +
+          '<strong>Wave:</strong> ' + (cell.wave_height_m || 0).toFixed(3) + ' m<br>' +
+          '<strong>Impact:</strong> ' + (newImpact * 100).toFixed(0) + '%'
+        );
+      });
+    }
+
+    // ── Draw lake polygon (thin border outline only) ──
+    function drawLakePolygon(coords) {
+      if (lakePolygonLayer) map.removeLayer(lakePolygonLayer);
+
+      const latlngs = coords.map(c => [c[1], c[0]]);
+
+      lakePolygonLayer = L.polygon(latlngs, {
+        color: '#533afd',
+        weight: 2,
+        opacity: 0.85,
+        fillColor: '#533afd',
+        fillOpacity: 0,
+        dashArray: null,
+        smoothFactor: 0.5
+      }).addTo(map);
+
+      // Fit bounds with some padding
+      map.fitBounds(lakePolygonLayer.getBounds(), { padding: [100, 100] });
+    }
+
+    // ── Draw grid heatmap ──
+    function clearGridHeatmap() {
+      gridHeatmapLayers.forEach(l => map.removeLayer(l));
+      gridHeatmapLayers = [];
+    }
+
+    function drawGridHeatmap(grid) {
+      clearGridHeatmap();
+
+      if (!grid || grid.length === 0) return;
+
+      grid.forEach(cell => {
+        const impactScore = cell.impact_score;
+        const color = gridImpactColor(impactScore);
+        const half = GRID_CELL_SIZE / 2;
+        const bounds = [
+          [cell.lat - half, cell.lon - half],
+          [cell.lat + half, cell.lon + half]
+        ];
+
+        const rect = L.rectangle(bounds, {
+          color: color,
+          weight: 0.5,
+          opacity: 0.6,
+          fillColor: color,
+          fillOpacity: 0.55,
+          smoothFactor: 0
+        }).addTo(map);
+
+        const tipText = '<strong>Fetch:</strong> ' + (cell.fetch_km || 0).toFixed(3) + ' km<br>' +
+                  '<strong>Wave:</strong> ' + (cell.wave_height_m || 0).toFixed(3) + ' m<br>' +
+                  '<strong>Impact:</strong> ' + ((cell.impact_score || 0) * 100).toFixed(0) + '%';
+        let finalTip = tipText;
+        if (cell.shield_factor != null && cell.shield_factor < 0.99) {
+          finalTip += '<br><strong>Shield:</strong> ' + (cell.shield_factor * 100).toFixed(0) + '%';
+        }
+        if (cell.shore_distance_m != null && cell.shore_distance_m < 150) {
+          finalTip += '<br><strong>Shore:</strong> ' + cell.shore_distance_m.toFixed(0) + 'm';
+        }
+        rect.bindTooltip(finalTip,
+          { direction: 'top', className: 'grid-tooltip', sticky: true }
+        );
+
+        gridHeatmapLayers.push(rect);
+      });
+    }
+
+    // ── Draw shoreline segments ──
+    function clearShorelines() {
+      shorelineLayers.forEach(l => map.removeLayer(l));
+      shorelineLayers = [];
+    }
+
+    function drawShorelineSegments(segments) {
+      clearShorelines();
+
+      segments.forEach((seg, idx) => {
+        const coords = (seg.segment || seg.coordinates || []).map(c => [c[1], c[0]]);
+        const category = classifyImpact(seg.impact_score);
+        const color = impactColor(category);
+
+        const line = L.polyline(coords, {
+          color: color,
+          weight: impactWeight(category),
+          opacity: 0.9,
+          smoothFactor: 0.3,
+          lineCap: 'round',
+          lineJoin: 'round'
+        }).addTo(map);
+
+        // Tooltip with segment info
+        const segName = seg.name || 'Segment ' + (idx + 1);
+        line.bindTooltip(
+          '<strong>' + segName + '</strong><br>' + impactLabel(category) + ' · ' + (seg.impact_score * 100).toFixed(0) + '%',
+          { direction: 'center', className: 'segment-tooltip', offset: [0, 0] }
+        );
+
+        shorelineLayers.push(line);
+      });
+    }
+
+    // ── Update wind UI ──
+    function updateWindUI(wind) {
+      if (!wind) {
+        $windSpeed.textContent = '—';
+        $windGust.textContent = '—';
+        $windDir.textContent = '—';
+        $impactBadge.textContent = '—';
+        $windCard.style.display = 'none';
+        return;
+      }
+
+      $windSpeed.textContent = wind.speed_mph ?? '—';
+      $windGust.textContent = wind.gust_mph ?? '—';
+      $windDir.textContent = wind.direction_deg ?? '—';
+
+      // Determine overall impact for badge
+      const speeds = (data.shoreline_segments || []).map(s => s.impact_score || 0);
+      const avgImpact = speeds.length ? speeds.reduce((a, b) => a + b, 0) / speeds.length : 0;
+      const cat = classifyImpact(avgImpact);
+      $impactBadge.textContent = impactLabel(cat);
+      $impactBadge.style.background = impactColor(cat) + '18';
+      $impactBadge.style.color = impactColor(cat);
+
+      // Wind card on map
+      $windCard.style.display = 'flex';
+      $windCardText.textContent = (wind.speed_mph ?? '—') + ' mph from ' + (wind.direction_deg ?? '—') + '°';
+      $windArrow.style.transform = 'rotate(' + ((wind.direction_deg || 0) - 180) + 'deg)';
+    }
+
+    // ── Build time pills ──
+    function buildTimePills(forecast) {
+      $timePills.innerHTML = '';
+
+      if (!forecast || forecast.length === 0) {
+        const placeholder = document.createElement('span');
+        placeholder.className = 'time-pill';
+        placeholder.style.opacity = '0.5';
+        placeholder.style.pointerEvents = 'none';
+        placeholder.textContent = 'No forecast data';
+        $timePills.appendChild(placeholder);
+        return;
+      }
+
+      forecast.forEach((f, idx) => {
+        const pill = document.createElement('button');
+        pill.className = 'time-pill' + (idx === currentTimeIdx ? ' active' : '');
+
+        // Format time
+        const dt = new Date(f.timestamp);
+        const hour = dt.getHours();
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour % 12 || 12;
+        const timeStr = displayHour + ampm;
+
+        pill.innerHTML = timeStr + '<span class="pill-speed">' + (f.speed_mph ?? '—') + ' mph</span>';
+        pill.title = f.timestamp + ' — ' + f.speed_mph + ' mph from ' + f.direction_deg + '°';
+
+        pill.addEventListener('click', () => selectTimeSlot(idx));
+
+        $timePills.appendChild(pill);
+      });
+    }
+
+    // ── Select time slot ──
+    function selectTimeSlot(idx) {
+      if (!data || !data.wind_forecast) return;
+      currentTimeIdx = idx;
+
+      // Update pills
+      const pills = $timePills.querySelectorAll('.time-pill');
+      pills.forEach((p, i) => p.classList.toggle('active', i === idx));
+
+      // Update wind
+      const forecastEntry = data.wind_forecast[idx];
+      if (forecastEntry) {
+        updateWindUI(forecastEntry);
+      }
+
+      // Redraw shoreline with current time's wind
+      if (data.shoreline_segments) {
+        const segments = data.shoreline_segments.map(seg => {
+          if (seg.impacts && seg.impacts[idx] != null) {
+            return Object.assign({}, seg, { impact_score: seg.impacts[idx] });
+          }
+          return seg;
+        });
+        drawShorelineSegments(segments);
+      }
+
+      // Recolor grid heatmap for new wind speed
+      if (forecastEntry && data.wind_forecast && data.wind_forecast[0]) {
+        recolorGridHeatmap(forecastEntry.speed_mph, data.wind_forecast[0].speed_mph);
+      }
+    }
+
+    // ── Load data ──
+    async function loadData(url) {
+      $loadingBar.classList.add('visible');
+
+      try {
+        const resp = await fetch(url);
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+
+        data = await resp.json();
+
+        // Normalize field names from compute engine output
+        data.lake_polygon = data.lake?.polygon || [];
+        data.shoreline_segments = data.shoreline || [];
+        data.grid_cells = data.grid || [];
+        data.wind_forecast = (data.wind?.hourly || []).map(h => ({
+          timestamp: h.time,
+          speed_mph: Math.round((h.speed_ms || 0) * 2.237),
+          gust_mph: Math.round((h.gust_ms || h.speed_ms || 0) * 2.237),
+          direction_deg: h.direction_deg || 0
+        }));
+
+        // Reset current time index
+        currentTimeIdx = 0;
+
+        // Draw lake outline (thin border, no fill)
+        if (data.lake_polygon && data.lake_polygon.length > 0) {
+          drawLakePolygon(data.lake_polygon);
+        }
+
+        // Draw grid heatmap
+        drawGridHeatmap(data.grid_cells);
+
+        // Build time selector
+        buildTimePills(data.wind_forecast);
+
+        // Initial time slot
+        if (data.wind_forecast && data.wind_forecast.length > 0) {
+          selectTimeSlot(0);
+        } else if (data.shoreline_segments) {
+          drawShorelineSegments(data.shoreline_segments);
+          updateWindUI(null);
+        }
+
+        // Update wind UI
+
+        $loadingBar.classList.remove('visible');
+
+      } catch (err) {
+        console.warn('Could not load data:', err.message);
+        showNoData();
+        $loadingBar.classList.remove('visible');
+      }
+    }
+
+    // ── Show no-data placeholder ──
+    function showNoData() {
+      // Remove existing overlay if any
+      const existing = document.getElementById('noDataOverlay');
+      if (existing) existing.remove();
+
+      const overlay = document.createElement('div');
+      overlay.className = 'no-data-overlay';
+      overlay.id = 'noDataOverlay';
+      overlay.innerHTML = '\n        <div class="no-data-card">\n          <div class="icon-circle">~</div>\n          <h2>Could not load data</h2>\n          <p>Check that the server is running and<br>lake_data.json exists.</p>\n        </div>\n      ';
+      document.body.appendChild(overlay);
+    }
+
+    // ── Tooltip style ──
+    function injectTooltipStyles() {
+      const style = document.createElement('style');
+      style.textContent = '\n        .segment-tooltip {\n          background: var(--bg) !important;\n          border: 1px solid var(--border) !important;\n          border-radius: var(--radius-sm) !important;\n          box-shadow: var(--card-shadow) !important;\n          padding: 6px 10px !important;\n          font-family: \'Source Sans 3\', system-ui, sans-serif !important;\n          font-size: 12px !important;\n          color: var(--heading) !important;\n          line-height: 1.4 !important;\n          font-weight: 400 !important;\n        }\n        .segment-tooltip::before {\n          border-top-color: var(--border) !important;\n        }\n        .leaflet-tooltip {\n          white-space: nowrap;\n        }\n      ';
+      document.head.appendChild(style);
+    }
+
+    // ── Boot ──
+    function boot() {
+      injectTooltipStyles();
+      initMap();
+      loadData(DATA_URL_LIVE);
+    }
+
+    // Run when DOM is ready
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', boot);
+    } else {
+      boot();
+    }
+
+  })();
+  </script>
+
+</body>
+</html>
