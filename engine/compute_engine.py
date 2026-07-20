@@ -17,9 +17,11 @@ import urllib.error
 import sys
 import argparse
 import os
+from datetime import datetime, timedelta
+import time
 # ── Configuration ──────────────────────────────────────────────────────────
-KML_PATH = "/tmp/blue_lake.kml"
-OUTPUT_PATH = "/home/reid/spikes/wave-fetch/lake_data.json"
+KML_PATH = "data/blue_lake.kml"
+OUTPUT_PATH = "data/lake_data.json"
 LAKE_NAME = "Blue Lake"
 LAKE_CENTER_LAT = 45.49
 LAKE_CENTER_LON = -93.50
@@ -30,6 +32,47 @@ G = 9.81                    # gravitational acceleration m/s²
 SAMPLING_STEP = 10           # sample every Nth vertex for shoreline segments
 GRID_SPACING_DEG = 0.0004   # ~35-45m spacing at this latitude
 SHIELD_DISTANCE_M = 100      # max distance from shore (meters) where tree-line shielding applies
+
+# NLCD 2021 land cover class → wind reduction coefficient
+# Derived from aerodynamic roughness length (z₀) ratios
+# reduction = 1.0 - ln(10/z₀_land) / ln(10/0.0002)
+NLCD_COEFFICIENTS = {
+    11: 0.00,  # Open Water
+    12: 0.00,  # Perennial Ice/Snow
+    21: 0.64,  # Developed, Open Space
+    22: 0.72,  # Developed, Low Intensity
+    23: 0.77,  # Developed, Medium Intensity
+    24: 0.82,  # Developed, High Intensity
+    31: 0.30,  # Barren Land
+    41: 0.75,  # Deciduous Forest
+    42: 0.79,  # Evergreen Forest
+    43: 0.77,  # Mixed Forest
+    52: 0.57,  # Shrub/Scrub
+    71: 0.36,  # Grassland/Herbaceous
+    81: 0.46,  # Pasture/Hay
+    82: 0.51,  # Cultivated Crops
+    90: 0.72,  # Woody Wetlands
+    95: 0.46,  # Emergent Herbaceous Wetlands
+}
+
+NLCD_CLASS_NAMES = {
+    11: "Open Water",
+    12: "Perennial Ice/Snow",
+    21: "Developed, Open Space",
+    22: "Developed, Low Intensity",
+    23: "Developed, Medium Intensity",
+    24: "Developed, High Intensity",
+    31: "Barren Land",
+    41: "Deciduous Forest",
+    42: "Evergreen Forest",
+    43: "Mixed Forest",
+    52: "Shrub/Scrub",
+    71: "Grassland/Herbaceous",
+    81: "Pasture/Hay",
+    82: "Cultivated Crops",
+    90: "Woody Wetlands",
+    95: "Emergent Herbaceous Wetlands",
+}
 
 # ── 1. Parse KML ───────────────────────────────────────────────────────────
 
@@ -90,13 +133,47 @@ def fetch_wind_data(lat, lon):
 
     result = []
     for t, s, d, g in zip(times, speeds, directions, gusts):
+        # convert UTC to Minnesota local (CDT = UTC-5)
+        local_dt = datetime.fromisoformat(t) - timedelta(hours=5)
         result.append({
-            "time": t,
+            "time": local_dt.strftime("%Y-%m-%dT%H:%M"),
             "speed_ms": round(s * KMH_TO_MS, 2),
             "direction_deg": d,
             "gust_ms": round(g * KMH_TO_MS, 2) if g is not None else None,
         })
     return result
+
+
+# ── 2b. NLCD Land Cover Sampling ────────────────────────────────────────
+
+NLCD_WMS_URL = (
+    "https://www.mrlc.gov/geoserver/mrlc_display/wms"
+    "?service=WMS&version=1.1.1&request=GetFeatureInfo"
+    "&layers=NLCD_2021_Land_Cover_L48"
+    "&query_layers=NLCD_2021_Land_Cover_L48"
+    "&width=1&height=1&x=0&y=0"
+    "&srs=EPSG:4326&format=image/png"
+    "&info_format=application/json"
+)
+
+
+def sample_nlcd(lat, lon, timeout=10):
+    """Query NLCD 2021 land cover class at a point via MRLC WMS.
+
+    Returns: (nlcd_class: int, class_name: str) or (None, None) on failure.
+    """
+    bbox = f"{lon-0.001},{lat-0.001},{lon+0.001},{lat+0.001}"
+    url = f"{NLCD_WMS_URL}&bbox={bbox}"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "WaveFetchSpike/1.0"})
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            result = json.loads(resp.read().decode("utf-8"))
+        value = result.get("features", [{}])[0].get("properties", {}).get("PALETTE_INDEX")
+        if value is not None:
+            return int(value), NLCD_CLASS_NAMES.get(int(value), "Unknown")
+    except Exception as e:
+        print(f"    NLCD query failed for ({lat:.4f}, {lon:.4f}): {e}")
+    return None, None
 
 
 # ── 3. Geometry Helpers ────────────────────────────────────────────────────
@@ -382,9 +459,12 @@ def wave_height_simplified(wind_speed_ms, fetch_km):
     return 0.017 * wind_speed_ms * math.sqrt(fetch_m)
 
 
-def compute_shield_factor(distance_m, water_normal_deg, wind_dir_deg):
+def compute_shield_factor(distance_m, water_normal_deg, wind_dir_deg, nlcd_reduction=0.80):
     """
     Compute wind speed reduction factor due to tree-line shielding.
+
+    Now incorporates NLCD land cover data: the base shielding at the shore
+    depends on what's growing on the shoreline (forest = strong, grass = weak).
 
     When wind blows from land toward water (onshore), trees and terrain
     near the shore shield the first SHIELD_DISTANCE_M meters of water.
@@ -393,9 +473,11 @@ def compute_shield_factor(distance_m, water_normal_deg, wind_dir_deg):
         distance_m: Distance from cell to nearest shoreline (meters)
         water_normal_deg: Bearing of water-facing shore normal
         wind_dir_deg: Wind direction in degrees (meteorological: FROM)
+        nlcd_reduction: NLCD wind reduction coefficient (0.0=water, 0.80=dense forest)
 
     Returns:
-        shield_factor: 0.0 (fully shielded) to 1.0 (no shielding)
+        shield_factor: shore_shield (1.0 - nlcd_reduction) at shore,
+                       ramping to 1.0 (no shielding) at SHIELD_DISTANCE_M
     """
     if distance_m >= SHIELD_DISTANCE_M:
         return 1.0
@@ -412,8 +494,8 @@ def compute_shield_factor(distance_m, water_normal_deg, wind_dir_deg):
     # If wind is blowing within 90° of the water-facing normal,
     # it's onshore and trees shield the water
     if diff < 90.0:
-        # Linear ramp: 0.0 at shore, 1.0 at SHIELD_DISTANCE_M
-        return distance_m / SHIELD_DISTANCE_M
+        shore_shield = 1.0 - nlcd_reduction
+        return shore_shield + (1.0 - shore_shield) * (distance_m / SHIELD_DISTANCE_M)
 
     return 1.0
 
@@ -495,6 +577,11 @@ def compute_shoreline(polygon, wind_hourly):
         # Calm area: fetch < 200m OR wind shielded (dot < 0)
         is_calm = fetch_km < 0.2 or dot <= 0
 
+        # Sample NLCD land cover at the shoreline midpoint
+        nlcd_class, nlcd_name = sample_nlcd(midpoint[1], midpoint[0])
+        nlcd_reduction = NLCD_COEFFICIENTS.get(nlcd_class, 0.50) if nlcd_class else 0.50
+        time.sleep(0.1)  # rate-limit WMS queries
+
         segments.append({
             "segment": [p1, p2],
             "midpoint": midpoint,
@@ -504,6 +591,9 @@ def compute_shoreline(polygon, wind_hourly):
             "is_calm": is_calm,
             "wind_speed_ms": wind_speed,
             "wind_direction_deg": wind_dir,
+            "nlcd_class": nlcd_class,
+            "nlcd_class_name": nlcd_name,
+            "nlcd_reduction": round(nlcd_reduction, 3),
         })
 
     return segments
@@ -511,14 +601,15 @@ def compute_shoreline(polygon, wind_hourly):
 
 # ── 5. Compute Grid Heatmap ────────────────────────────────────────────────
 
-def compute_grid(polygon, wind_dir, wind_speed_ms):
+def compute_grid(polygon, wind_dir, wind_speed_ms, shoreline):
     """
     Create a grid of sample points across the lake bounding box,
     filter to points inside the polygon, and compute fetch/wave/impact
     for each cell.
 
-    Also applies tree-line wind shielding: cells within SHIELD_DISTANCE_M
-    of shore with onshore wind get reduced effective wind speed.
+    Also applies NLCD land-cover-aware wind shielding: cells within
+    SHIELD_DISTANCE_M of shore with onshore wind get reduced effective
+    wind speed based on the land cover type at the nearest shoreline.
     """
     # Compute bounding box
     lons = [p[0] for p in polygon]
@@ -544,6 +635,21 @@ def compute_grid(polygon, wind_dir, wind_speed_ms):
 
                 shore_dist_m, shore_normal_deg = nearest_shore_info(lon, lat, polygon)
 
+                # Find nearest shoreline segment for NLCD land cover data
+                nearest_seg = None
+                nearest_seg_dist = float('inf')
+                for seg in shoreline:
+                    seg_mid = seg["midpoint"]
+                    km_per_deg_lon = 111.32 * math.cos(math.radians(lat))
+                    km_per_deg_lat = 111.32
+                    dx = (seg_mid[0] - lon) * km_per_deg_lon * 1000.0
+                    dy = (seg_mid[1] - lat) * km_per_deg_lat * 1000.0
+                    d = math.sqrt(dx * dx + dy * dy)
+                    if d < nearest_seg_dist:
+                        nearest_seg_dist = d
+                        nearest_seg = seg
+                nlcd_red = nearest_seg.get("nlcd_reduction", 0.50) if nearest_seg else 0.50
+
                 # Compute fetch in the wind-from direction
                 fetch_km = ray_polygon_intersection(
                     [lon, lat], wind_dir, polygon, max_km=FETCH_CAP_KM
@@ -551,7 +657,8 @@ def compute_grid(polygon, wind_dir, wind_speed_ms):
 
                 # ── Tree-line wind shielding ──
                 shield_factor = compute_shield_factor(
-                    shore_dist_m, shore_normal_deg, wind_dir
+                    shore_dist_m, shore_normal_deg, wind_dir,
+                    nlcd_reduction=nlcd_red
                 )
                 effective_wind_speed = wind_speed_ms * shield_factor
 
@@ -575,6 +682,9 @@ def compute_grid(polygon, wind_dir, wind_speed_ms):
                     "shore_distance_m": round(shore_dist_m, 1),
                     "shore_normal_deg": round(shore_normal_deg, 1),
                     "shield_factor": round(shield_factor, 3),
+                    "nlcd_class": nearest_seg.get("nlcd_class") if nearest_seg else None,
+                    "nlcd_class_name": nearest_seg.get("nlcd_class_name") if nearest_seg else None,
+                    "nlcd_reduction": round(nlcd_red, 3),
                 })
             lon += GRID_SPACING_DEG
         lat += GRID_SPACING_DEG
@@ -613,7 +723,7 @@ def main():
         print(f"  WARNING: Open-Meteo API failed: {e}")
         print("  Using synthetic fallback wind data")
         wind_hourly = [
-            {"time": "2026-07-19T14:00", "speed_ms": 5.2, "direction_deg": 270, "gust_ms": 5.2}
+            {"time": "2026-07-19T14:00Z", "speed_ms": 5.2, "direction_deg": 270, "gust_ms": 5.2}
         ]
 
     # Use first wind entry for computation
@@ -625,7 +735,7 @@ def main():
     shoreline = compute_shoreline(polygon, wind_hourly)
 
     print("Computing grid heatmap...")
-    grid_cells = compute_grid(polygon, wind_dir, wind_speed_ms)
+    grid_cells = compute_grid(polygon, wind_dir, wind_speed_ms, shoreline)
 
     # Build output
     output = {
