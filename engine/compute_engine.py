@@ -720,11 +720,8 @@ def main():
         print(f"  Got {len(wind_hourly)} hourly forecast points")
         print(f"  Current wind: {wind_hourly[0]['speed_ms']} m/s from {wind_hourly[0]['direction_deg']}°")
     except (urllib.error.URLError, OSError) as e:
-        print(f"  WARNING: Open-Meteo API failed: {e}")
-        print("  Using synthetic fallback wind data")
-        wind_hourly = [
-            {"time": "2026-07-19T14:00Z", "speed_ms": 5.2, "direction_deg": 270, "gust_ms": 5.2}
-        ]
+        print(f"ERROR: Open-Meteo API failed: {e}", file=sys.stderr)
+        sys.exit(1)
 
     # Use first wind entry for computation
     wind = wind_hourly[0]

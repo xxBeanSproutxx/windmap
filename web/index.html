@@ -6,6 +6,10 @@
   <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
   <title>Blue Lake · Wave Forecast</title>
 
+  <!-- PWA -->
+  <link rel="manifest" href="/manifest.json">
+  <link rel="icon" type="image/svg+xml" href="/icon.svg">
+
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -157,7 +161,8 @@
       font-family: var(--font);
       font-size: 12px;
       font-weight: 400;
-      padding: 4px 10px;
+      padding: 8px 12px;
+      min-height: 44px;
       border-radius: 100px;
       border: 1px solid var(--border);
       background: var(--bg);
@@ -168,6 +173,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       max-width: 140px;
+      touch-action: manipulation;
     }
 
     .landcover-toggle:hover {
@@ -182,6 +188,38 @@
       border-color: var(--accent);
       box-shadow: 0 2px 6px rgba(83,58,253,0.3);
       font-weight: 600;
+    }
+
+    .refresh-btn {
+      width: 44px;
+      height: 44px;
+      min-width: 44px;
+      min-height: 44px;
+      font-size: 18px;
+      border-radius: 100px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--accent);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+      padding: 0;
+      line-height: 1;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    .refresh-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: 0 2px 6px rgba(83,58,253,0.3);
+    }
+
+    .refresh-btn:active {
+      transform: scale(0.95);
     }
 
     /* ── Time Selector ── */
@@ -220,7 +258,8 @@
       font-family: var(--font);
       font-size: 13px;
       font-weight: 400;
-      padding: 6px 14px;
+      padding: 10px 14px;
+      min-height: 44px;
       border-radius: 100px;
       border: 1px solid var(--border);
       background: var(--bg);
@@ -229,6 +268,7 @@
       transition: all 0.15s ease;
       white-space: nowrap;
       user-select: none;
+      touch-action: manipulation;
     }
 
     .time-pill:hover {
@@ -274,6 +314,7 @@
       padding: 14px 16px;
       box-shadow: var(--card-shadow-lg);
       min-width: 180px;
+      padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
     }
 
     .legend-title {
@@ -293,6 +334,7 @@
       font-weight: 400;
       color: var(--heading);
       margin-bottom: 6px;
+      min-height: 44px;
     }
 
     .legend-item:last-child { margin-bottom: 0; }
@@ -450,7 +492,7 @@
       .legend {
         bottom: 16px;
         left: 12px;
-        padding: 10px 12px;
+        padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
         min-width: auto;
       }
       .legend-title { font-size: 10px; margin-bottom: 6px; }
@@ -507,6 +549,7 @@
         <span class="stat-label">°</span>
       </div>
       <span class="header-badge" id="impactBadge">—</span>
+      <button class="refresh-btn" id="refreshBtn" title="Refresh data">↻</button>
       <button class="landcover-toggle" id="landcoverToggle" data-short="🌲">🌲 Land Cover</button>
     </div>
   </header>
@@ -998,7 +1041,15 @@
       injectTooltipStyles();
       initMap();
       document.getElementById('landcoverToggle').addEventListener('click', toggleLandCover);
+      document.getElementById('refreshBtn').addEventListener('click', function() {
+        loadData('../data/lake_data.json?v=' + Date.now());
+      });
       loadData(DATA_URL_LIVE);
+
+      // Register service worker for offline caching
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js').catch(function() {});
+      }
     }
 
     // Run when DOM is ready
