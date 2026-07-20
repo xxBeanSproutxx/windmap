@@ -14,6 +14,16 @@ cd web && python3 server.py
 
 Then open http://localhost:8765 in your browser.
 
+## PWA Install (Android/Brave)
+
+To install as a standalone app (no URL bar), you must whitelist the origin since it's served over local HTTP:
+
+1. Open `brave://flags/#unsafely-treat-insecure-origin-as-secure` in Brave
+2. Enable the flag and add `http://192.168.0.61:8765`
+3. Relaunch Brave, visit the URL, then **Install App** from the menu
+
+Or use ADB reverse: `adb reverse tcp:8765 tcp:8765` and visit `http://localhost:8765` (treated as secure).
+
 ## Skill Conventions (for Hermes)
 
 Before ANY coding session, Hermes must load these skills:
@@ -32,9 +42,9 @@ Three shippable slices — complete one before starting the next:
 
 | Loop | Goal | Status |
 |------|------|--------|
-| 1 | Productize: proper repo, tests, CI-ready | ⬜ |
-| 2 | PWA + Polish: installable on phone, polished mobile UX | ⬜ |
-| 3 | Refine: Blue Lake ground-truthed, math validated | ⬜ |
+| 1 | Productize: proper repo, tests | ✅ |
+| 2 | PWA + Polish: installable on phone, polished mobile UX | ✅ |
+| 3 | Refine: Blue Lake ground-truthed, math validated | ⬜ (needs on-water testing) |
 
 ## Architecture
 
