@@ -9,7 +9,7 @@ Single-page web app that shows real-time wave-fetch wind impact on Blue Lake, Mi
 python3 engine/compute_engine.py
 
 # Serve locally
-cd web && python3 -m http.server 8765
+cd web && python3 server.py
 ```
 
 Then open http://localhost:8765 in your browser.
