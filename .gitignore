@@ -1,3 +1,4 @@
 __pycache__/
 *.pyc
 lake_data_sim.json
+data/lake_data.json
