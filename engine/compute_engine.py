@@ -708,6 +708,8 @@ def main():
     parser = argparse.ArgumentParser(description="Blue Lake Wave-Fetch Compute Engine")
     parser.add_argument("--output", type=str, default=OUTPUT_PATH,
                         help=f"Output JSON path (default: {OUTPUT_PATH})")
+    parser.add_argument("--static", action="store_true",
+                        help="Output static geometry data only (no wind forecast array, no impact scores)")
     args = parser.parse_args()
 
     print("Parsing KML...")
@@ -733,6 +735,47 @@ def main():
 
     print("Computing grid heatmap...")
     grid_cells = compute_grid(polygon, wind_dir, wind_speed_ms, shoreline)
+
+    # ── Static mode: strip wind-dependent fields, write geometry-only JSON ──
+    if args.static:
+        static_output = {
+            "lake": {
+                "name": LAKE_NAME,
+                "polygon": polygon,
+            },
+            "shoreline": [],
+            "grid": [],
+            "generated_at": datetime.now().isoformat(),
+            "generated_wind_direction_deg": wind_dir,
+            "generated_wind_speed_ms": round(wind_speed_ms, 2),
+        }
+
+        # Strip wind-dependent fields from shoreline
+        for seg in shoreline:
+            stripped = {}
+            for k, v in seg.items():
+                if k in ("impact_score", "wave_height_m", "wind_speed_ms", "wind_direction_deg"):
+                    continue
+                stripped[k] = v
+            static_output["shoreline"].append(stripped)
+
+        # Strip wind-dependent fields from grid cells
+        for cell in grid_cells:
+            stripped = {}
+            for k, v in cell.items():
+                if k in ("impact_score", "wave_height_m", "shield_factor"):
+                    continue
+                stripped[k] = v
+            static_output["grid"].append(stripped)
+
+        static_path = os.path.join(os.path.dirname(os.path.abspath(args.output)), "lake_static.json")
+        os.makedirs(os.path.dirname(static_path), exist_ok=True)
+        with open(static_path, "w") as f:
+            json.dump(static_output, f, indent=2)
+        print(f"Static data written to {static_path}")
+        print(f"  Shoreline segments: {len(static_output['shoreline'])}")
+        print(f"  Grid cells: {len(static_output['grid'])}")
+        return
 
     # Build output
     output = {
