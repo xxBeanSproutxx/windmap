@@ -594,8 +594,11 @@
     // ── Constants ──
     const BLUE_LAKE_CENTER = [45.491, -93.499];
     const DEFAULT_ZOOM = 14;
-    const DATA_URL_LIVE = '../data/lake_data.json?v=' + Date.now();
+    const STATIC_URL = 'data/lake_static.json';
     const GRID_CELL_SIZE = 0.0004; // degrees — matches compute engine spacing
+    const SHIELD_DISTANCE_M = 100;
+    const FETCH_CAP_KM = 5.0;       // shoreline fetch cap (matches engine)
+    const GRID_FETCH_CAP_KM = 1.0;  // grid impact cap (matches engine)
 
     // ── Impact classification ──
     function classifyImpact(score) {
@@ -637,6 +640,7 @@
     let gridHeatmapLayers = [];
     let landCoverLayer = null;  // ponytail: WMS toggle, in initMap not here
     let data = null;
+    let staticData = null;
     let currentTimeIdx = 0;
 
     // ── DOM refs ──
@@ -698,42 +702,144 @@
       }
     }
 
-    // ── Tree-line wind shielding (mirrors Python compute_shield_factor) ──
-    function computeShieldFactor(distanceM, waterNormalDeg, windDirDeg) {
-      const SHIELD_DISTANCE_M = 100;
+    // ── Live wind fetch from Open-Meteo (Task 2) ──
+    async function fetchLiveWind(lat, lon) {
+      const url = 'https://api.open-meteo.com/v1/forecast'
+        + '?latitude=' + lat + '&longitude=' + lon
+        + '&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m'
+        + '&forecast_days=1';
+
+      const resp = await fetch(url);
+      const raw = await resp.json();
+      const hourly = raw.hourly;
+
+      const KMH_TO_MS = 1.0 / 3.6;
+      const forecast = [];
+      for (let i = 0; i < hourly.time.length; i++) {
+        // Convert UTC to CDT (UTC-5)
+        const utcTime = hourly.time[i];
+        const localDt = new Date(utcTime + 'Z');
+        localDt.setHours(localDt.getHours() - 5);
+        const timeStr = localDt.toISOString().slice(0, 16); // "2026-07-20T07:00"
+
+        forecast.push({
+          timestamp: timeStr,
+          speed_ms: Math.round(hourly.wind_speed_10m[i] * KMH_TO_MS * 100) / 100,
+          speed_mph: Math.round(hourly.wind_speed_10m[i] * 0.6214),
+          gust_mph: Math.round((hourly.wind_gusts_10m ? hourly.wind_gusts_10m[i] : hourly.wind_speed_10m[i]) * 0.6214),
+          direction_deg: hourly.wind_direction_10m[i]
+        });
+      }
+      return forecast;
+    }
+
+    // ── Wind impact math (Task 3) — mirrors Python compute_shield_factor + compute_grid ──
+
+    // Mirror Python compute_shield_factor()
+    function computeShieldFactorJS(distanceM, waterNormalDeg, windDirDeg, nlcdReduction) {
       if (distanceM == null || distanceM >= SHIELD_DISTANCE_M) return 1.0;
 
-      // Wind TO direction
+      // Wind TO direction: where wind is going
       const windToDeg = (windDirDeg + 180) % 360;
-
-      // Angular difference
       let diff = Math.abs(windToDeg - waterNormalDeg);
       if (diff > 180) diff = 360 - diff;
 
       // Onshore wind (within 90° of water-facing normal)
       if (diff < 90) {
-        return distanceM / SHIELD_DISTANCE_M;
+        const shoreShield = 1.0 - (nlcdReduction != null ? nlcdReduction : 0.5);
+        return shoreShield + (1.0 - shoreShield) * (distanceM / SHIELD_DISTANCE_M);
       }
       return 1.0;
     }
 
-    // ── Grid recoloring (scales impact by wind speed ratio) ──
-    function recolorGridHeatmap(newWindSpeedMph, originalWindSpeedMph) {
-      if (!data || !data.grid_cells || data.grid_cells.length === 0) return;
+    // Mirror Python compute_grid() impact formula
+    function recomputeImpactScore(cell, windSpeedMs, windDirDeg) {
+      const shieldFactor = computeShieldFactorJS(
+        cell.shore_distance_m,
+        cell.shore_normal_deg,
+        windDirDeg,
+        cell.nlcd_reduction != null ? cell.nlcd_reduction : 0.5
+      );
+      const effectiveWind = windSpeedMs * shieldFactor;
+      const windFactor = effectiveWind / 7.82;  // 7.82 m/s normalization
+      return Math.min(cell.fetch_km / GRID_FETCH_CAP_KM, 1.0) * windFactor;
+    }
 
-      const ratio = originalWindSpeedMph > 0 ? (newWindSpeedMph / originalWindSpeedMph) : 1;
+    // Shoreline impact: mirrors Python compute_shoreline()
+    function recomputeShorelineImpact(seg, windDirDeg) {
+      // Reconstruct dot product of shore normal and wind vector
+      const p1 = seg.segment[0];
+      const p2 = seg.segment[1];
+      const dx = p2[0] - p1[0];
+      const dy = p2[1] - p1[1];
+      const len = Math.sqrt(dx * dx + dy * dy);
+      if (len < 1e-12) return 0;
 
-      gridHeatmapLayers.forEach((rect, i) => {
-        const cell = data.grid_cells[i];
-        if (!cell) return;
-        const newImpact = cell.impact_score * ratio;
-        const color = gridImpactColor(newImpact);
-        rect.setStyle({ color: color, fillColor: color });
-        rect.setTooltipContent(
-          '<strong>Fetch:</strong> ' + (cell.fetch_km || 0).toFixed(3) + ' km<br>' +
-          '<strong>Wave:</strong> ' + (cell.wave_height_m || 0).toFixed(3) + ' m<br>' +
-          '<strong>Impact:</strong> ' + (newImpact * 100).toFixed(0) + '%'
+      // Left normal in lat/lon space
+      const nx = -dy / len;
+      const ny = dx / len;
+
+      // Wind vector (where wind goes): direction_deg + 180
+      const goesDeg = (windDirDeg + 180) % 360;
+      const rad = goesDeg * Math.PI / 180;
+      const wx = Math.sin(rad);  // lon component
+      const wy = Math.cos(rad);  // lat component
+
+      const dot = nx * wx + ny * wy;
+      const normalizedFetch = Math.min(seg.fetch_km / FETCH_CAP_KM, 1.0);
+      return Math.max(0, dot) * normalizedFetch;
+    }
+
+    // ── Grid heatmap full redraw with recomputed impact ──
+    function redrawGridHeatmap(grid, windSpeedMs, windDirDeg) {
+      clearGridHeatmap();
+
+      if (!grid || grid.length === 0) return;
+
+      grid.forEach(cell => {
+        const impactScore = recomputeImpactScore(cell, windSpeedMs, windDirDeg);
+        const color = gridImpactColor(impactScore);
+        const half = GRID_CELL_SIZE / 2;
+        const bounds = [
+          [cell.lat - half, cell.lon - half],
+          [cell.lat + half, cell.lon + half]
+        ];
+
+        const rect = L.rectangle(bounds, {
+          color: color,
+          weight: 0.5,
+          opacity: 0.6,
+          fillColor: color,
+          fillOpacity: 0.55,
+          smoothFactor: 0
+        }).addTo(map);
+
+        let tipText = '<strong>Fetch:</strong> ' + (cell.fetch_km || 0).toFixed(3) + ' km<br>'
+          + '<strong>Impact:</strong> ' + (impactScore * 100).toFixed(0) + '%';
+
+        // Show wave height estimate for reference
+        const waveH = 0.017 * (windSpeedMs * computeShieldFactorJS(
+          cell.shore_distance_m, cell.shore_normal_deg, windDirDeg,
+          cell.nlcd_reduction != null ? cell.nlcd_reduction : 0.5
+        )) * Math.sqrt((cell.fetch_km || 0) * 1000);
+        tipText += '<br><strong>Wave:</strong> ' + waveH.toFixed(3) + ' m';
+
+        const shieldFactor = computeShieldFactorJS(
+          cell.shore_distance_m, cell.shore_normal_deg, windDirDeg,
+          cell.nlcd_reduction != null ? cell.nlcd_reduction : 0.5
         );
+        if (shieldFactor < 0.99) {
+          tipText += '<br><strong>Shield:</strong> ' + (shieldFactor * 100).toFixed(0) + '%';
+        }
+        if (cell.shore_distance_m != null && cell.shore_distance_m < 150) {
+          tipText += '<br><strong>Shore:</strong> ' + cell.shore_distance_m.toFixed(0) + 'm';
+        }
+
+        rect.bindTooltip(tipText,
+          { direction: 'top', className: 'grid-tooltip', sticky: true }
+        );
+
+        gridHeatmapLayers.push(rect);
       });
     }
 
@@ -899,6 +1005,7 @@
 
         const pill = document.createElement('button');
         pill.className = 'time-pill' + (idx === currentTimeIdx ? ' active' : '');
+        pill.dataset.idx = idx;
 
         // parse hour directly from UTC timestamp (YYYY-MM-DDTHH:00)
         const hour = parseInt(f.timestamp.split('T')[1], 10);
@@ -915,74 +1022,88 @@
       }
     }
 
-    // ── Select time slot ──
+    // ── Select time slot (with live recompute) ──
     function selectTimeSlot(idx) {
       if (!data || !data.wind_forecast) return;
       currentTimeIdx = idx;
 
       // Update pills
       const pills = $timePills.querySelectorAll('.time-pill');
-      pills.forEach((p, i) => p.classList.toggle('active', i === idx));
+      pills.forEach(p => {
+        const pIdx = parseInt(p.dataset.idx, 10);
+        p.classList.toggle('active', pIdx === idx);
+      });
 
-      // Update wind
+      // Get selected forecast entry
       const forecastEntry = data.wind_forecast[idx];
-      if (forecastEntry) {
-        updateWindUI(forecastEntry);
-      }
+      if (!forecastEntry) return;
 
-      // Redraw shoreline with current time's wind
+      // Update wind UI
+      updateWindUI(forecastEntry);
+
+      // Recompute and redraw shoreline for this hour's wind
       if (data.shoreline_segments) {
         const segments = data.shoreline_segments.map(seg => {
-          if (seg.impacts && seg.impacts[idx] != null) {
-            return Object.assign({}, seg, { impact_score: seg.impacts[idx] });
-          }
-          return seg;
+          const impact = recomputeShorelineImpact(seg, forecastEntry.direction_deg);
+          return Object.assign({}, seg, { impact_score: impact });
         });
         drawShorelineSegments(segments);
       }
 
-      // Recolor grid heatmap for new wind speed
-      if (forecastEntry && data.wind_forecast && data.wind_forecast[0]) {
-        recolorGridHeatmap(forecastEntry.speed_mph, data.wind_forecast[0].speed_mph);
+      // Full redraw of grid heatmap with recomputed impact
+      if (data.grid_cells && forecastEntry) {
+        redrawGridHeatmap(data.grid_cells, forecastEntry.speed_ms, forecastEntry.direction_deg);
       }
     }
 
-    // ── Load data ──
-    async function loadData(url) {
+    // ── Load data (dual-fetch: static geometry + live wind) ──
+    async function loadData() {
       $loadingBar.classList.add('visible');
 
       try {
-        const resp = await fetch(url);
-        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        // Fetch static geometry (cached by browser after first load)
+        if (!staticData) {
+          const staticResp = await fetch(STATIC_URL);
+          if (!staticResp.ok) throw new Error('Static data HTTP ' + staticResp.status);
+          staticData = await staticResp.json();
+        }
 
-        data = await resp.json();
+        // Fetch live wind from Open-Meteo
+        const forecast = await fetchLiveWind(45.49, -93.50);
+        if (!forecast || forecast.length === 0) throw new Error('No wind forecast');
 
-        // Normalize field names from compute engine output
-        data.lake_polygon = data.lake?.polygon || [];
-        data.shoreline_segments = data.shoreline || [];
-        data.grid_cells = data.grid || [];
-        data.wind_forecast = (data.wind?.hourly || []).map(h => ({
-          timestamp: h.time + 'Z',
-          speed_mph: Math.round((h.speed_ms || 0) * 2.237),
-          gust_mph: Math.round((h.gust_ms || h.speed_ms || 0) * 2.237),
-          direction_deg: h.direction_deg || 0
+        // Build the combined data object the render pipeline expects
+        data = {
+          lake_polygon: staticData.lake.polygon,
+          grid_cells: staticData.grid,
+          shoreline_segments: staticData.shoreline,
+          wind_forecast: forecast
+        };
+
+        // Recompute impact scores for current wind (first forecast hour)
+        const currentWind = forecast[0];
+        data.grid_cells = staticData.grid.map(cell => Object.assign({}, cell, {
+          impact_score: recomputeImpactScore(cell, currentWind.speed_ms, currentWind.direction_deg)
+        }));
+        data.shoreline_segments = staticData.shoreline.map(seg => Object.assign({}, seg, {
+          impact_score: recomputeShorelineImpact(seg, currentWind.direction_deg)
         }));
 
         // Reset current time index
         currentTimeIdx = 0;
 
-        // Draw lake outline (thin border, no fill)
+        // Draw lake outline
         if (data.lake_polygon && data.lake_polygon.length > 0) {
           drawLakePolygon(data.lake_polygon);
         }
 
         // Draw grid heatmap
-        drawGridHeatmap(data.grid_cells);
+        redrawGridHeatmap(data.grid_cells, currentWind.speed_ms, currentWind.direction_deg);
 
         // Build time selector
         buildTimePills(data.wind_forecast);
 
-        // Initial time slot — pick the forecast hour closest to now (using UTC hours)
+        // Initial time slot — pick the forecast hour closest to now
         if (data.wind_forecast && data.wind_forecast.length > 0) {
           const nowLocalHour = new Date().getHours();
           let bestIdx = 0;
@@ -990,7 +1111,6 @@
           data.wind_forecast.forEach((f, i) => {
             const forecastHour = parseInt(f.timestamp.split('T')[1], 10);
             let diff = Math.abs(forecastHour - nowLocalHour);
-            // handle wrap-around (e.g., 23 vs 0)
             if (diff > 12) diff = 24 - diff;
             if (diff < bestDiff) {
               bestDiff = diff;
@@ -1004,12 +1124,11 @@
           if (activePill) {
             activePill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
           }
-        } else if (data.shoreline_segments) {
+        } else {
+          // Fallback: draw shoreline from data
           drawShorelineSegments(data.shoreline_segments);
           updateWindUI(null);
         }
-
-        // Update wind UI
 
         $loadingBar.classList.remove('visible');
 
@@ -1029,7 +1148,7 @@
       const overlay = document.createElement('div');
       overlay.className = 'no-data-overlay';
       overlay.id = 'noDataOverlay';
-      overlay.innerHTML = '\n        <div class="no-data-card">\n          <div class="icon-circle">~</div>\n          <h2>Could not load data</h2>\n          <p>Check that the server is running and<br>lake_data.json exists.</p>\n        </div>\n      ';
+      overlay.innerHTML = '\n        <div class="no-data-card">\n          <div class="icon-circle">~</div>\n          <h2>Could not load data</h2>\n          <p>Check that the server is running and<br>lake_static.json exists in the data/ folder.<br>Run <code>python3 engine/compute_engine.py --static</code></p>\n        </div>\n      ';
       document.body.appendChild(overlay);
     }
 
@@ -1046,9 +1165,10 @@
       initMap();
       document.getElementById('landcoverToggle').addEventListener('click', toggleLandCover);
       document.getElementById('refreshBtn').addEventListener('click', function() {
-        loadData('../data/lake_data.json?v=' + Date.now());
+        staticData = null;  // force re-fetch of static geometry
+        loadData();
       });
-      loadData(DATA_URL_LIVE);
+      loadData();
 
       // Register service worker for offline caching
       if ('serviceWorker' in navigator) {

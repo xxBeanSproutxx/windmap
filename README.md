@@ -5,14 +5,14 @@ Single-page web app that shows real-time wave-fetch wind impact on Blue Lake, Mi
 ## Quick Start
 
 ```bash
-# Generate data (requires internet — fetches from Open-Meteo and NLCD WMS)
-python3 engine/compute_engine.py
+# Generate static geometry (one-time, or when shoreline/NLCD data changes)
+python3 engine/compute_engine.py --static
 
 # Serve locally
 cd web && python3 server.py
 ```
 
-Then open http://localhost:8765 in your browser.
+Then open http://localhost:8765 in your browser. Wind data is fetched live from Open-Meteo on every page load — no engine re-run needed.
 
 ## PWA Install (Android/Brave)
 
@@ -48,9 +48,9 @@ Three shippable slices — complete one before starting the next:
 
 ## Architecture
 
-- **Compute Engine:** Pure Python stdlib — parses KML shoreline, fetches wind from Open-Meteo, queries NLCD WMS for land cover data, computes wave fetch + wind shielding per grid cell, outputs JSON.
-- **Web App:** Single-page Leaflet map — time pills for forecast hours, impact heatmap (green/yellow/red), land cover toggle overlay, Stripe-inspired design system.
-- **Data Flow:** `engine/compute_engine.py` → `data/lake_data.json` → `web/index.html`
+- **Compute Engine:** Pure Python stdlib — parses KML shoreline, queries NLCD WMS for land cover data, computes static geometry (polygon, grid, fetch, shoreline) in `--static` mode. Full mode fetches wind and computes impact scores.
+- **Web App:** Single-page Leaflet map — fetches static geometry once (cached), fetches live wind from Open-Meteo JavaScript API on every load/refresh, recomputes impact scores in-browser. Time pills for forecast hours, impact heatmap (green/yellow/red), land cover toggle overlay, Stripe-inspired design system.
+- **Data Flow:** `engine/compute_engine.py --static` → `data/lake_static.json` → `web/index.html` (static) + Open-Meteo API → `web/index.html` (live wind)
 
 ## Design
 
