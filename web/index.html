@@ -834,6 +834,41 @@
     }
 
     // ── Canvas Grid Layer (replaces individual DOM rectangles) ──
+
+    // Ray-casting point-in-polygon with an optional degree buffer
+    // (expands the polygon boundary by bufferDeg for overbuilding cells near shore)
+    function pointInPolygonBuffered(lat, lon, polygon, bufferDeg) {
+      if (!polygon || polygon.length < 3) return false;
+      // If no buffer, use strict point-in-polygon
+      if (!bufferDeg || bufferDeg <= 0) {
+        let inside = false;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+          const xi = polygon[i][0], yi = polygon[i][1];
+          const xj = polygon[j][0], yj = polygon[j][1];
+          const intersect = ((yi > lat) !== (yj > lat))
+            && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi);
+          if (intersect) inside = !inside;
+        }
+        return inside;
+      }
+      // With buffer: also include points within bufferDeg of any edge
+      // Check center point + 4 offset points (N/S/E/W at bufferDeg)
+      const offsets = [[0,0], [bufferDeg,0], [-bufferDeg,0], [0,bufferDeg], [0,-bufferDeg]];
+      for (const [dlat, dlon] of offsets) {
+        const tlat = lat + dlat, tlon = lon + dlon;
+        let inside = false;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+          const xi = polygon[i][0], yi = polygon[i][1];
+          const xj = polygon[j][0], yj = polygon[j][1];
+          const intersect = ((yi > tlat) !== (yj > tlat))
+            && (tlon < (xj - xi) * (tlat - yi) / (yj - yi) + xi);
+          if (intersect) inside = !inside;
+        }
+        if (inside) return true;
+      }
+      return false;
+    }
+
     const GridCanvasLayer = L.Layer.extend({
       initialize: function(options) {
         this._grid = options.grid || [];
@@ -883,7 +918,7 @@
         ctx.save();
         ctx.beginPath();
         this._lakePolygon.forEach((coord, i) => {
-          const pt = map.latLngToContainerPoint([coord[1], coord[0]]);
+          const pt = map.latLngToLayerPoint([coord[1], coord[0]]);
           if (i === 0) ctx.moveTo(pt.x, pt.y);
           else ctx.lineTo(pt.x, pt.y);
         });
@@ -893,7 +928,14 @@
         // ---- Draw each grid cell ----
         const halfCell = GRID_CELL_SIZE / 2;
 
-        this._grid.forEach(cell => {
+        // Expand grid: include cells within 2 cell-widths of polygon boundary
+        // so clip trims them cleanly with no gaps at the shoreline
+        const bufferDeg = GRID_CELL_SIZE * 2;
+        const expandedGrid = this._grid.filter(cell => {
+          return pointInPolygonBuffered(cell.lat, cell.lon, this._lakePolygon, bufferDeg);
+        });
+
+        expandedGrid.forEach(cell => {
           // Use pre-computed _impactScore for speed
           let impactScore;
           if (cell._impactScore != null) {
@@ -905,10 +947,10 @@
           const color = gridImpactColor(impactScore);
 
           // Project cell corners to pixel space
-          const topLeft = map.latLngToContainerPoint([cell.lat + halfCell, cell.lon - halfCell]);
-          const topRight = map.latLngToContainerPoint([cell.lat + halfCell, cell.lon + halfCell]);
-          const botRight = map.latLngToContainerPoint([cell.lat - halfCell, cell.lon + halfCell]);
-          const botLeft = map.latLngToContainerPoint([cell.lat - halfCell, cell.lon - halfCell]);
+          const topLeft = map.latLngToLayerPoint([cell.lat + halfCell, cell.lon - halfCell]);
+          const topRight = map.latLngToLayerPoint([cell.lat + halfCell, cell.lon + halfCell]);
+          const botRight = map.latLngToLayerPoint([cell.lat - halfCell, cell.lon + halfCell]);
+          const botLeft = map.latLngToLayerPoint([cell.lat - halfCell, cell.lon - halfCell]);
 
           const minX = Math.min(topLeft.x, topRight.x, botRight.x, botLeft.x);
           const minY = Math.min(topLeft.y, topRight.y, botRight.y, botLeft.y);
