@@ -439,6 +439,28 @@
       border: 1px solid var(--border);
     }
 
+    .retry-btn {
+      margin-top: 16px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      padding: 10px 24px;
+      border-radius: 100px;
+      border: 2px solid var(--accent);
+      background: transparent;
+      color: var(--accent);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      touch-action: manipulation;
+      min-height: 44px;
+    }
+
+    .retry-btn:hover {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 2px 6px rgba(83,58,253,0.3);
+    }
+
     /* ── Loading Spinner ── */
     .loading-bar {
       position: absolute;
@@ -459,6 +481,36 @@
     @keyframes loadingSlide {
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
+    }
+
+    /* ── Centered spinner over map during load ── */
+    .loading-spinner {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+    }
+
+    .loading-spinner.visible { opacity: 1; }
+
+    .loading-spinner .spinner-ring {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(83, 58, 253, 0.15);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     /* ── Wind badge on map ── */
@@ -570,6 +622,11 @@
 
   <!-- Loading bar -->
   <div class="loading-bar visible" id="loadingBar"></div>
+
+  <!-- Loading spinner (centered over map during fetch) -->
+  <div class="loading-spinner visible" id="loadingSpinner">
+    <div class="spinner-ring"></div>
+  </div>
 
   <!-- Header -->
   <header class="header">
@@ -702,6 +759,7 @@
 
     // ── DOM refs ──
     const $loadingBar = document.getElementById('loadingBar');
+    const $loadingSpinner = document.getElementById('loadingSpinner');
     const $windSpeed = document.getElementById('windSpeed');
     const $windGust = document.getElementById('windGust');
     const $windDir = document.getElementById('windDir');
@@ -766,28 +824,34 @@
         + '&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m'
         + '&forecast_days=1';
 
-      const resp = await fetch(url);
-      const raw = await resp.json();
-      const hourly = raw.hourly;
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 10000);
+      try {
+        const resp = await fetch(url, { signal: controller.signal });
+        const raw = await resp.json();
+        const hourly = raw.hourly;
 
-      const KMH_TO_MS = 1.0 / 3.6;
-      const forecast = [];
-      for (let i = 0; i < hourly.time.length; i++) {
-        // Convert UTC to CDT (UTC-5)
-        const utcTime = hourly.time[i];
-        const localDt = new Date(utcTime + 'Z');
-        localDt.setHours(localDt.getHours() - 5);
-        const timeStr = localDt.toISOString().slice(0, 16); // "2026-07-20T07:00"
+        const KMH_TO_MS = 1.0 / 3.6;
+        const forecast = [];
+        for (let i = 0; i < hourly.time.length; i++) {
+          // Convert UTC to CDT (UTC-5)
+          const utcTime = hourly.time[i];
+          const localDt = new Date(utcTime + 'Z');
+          localDt.setHours(localDt.getHours() - 5);
+          const timeStr = localDt.toISOString().slice(0, 16); // "2026-07-20T07:00"
 
-        forecast.push({
-          timestamp: timeStr,
-          speed_ms: Math.round(hourly.wind_speed_10m[i] * KMH_TO_MS * 100) / 100,
-          speed_mph: Math.round(hourly.wind_speed_10m[i] * 0.6214),
-          gust_mph: Math.round((hourly.wind_gusts_10m ? hourly.wind_gusts_10m[i] : hourly.wind_speed_10m[i]) * 0.6214),
-          direction_deg: hourly.wind_direction_10m[i]
-        });
+          forecast.push({
+            timestamp: timeStr,
+            speed_ms: Math.round(hourly.wind_speed_10m[i] * KMH_TO_MS * 100) / 100,
+            speed_mph: Math.round(hourly.wind_speed_10m[i] * 0.6214),
+            gust_mph: Math.round((hourly.wind_gusts_10m ? hourly.wind_gusts_10m[i] : hourly.wind_speed_10m[i]) * 0.6214),
+            direction_deg: hourly.wind_direction_10m[i]
+          });
+        }
+        return forecast;
+      } finally {
+        clearTimeout(timeout);
       }
-      return forecast;
     }
 
     // ── Wind impact math (Task 3) — mirrors Python compute_shield_factor + compute_grid ──
@@ -1125,6 +1189,7 @@
     // ── Load data (dual-fetch: static geometry + live wind) ──
     async function loadData() {
       $loadingBar.classList.add('visible');
+      $loadingSpinner.classList.add('visible');
 
       try {
         // Fetch static geometry (cached by browser after first load)
@@ -1199,25 +1264,40 @@
         }
 
         $loadingBar.classList.remove('visible');
+        $loadingSpinner.classList.remove('visible');
 
       } catch (err) {
         console.warn('Could not load data:', err.message);
-        showNoData();
+        // Determine failure reason: wind failed vs static data failed
+        const reason = staticData ? 'wind' : 'static';
+        showNoData(reason);
         $loadingBar.classList.remove('visible');
+        $loadingSpinner.classList.remove('visible');
       }
     }
 
     // ── Show no-data placeholder ──
-    function showNoData() {
+    function showNoData(reason) {
       // Remove existing overlay if any
       const existing = document.getElementById('noDataOverlay');
       if (existing) existing.remove();
 
+      const isWindError = reason === 'wind';
       const overlay = document.createElement('div');
       overlay.className = 'no-data-overlay';
       overlay.id = 'noDataOverlay';
-      overlay.innerHTML = '\n        <div class="no-data-card">\n          <div class="icon-circle">~</div>\n          <h2>Could not load data</h2>\n          <p>Check that the server is running and<br>lake_static.json exists in the data/ folder.<br>Run <code>python3 engine/compute_engine.py --static</code></p>\n        </div>\n      ';
-      document.body.appendChild(overlay);
+
+      if (isWindError) {
+        overlay.innerHTML = '\n        <div class="no-data-card">\n          <div class="icon-circle">~</div>\n          <h2>Could not fetch wind data</h2>\n          <p>Open-Meteo may be unavailable or the<br>network connection was lost.</p>\n          <button class="retry-btn" id="retryBtn">Try Again</button>\n        </div>\n      ';
+        document.body.appendChild(overlay);
+        document.getElementById('retryBtn').addEventListener('click', function() {
+          document.getElementById('noDataOverlay').remove();
+          loadData();
+        });
+      } else {
+        overlay.innerHTML = '\n        <div class="no-data-card">\n          <div class="icon-circle">~</div>\n          <h2>Could not load data</h2>\n          <p>Check that the server is running and<br>lake_static.json exists in the data/ folder.<br>Run <code>python3 engine/compute_engine.py --static</code></p>\n        </div>\n      ';
+        document.body.appendChild(overlay);
+      }
     }
 
     // ── Tooltip style ──
