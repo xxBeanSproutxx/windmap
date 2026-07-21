@@ -676,25 +676,11 @@
       return weights[category] || 4;
     }
 
-    // Ray-casting point-in-polygon test
-    function pointInPolygon(lat, lon, polygon) {
-      let inside = false;
-      for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
-        // polygon coords are [lon, lat] from KML
-        const xi = polygon[i][0], yi = polygon[i][1];
-        const xj = polygon[j][0], yj = polygon[j][1];
-        const intersect = ((yi > lat) !== (yj > lat))
-          && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi);
-        if (intersect) inside = !inside;
-      }
-      return inside;
-    }
-
     // ── State ──
     let map = null;
     let lakePolygonLayer = null;
     let shorelineLayers = [];
-    let gridHeatmapLayers = [];
+    let gridCanvasLayer = null;
     let landCoverLayer = null;  // ponytail: WMS toggle, in initMap not here
     let data = null;
     let staticData = null;
@@ -847,63 +833,106 @@
       return Math.max(0, dot) * normalizedFetch;
     }
 
-    // ── Grid heatmap full redraw with recomputed impact ──
-    function redrawGridHeatmap(grid, windSpeedMs, windDirDeg) {
-      clearGridHeatmap();
+    // ── Canvas Grid Layer (replaces individual DOM rectangles) ──
+    const GridCanvasLayer = L.Layer.extend({
+      initialize: function(options) {
+        this._grid = options.grid || [];
+        this._windSpeedMs = options.windSpeedMs || 0;
+        this._windDirDeg = options.windDirDeg || 0;
+        this._lakePolygon = options.lakePolygon || null;
+      },
 
-      if (!grid || grid.length === 0) return;
+      onAdd: function(map) {
+        this._map = map;
+        this._canvas = document.createElement('canvas');
+        this._canvas.style.position = 'absolute';
+        this._canvas.style.pointerEvents = 'none';  // click-through to map
+        map.getPanes().overlayPane.appendChild(this._canvas);
+        this._ctx = this._canvas.getContext('2d');
+        this._resize();
+        this._draw();
+        map.on('moveend zoomend resize', this._draw, this);
+      },
 
-      const lakePolygon = data.lake_polygon;  // [lon, lat] pairs
-
-      grid.forEach(cell => {
-        // Only render cells inside the lake polygon
-        if (lakePolygon && !pointInPolygon(cell.lat, cell.lon, lakePolygon)) return;
-
-        const impactScore = recomputeImpactScore(cell, windSpeedMs, windDirDeg);
-        const color = gridImpactColor(impactScore);
-        const half = GRID_CELL_SIZE / 2;
-        const bounds = [
-          [cell.lat - half, cell.lon - half],
-          [cell.lat + half, cell.lon + half]
-        ];
-
-        const rect = L.rectangle(bounds, {
-          color: color,
-          weight: 0.5,
-          opacity: 0.6,
-          fillColor: color,
-          fillOpacity: 0.55,
-          smoothFactor: 0
-        }).addTo(map);
-
-        let tipText = '<strong>Fetch:</strong> ' + (cell.fetch_km || 0).toFixed(3) + ' km<br>'
-          + '<strong>Impact:</strong> ' + (impactScore * 100).toFixed(0) + '%';
-
-        // Show wave height estimate for reference
-        const waveH = 0.017 * (windSpeedMs * computeShieldFactorJS(
-          cell.shore_distance_m, cell.shore_normal_deg, windDirDeg,
-          cell.nlcd_reduction != null ? cell.nlcd_reduction : 0.5
-        )) * Math.sqrt((cell.fetch_km || 0) * 1000);
-        tipText += '<br><strong>Wave:</strong> ' + waveH.toFixed(3) + ' m';
-
-        const shieldFactor = computeShieldFactorJS(
-          cell.shore_distance_m, cell.shore_normal_deg, windDirDeg,
-          cell.nlcd_reduction != null ? cell.nlcd_reduction : 0.5
-        );
-        if (shieldFactor < 0.99) {
-          tipText += '<br><strong>Shield:</strong> ' + (shieldFactor * 100).toFixed(0) + '%';
+      onRemove: function(map) {
+        map.off('moveend zoomend resize', this._draw, this);
+        if (this._canvas && this._canvas.parentNode) {
+          this._canvas.parentNode.removeChild(this._canvas);
         }
-        if (cell.shore_distance_m != null && cell.shore_distance_m < 150) {
-          tipText += '<br><strong>Shore:</strong> ' + cell.shore_distance_m.toFixed(0) + 'm';
-        }
+      },
 
-        rect.bindTooltip(tipText,
-          { direction: 'top', className: 'grid-tooltip', sticky: true }
-        );
+      _resize: function() {
+        const size = this._map.getSize();
+        const dpr = window.devicePixelRatio || 1;
+        this._canvas.width = size.x * dpr;
+        this._canvas.height = size.y * dpr;
+        this._canvas.style.width = size.x + 'px';
+        this._canvas.style.height = size.y + 'px';
+        this._ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      },
 
-        gridHeatmapLayers.push(rect);
-      });
-    }
+      _draw: function() {
+        const ctx = this._ctx;
+        const map = this._map;
+        const size = map.getSize();
+        ctx.clearRect(0, 0, size.x, size.y);
+
+        if (!this._grid.length || !this._lakePolygon) return;
+
+        // ---- Clip to lake polygon ----
+        ctx.save();
+        ctx.beginPath();
+        this._lakePolygon.forEach((coord, i) => {
+          const pt = map.latLngToContainerPoint([coord[1], coord[0]]);
+          if (i === 0) ctx.moveTo(pt.x, pt.y);
+          else ctx.lineTo(pt.x, pt.y);
+        });
+        ctx.closePath();
+        ctx.clip();
+
+        // ---- Draw each grid cell ----
+        const halfCell = GRID_CELL_SIZE / 2;
+
+        this._grid.forEach(cell => {
+          // Use pre-computed _impactScore for speed
+          let impactScore;
+          if (cell._impactScore != null) {
+            impactScore = cell._impactScore;
+          } else {
+            impactScore = recomputeImpactScore(cell, this._windSpeedMs, this._windDirDeg);
+          }
+
+          const color = gridImpactColor(impactScore);
+
+          // Project cell corners to pixel space
+          const topLeft = map.latLngToContainerPoint([cell.lat + halfCell, cell.lon - halfCell]);
+          const topRight = map.latLngToContainerPoint([cell.lat + halfCell, cell.lon + halfCell]);
+          const botRight = map.latLngToContainerPoint([cell.lat - halfCell, cell.lon + halfCell]);
+          const botLeft = map.latLngToContainerPoint([cell.lat - halfCell, cell.lon - halfCell]);
+
+          const minX = Math.min(topLeft.x, topRight.x, botRight.x, botLeft.x);
+          const minY = Math.min(topLeft.y, topRight.y, botRight.y, botLeft.y);
+          const maxX = Math.max(topLeft.x, topRight.x, botRight.x, botLeft.x);
+          const maxY = Math.max(topLeft.y, topRight.y, botRight.y, botLeft.y);
+
+          ctx.fillStyle = color;
+          ctx.globalAlpha = 0.55;
+          ctx.fillRect(minX, minY, maxX - minX, maxY - minY);
+        });
+
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+      },
+
+      // Public API to update data without recreating the layer
+      updateData: function(grid, windSpeedMs, windDirDeg, lakePolygon) {
+        this._grid = grid;
+        this._windSpeedMs = windSpeedMs;
+        this._windDirDeg = windDirDeg;
+        this._lakePolygon = lakePolygon;
+        if (this._map) this._draw();
+      }
+    });
 
     // ── Draw lake polygon (thin border outline only) ──
     function drawLakePolygon(coords) {
@@ -923,57 +952,6 @@
 
       // Fit bounds with some padding
       map.fitBounds(lakePolygonLayer.getBounds(), { padding: [100, 100] });
-    }
-
-    // ── Draw grid heatmap ──
-    function clearGridHeatmap() {
-      gridHeatmapLayers.forEach(l => map.removeLayer(l));
-      gridHeatmapLayers = [];
-    }
-
-    function drawGridHeatmap(grid) {
-      clearGridHeatmap();
-
-      if (!grid || grid.length === 0) return;
-
-      const lakePolygon = data.lake_polygon;
-
-      grid.forEach(cell => {
-        if (lakePolygon && !pointInPolygon(cell.lat, cell.lon, lakePolygon)) return;
-
-        const impactScore = cell.impact_score;
-        const color = gridImpactColor(impactScore);
-        const half = GRID_CELL_SIZE / 2;
-        const bounds = [
-          [cell.lat - half, cell.lon - half],
-          [cell.lat + half, cell.lon + half]
-        ];
-
-        const rect = L.rectangle(bounds, {
-          color: color,
-          weight: 0.5,
-          opacity: 0.6,
-          fillColor: color,
-          fillOpacity: 0.55,
-          smoothFactor: 0
-        }).addTo(map);
-
-        const tipText = '<strong>Fetch:</strong> ' + (cell.fetch_km || 0).toFixed(3) + ' km<br>' +
-                  '<strong>Wave:</strong> ' + (cell.wave_height_m || 0).toFixed(3) + ' m<br>' +
-                  '<strong>Impact:</strong> ' + ((cell.impact_score || 0) * 100).toFixed(0) + '%';
-        let finalTip = tipText;
-        if (cell.shield_factor != null && cell.shield_factor < 0.99) {
-          finalTip += '<br><strong>Shield:</strong> ' + (cell.shield_factor * 100).toFixed(0) + '%';
-        }
-        if (cell.shore_distance_m != null && cell.shore_distance_m < 150) {
-          finalTip += '<br><strong>Shore:</strong> ' + cell.shore_distance_m.toFixed(0) + 'm';
-        }
-        rect.bindTooltip(finalTip,
-          { direction: 'top', className: 'grid-tooltip', sticky: true }
-        );
-
-        gridHeatmapLayers.push(rect);
-      });
     }
 
     // ── Draw shoreline segments ──
@@ -1117,8 +1095,12 @@
       }
 
       // Full redraw of grid heatmap with recomputed impact
-      if (data.grid_cells && forecastEntry) {
-        redrawGridHeatmap(data.grid_cells, forecastEntry.speed_ms, forecastEntry.direction_deg);
+      if (data.grid_cells && forecastEntry && gridCanvasLayer) {
+        // Pre-compute impact scores so the canvas draw loop is fast
+        data.grid_cells.forEach(cell => {
+          cell._impactScore = recomputeImpactScore(cell, forecastEntry.speed_ms, forecastEntry.direction_deg);
+        });
+        gridCanvasLayer.updateData(data.grid_cells, forecastEntry.speed_ms, forecastEntry.direction_deg, data.lake_polygon);
       }
     }
 
@@ -1163,8 +1145,19 @@
           drawLakePolygon(data.lake_polygon);
         }
 
-        // Draw grid heatmap
-        redrawGridHeatmap(data.grid_cells, currentWind.speed_ms, currentWind.direction_deg);
+        // Draw grid heatmap (canvas layer with polygon clipping)
+        if (gridCanvasLayer) {
+          map.removeLayer(gridCanvasLayer);
+        }
+        data.grid_cells.forEach(cell => {
+          cell._impactScore = recomputeImpactScore(cell, currentWind.speed_ms, currentWind.direction_deg);
+        });
+        gridCanvasLayer = new GridCanvasLayer({
+          grid: data.grid_cells,
+          windSpeedMs: currentWind.speed_ms,
+          windDirDeg: currentWind.direction_deg,
+          lakePolygon: data.lake_polygon
+        }).addTo(map);
 
         // Build time selector
         buildTimePills(data.wind_forecast);
