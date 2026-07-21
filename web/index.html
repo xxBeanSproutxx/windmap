@@ -289,6 +289,15 @@
       font-weight: 600;
     }
 
+    .time-pill.active::before {
+      content: '● ';
+      font-size: 8px;
+      vertical-align: middle;
+      margin-right: 2px;
+      color: inherit;
+      opacity: 0.9;
+    }
+
     .time-pill .pill-speed {
       display: block;
       font-size: 10px;
@@ -450,6 +459,20 @@
       gap: 8px;
       font-size: 13px;
       color: var(--heading);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .map-wind-indicator.collapsed {
+      width: 36px;
+      height: 36px;
+      padding: 6px;
+      border-radius: 50%;
+      justify-content: center;
+      min-width: 36px;
+    }
+    .map-wind-indicator.collapsed #windCardText {
+      display: none;
     }
 
     .wind-arrow {
@@ -480,45 +503,64 @@
     /* ── Responsive ── */
     @media (max-width: 640px) {
       .header {
-        padding: 10px 14px;
-        gap: 8px;
-        overflow: hidden;
+        padding: 6px 10px;
+        gap: 6px;
+        flex-wrap: nowrap;
+        min-height: 44px;
       }
-      .header-title { font-size: 16px; }
+      .header-title { font-size: 14px; }
       .header-subtitle { display: none; }
-      .header-meta { gap: 8px; }
+      .brand-icon { width: 22px; height: 22px; font-size: 11px; }
+      .header-meta { gap: 6px; overflow: hidden; }
       .header-stat { font-size: 12px; }
       .header-stat .stat-label { display: none; }
+      #gustStat, #dirStat { display: none; }
+      .header-badge { display: none; }
+      .refresh-btn { width: 36px; height: 36px; min-width: 36px; min-height: 36px; font-size: 16px; }
+      .landcover-toggle {
+        font-size: 11px;
+        padding: 6px 10px;
+        min-height: 36px;
+        max-width: 80px;
+      }
       .time-selector-bar {
-        top: 56px;
-        padding: 8px 14px;
+        top: 44px;
+        padding: 4px 10px;
+        gap: 4px;
+      }
+      .time-selector-label { font-size: 10px; margin-right: 2px; }
+      .time-pill {
+        font-size: 12px;
+        padding: 6px 10px;
+        min-height: 32px;
+      }
+      .time-pill .pill-speed {
+        display: none;
       }
       .legend {
-        bottom: 16px;
-        left: 12px;
-        padding: 10px 12px calc(10px + env(safe-area-inset-bottom, 0px));
+        bottom: 10px;
+        left: 8px;
+        padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px));
         min-width: auto;
       }
-      .legend-title { font-size: 10px; margin-bottom: 6px; }
-      .legend-item { font-size: 11px; gap: 6px; }
+      .legend-title { font-size: 10px; margin-bottom: 4px; }
+      .legend-item { font-size: 11px; gap: 4px; min-height: 32px; }
       .legend-swatch { width: 10px; height: 10px; }
-      .map-wind-indicator { top: 110px; right: 12px; font-size: 11px; padding: 8px 10px; }
-      .landcover-toggle {
-        padding: 4px 8px;
-        font-size: 11px;
-        max-width: 90px;
+      .map-wind-indicator { top: 86px; right: 8px; font-size: 11px; padding: 6px 8px; }
+      .map-wind-indicator.collapsed {
+        width: 32px;
+        height: 32px;
+        padding: 4px;
       }
     }
 
     @media (max-width: 420px) {
       .landcover-toggle {
-        font-size: 0;
-        max-width: 36px;
-        padding: 4px 6px;
-      }
-      .landcover-toggle::before {
-        content: attr(data-short);
-        font-size: 14px;
+        font-size: 11px;
+        padding: 6px 8px;
+        min-height: 32px;
+        max-width: 44px;
+        overflow: hidden;
       }
     }
   </style>
@@ -633,6 +675,20 @@
       return weights[category] || 4;
     }
 
+    // Ray-casting point-in-polygon test
+    function pointInPolygon(lat, lon, polygon) {
+      let inside = false;
+      for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+        // polygon coords are [lon, lat] from KML
+        const xi = polygon[i][0], yi = polygon[i][1];
+        const xj = polygon[j][0], yj = polygon[j][1];
+        const intersect = ((yi > lat) !== (yj > lat))
+          && (lon < (xj - xi) * (lat - yi) / (yj - yi) + xi);
+        if (intersect) inside = !inside;
+      }
+      return inside;
+    }
+
     // ── State ──
     let map = null;
     let lakePolygonLayer = null;
@@ -641,7 +697,7 @@
     let landCoverLayer = null;  // ponytail: WMS toggle, in initMap not here
     let data = null;
     let staticData = null;
-    let currentTimeIdx = 0;
+    let currentTimeIdx = -1;
 
     // ── DOM refs ──
     const $loadingBar = document.getElementById('loadingBar');
@@ -796,7 +852,12 @@
 
       if (!grid || grid.length === 0) return;
 
+      const lakePolygon = data.lake_polygon;  // [lon, lat] pairs
+
       grid.forEach(cell => {
+        // Only render cells inside the lake polygon
+        if (lakePolygon && !pointInPolygon(cell.lat, cell.lon, lakePolygon)) return;
+
         const impactScore = recomputeImpactScore(cell, windSpeedMs, windDirDeg);
         const color = gridImpactColor(impactScore);
         const half = GRID_CELL_SIZE / 2;
@@ -874,7 +935,11 @@
 
       if (!grid || grid.length === 0) return;
 
+      const lakePolygon = data.lake_polygon;
+
       grid.forEach(cell => {
+        if (lakePolygon && !pointInPolygon(cell.lat, cell.lon, lakePolygon)) return;
+
         const impactScore = cell.impact_score;
         const color = gridImpactColor(impactScore);
         const half = GRID_CELL_SIZE / 2;
@@ -1004,7 +1069,7 @@
         const idx = i;
 
         const pill = document.createElement('button');
-        pill.className = 'time-pill' + (idx === currentTimeIdx ? ' active' : '');
+        pill.className = 'time-pill';
         pill.dataset.idx = idx;
 
         // parse hour directly from UTC timestamp (YYYY-MM-DDTHH:00)
@@ -1119,11 +1184,13 @@
           });
           selectTimeSlot(bestIdx);
 
-          // Scroll the active pill into view
-          const activePill = $timePills.querySelector('.time-pill.active');
-          if (activePill) {
-            activePill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-          }
+          // Scroll the active pill into view (delay for DOM settle)
+          setTimeout(() => {
+            const activePill = $timePills.querySelector('.time-pill.active');
+            if (activePill) {
+              activePill.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+            }
+          }, 100);
         } else {
           // Fallback: draw shoreline from data
           drawShorelineSegments(data.shoreline_segments);
@@ -1168,6 +1235,16 @@
         staticData = null;  // force re-fetch of static geometry
         loadData();
       });
+
+      // Wind card: click to toggle collapsed state
+      $windCard.addEventListener('click', function(e) {
+        e.stopPropagation();
+        $windCard.classList.toggle('collapsed');
+      });
+      // Default collapsed on mobile
+      if (window.innerWidth <= 640) {
+        $windCard.classList.add('collapsed');
+      }
       loadData();
 
       // Register service worker for offline caching
