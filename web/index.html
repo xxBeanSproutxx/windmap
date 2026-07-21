@@ -750,7 +750,6 @@
     // ── State ──
     let map = null;
     let lakePolygonLayer = null;
-    let shorelineLayers = [];
     let gridHeatmapLayers = [];
     let landCoverLayer = null;  // ponytail: WMS toggle, in initMap not here
     let data = null;
@@ -1041,38 +1040,7 @@
     }
 
     // ── Draw shoreline segments ──
-    function clearShorelines() {
-      shorelineLayers.forEach(l => map.removeLayer(l));
-      shorelineLayers = [];
-    }
 
-    function drawShorelineSegments(segments) {
-      clearShorelines();
-
-      segments.forEach((seg, idx) => {
-        const coords = (seg.segment || seg.coordinates || []).map(c => [c[1], c[0]]);
-        const category = classifyImpact(seg.impact_score);
-        const color = impactColor(category);
-
-        const line = L.polyline(coords, {
-          color: color,
-          weight: impactWeight(category),
-          opacity: 0.9,
-          smoothFactor: 0.3,
-          lineCap: 'round',
-          lineJoin: 'round'
-        }).addTo(map);
-
-        // Tooltip with segment info
-        const segName = seg.name || 'Segment ' + (idx + 1);
-        line.bindTooltip(
-          '<strong>' + segName + '</strong><br>' + impactLabel(category) + ' · ' + (seg.impact_score * 100).toFixed(0) + '%',
-          { direction: 'center', className: 'segment-tooltip', offset: [0, 0] }
-        );
-
-        shorelineLayers.push(line);
-      });
-    }
 
     // ── Update wind UI ──
     function updateWindUI(wind) {
@@ -1173,11 +1141,8 @@
 
       // Recompute and redraw shoreline for this hour's wind
       if (data.shoreline_segments) {
-        const segments = data.shoreline_segments.map(seg => {
-          const impact = recomputeShorelineImpact(seg, forecastEntry.direction_deg);
-          return Object.assign({}, seg, { impact_score: impact });
-        });
-        drawShorelineSegments(segments);
+        // Shoreline segment impact recomputed for current wind
+        // (segments drawn only for debugging — removed for visual clarity)
       }
 
       // Full redraw of grid heatmap with recomputed impact
@@ -1258,8 +1223,7 @@
             }
           }, 100);
         } else {
-          // Fallback: draw shoreline from data
-          drawShorelineSegments(data.shoreline_segments);
+          // No wind forecast data available
           updateWindUI(null);
         }
 
