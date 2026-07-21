@@ -907,6 +907,7 @@
       },
 
       _draw: function() {
+        this._resize();  // always sync canvas size before drawing
         const ctx = this._ctx;
         const map = this._map;
         const size = map.getSize();
