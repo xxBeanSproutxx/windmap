@@ -359,6 +359,24 @@
       flex-shrink: 0;
     }
 
+    /* Collapsed legend: hide items, show only title */
+    .legend.collapsed .legend-item { display: none; }
+    .legend.collapsed {
+      min-width: auto;
+      padding: 10px 14px;
+    }
+    .legend.collapsed .legend-title {
+      margin-bottom: 0;
+    }
+    .legend-title::after {
+      content: ' ▾';
+      font-size: 9px;
+      opacity: 0.5;
+    }
+    .legend.collapsed .legend-title::after {
+      content: ' ▸';
+    }
+
     /* ── Placeholder / No Data ── */
     .no-data-overlay {
       position: absolute;
@@ -463,18 +481,6 @@
       transition: all 0.2s ease;
     }
 
-    .map-wind-indicator.collapsed {
-      width: 36px;
-      height: 36px;
-      padding: 6px;
-      border-radius: 50%;
-      justify-content: center;
-      min-width: 36px;
-    }
-    .map-wind-indicator.collapsed #windCardText {
-      display: none;
-    }
-
     .wind-arrow {
       width: 24px;
       height: 24px;
@@ -514,7 +520,7 @@
       .header-meta { gap: 6px; overflow: hidden; }
       .header-stat { font-size: 12px; }
       .header-stat .stat-label { display: none; }
-      #gustStat, #dirStat { display: none; }
+      #gustStat { display: none; }
       .header-badge { display: none; }
       .refresh-btn { width: 36px; height: 36px; min-width: 36px; min-height: 36px; font-size: 16px; }
       .landcover-toggle {
@@ -528,7 +534,7 @@
         padding: 4px 10px;
         gap: 4px;
       }
-      .time-selector-label { font-size: 10px; margin-right: 2px; }
+      .time-selector-label { font-size: 10px; margin-right: 8px; }
       .time-pill {
         font-size: 12px;
         padding: 6px 10px;
@@ -547,11 +553,6 @@
       .legend-item { font-size: 11px; gap: 4px; min-height: 32px; }
       .legend-swatch { width: 10px; height: 10px; }
       .map-wind-indicator { top: 86px; right: 8px; font-size: 11px; padding: 6px 8px; }
-      .map-wind-indicator.collapsed {
-        width: 32px;
-        height: 32px;
-        padding: 4px;
-      }
     }
 
     @media (max-width: 420px) {
@@ -1236,14 +1237,17 @@
         loadData();
       });
 
-      // Wind card: click to toggle collapsed state
-      $windCard.addEventListener('click', function(e) {
+      // Legend: click title to toggle collapse
+      const $legend = document.getElementById('legend');
+      const $legendTitle = $legend.querySelector('.legend-title');
+      $legendTitle.style.cursor = 'pointer';
+      $legendTitle.addEventListener('click', function(e) {
         e.stopPropagation();
-        $windCard.classList.toggle('collapsed');
+        $legend.classList.toggle('collapsed');
       });
       // Default collapsed on mobile
       if (window.innerWidth <= 640) {
-        $windCard.classList.add('collapsed');
+        $legend.classList.add('collapsed');
       }
       loadData();
 
