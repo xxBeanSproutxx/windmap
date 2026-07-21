@@ -1,4 +1,4 @@
-const CACHE_NAME = 'blue-lake-wave-v4';
+const CACHE_NAME = 'blue-lake-wave-v5';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',

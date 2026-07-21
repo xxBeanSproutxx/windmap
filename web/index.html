@@ -853,12 +853,7 @@
 
       if (!grid || grid.length === 0) return;
 
-      const lakePolygon = data.lake_polygon;  // [lon, lat] pairs
-
       grid.forEach(cell => {
-        // Only render cells inside the lake polygon
-        if (lakePolygon && !pointInPolygon(cell.lat, cell.lon, lakePolygon)) return;
-
         const impactScore = recomputeImpactScore(cell, windSpeedMs, windDirDeg);
         const color = gridImpactColor(impactScore);
         const half = GRID_CELL_SIZE / 2;
@@ -925,6 +920,44 @@
       map.fitBounds(lakePolygonLayer.getBounds(), { padding: [100, 100] });
     }
 
+    // ── SVG clip-path: trim grid cells to lake outline ──
+    function applyLakeClip() {
+      if (!lakePolygonLayer || !lakePolygonLayer._path) return;
+      const svg = document.querySelector('.leaflet-overlay-pane svg');
+      if (!svg) return;
+
+      let defs = svg.querySelector('defs');
+      if (!defs) {
+        defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+        svg.insertBefore(defs, svg.firstChild);
+      }
+
+      // Remove old clipPath
+      const old = defs.querySelector('#lake-clip');
+      if (old) old.remove();
+
+      const clipPath = document.createElementNS('http://www.w3.org/2000/svg', 'clipPath');
+      clipPath.id = 'lake-clip';
+
+      const pathClone = lakePolygonLayer._path.cloneNode(true);
+      pathClone.removeAttribute('fill');
+      pathClone.removeAttribute('stroke');
+      pathClone.removeAttribute('stroke-width');
+      pathClone.removeAttribute('stroke-opacity');
+      pathClone.removeAttribute('stroke-linecap');
+      pathClone.removeAttribute('stroke-linejoin');
+      pathClone.removeAttribute('stroke-dasharray');
+      clipPath.appendChild(pathClone);
+      defs.appendChild(clipPath);
+
+      // Apply to each grid rectangle
+      gridHeatmapLayers.forEach(layer => {
+        if (layer._path) {
+          layer._path.setAttribute('clip-path', 'url(#lake-clip)');
+        }
+      });
+    }
+
     // ── Draw grid heatmap ──
     function clearGridHeatmap() {
       gridHeatmapLayers.forEach(l => map.removeLayer(l));
@@ -936,11 +969,7 @@
 
       if (!grid || grid.length === 0) return;
 
-      const lakePolygon = data.lake_polygon;
-
       grid.forEach(cell => {
-        if (lakePolygon && !pointInPolygon(cell.lat, cell.lon, lakePolygon)) return;
-
         const impactScore = cell.impact_score;
         const color = gridImpactColor(impactScore);
         const half = GRID_CELL_SIZE / 2;
@@ -1119,6 +1148,7 @@
       // Full redraw of grid heatmap with recomputed impact
       if (data.grid_cells && forecastEntry) {
         redrawGridHeatmap(data.grid_cells, forecastEntry.speed_ms, forecastEntry.direction_deg);
+        applyLakeClip();
       }
     }
 
@@ -1165,6 +1195,7 @@
 
         // Draw grid heatmap
         redrawGridHeatmap(data.grid_cells, currentWind.speed_ms, currentWind.direction_deg);
+        applyLakeClip();
 
         // Build time selector
         buildTimePills(data.wind_forecast);
