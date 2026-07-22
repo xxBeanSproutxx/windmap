@@ -716,6 +716,9 @@
     const FETCH_CAP_KM = 5.0;       // shoreline fetch cap (matches engine)
     const GRID_FETCH_CAP_KM = 1.0;  // grid impact cap (matches engine)
 
+    // ── Selection state ──
+    var selectedCell = null;
+
     // ── Impact classification ──
     function classifyImpact(score) {
       if (score == null || isNaN(score)) return 'low';
@@ -980,7 +983,14 @@
           { direction: 'top', className: 'grid-tooltip', sticky: true }
         );
 
-        rect.on('click', function() { this.bringToFront(); });
+        rect.on('click', function() {
+          if (selectedCell && selectedCell !== this) {
+            selectedCell.setStyle({weight: 0.5, opacity: 0.6, fillOpacity: 0.55});
+          }
+          this.setStyle({weight: 3, opacity: 1.0, fillOpacity: 0.65});
+          this.bringToFront();
+          selectedCell = this;
+        });
 
         gridHeatmapLayers.push(rect);
       });
@@ -1053,7 +1063,14 @@
           { direction: 'top', className: 'grid-tooltip', sticky: true }
         );
 
-        rect.on('click', function() { this.bringToFront(); });
+        rect.on('click', function() {
+          if (selectedCell && selectedCell !== this) {
+            selectedCell.setStyle({weight: 0.5, opacity: 0.6, fillOpacity: 0.55});
+          }
+          this.setStyle({weight: 3, opacity: 1.0, fillOpacity: 0.65});
+          this.bringToFront();
+          selectedCell = this;
+        });
 
         gridHeatmapLayers.push(rect);
       });
