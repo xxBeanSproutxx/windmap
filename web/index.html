@@ -89,6 +89,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      line-height: 1;
       color: #fff;
       font-size: 14px;
       font-weight: 600;
@@ -247,6 +248,19 @@
 
     .time-selector-bar::-webkit-scrollbar { display: none; }
 
+    /* Gradient fade on right edge to indicate scrollable content */
+    .time-selector-bar::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 48px;
+      background: linear-gradient(to right, transparent, var(--bg) 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
     .time-selector-label {
       font-size: 12px;
       font-weight: 600;
@@ -254,7 +268,7 @@
       text-transform: uppercase;
       letter-spacing: 0.8px;
       flex-shrink: 0;
-      margin-right: 6px;
+      margin-right: 12px;
     }
 
     .time-pill {
@@ -267,7 +281,7 @@
       border-radius: 100px;
       border: 1px solid var(--border);
       background: var(--bg);
-      color: var(--body);
+      color: #4b5563;
       cursor: pointer;
       transition: all 0.15s ease;
       white-space: nowrap;
@@ -313,6 +327,7 @@
       right: 0;
       bottom: 0;
       z-index: 1;
+      clip-path: inset(82px 0 0 0);
     }
 
     /* ── Legend ── */
@@ -552,6 +567,7 @@
       line-height: 1.5 !important;
       font-weight: 400 !important;
       white-space: nowrap;
+      z-index: 10000 !important;
     }
 
     @media (max-width: 1024px) {
@@ -939,7 +955,7 @@
           smoothFactor: 0
         }).addTo(map);
 
-        let tipText = '<strong>Fetch:</strong> ' + (cell.fetch_km || 0).toFixed(3) + ' km<br>'
+        let tipText = '<strong>Fetch:</strong> ' + ((cell.fetch_km || 0) * 0.621371).toFixed(2) + ' mi<br>'
           + '<strong>Impact:</strong> ' + (impactScore * 100).toFixed(0) + '%';
 
         // Show wave height estimate for reference
@@ -947,7 +963,7 @@
           cell.shore_distance_m, cell.shore_normal_deg, windDirDeg,
           cell.nlcd_reduction != null ? cell.nlcd_reduction : 0.5
         )) * Math.sqrt((cell.fetch_km || 0) * 1000);
-        tipText += '<br><strong>Wave:</strong> ' + waveH.toFixed(3) + ' m';
+        tipText += '<br><strong>Wave:</strong> ' + (waveH * 3.28084).toFixed(1) + ' ft';
 
         const shieldFactor = computeShieldFactorJS(
           cell.shore_distance_m, cell.shore_normal_deg, windDirDeg,
@@ -957,7 +973,7 @@
           tipText += '<br><strong>Shield:</strong> ' + (shieldFactor * 100).toFixed(0) + '%';
         }
         if (cell.shore_distance_m != null && cell.shore_distance_m < 150) {
-          tipText += '<br><strong>Shore:</strong> ' + cell.shore_distance_m.toFixed(0) + 'm';
+          tipText += '<br><strong>Shore:</strong> ' + (cell.shore_distance_m * 3.28084).toFixed(0) + ' ft';
         }
 
         rect.bindTooltip(tipText,
@@ -1021,15 +1037,15 @@
           smoothFactor: 0
         }).addTo(map);
 
-        const tipText = '<strong>Fetch:</strong> ' + (cell.fetch_km || 0).toFixed(3) + ' km<br>' +
-                  '<strong>Wave:</strong> ' + (cell.wave_height_m || 0).toFixed(3) + ' m<br>' +
+        const tipText = '<strong>Fetch:</strong> ' + ((cell.fetch_km || 0) * 0.621371).toFixed(2) + ' mi<br>' +
+                  '<strong>Wave:</strong> ' + ((cell.wave_height_m || 0) * 3.28084).toFixed(1) + ' ft<br>' +
                   '<strong>Impact:</strong> ' + ((cell.impact_score || 0) * 100).toFixed(0) + '%';
         let finalTip = tipText;
         if (cell.shield_factor != null && cell.shield_factor < 0.99) {
           finalTip += '<br><strong>Shield:</strong> ' + (cell.shield_factor * 100).toFixed(0) + '%';
         }
         if (cell.shore_distance_m != null && cell.shore_distance_m < 150) {
-          finalTip += '<br><strong>Shore:</strong> ' + cell.shore_distance_m.toFixed(0) + 'm';
+          finalTip += '<br><strong>Shore:</strong> ' + (cell.shore_distance_m * 3.28084).toFixed(0) + ' ft';
         }
         rect.bindTooltip(finalTip,
           { direction: 'top', className: 'grid-tooltip', sticky: true }
