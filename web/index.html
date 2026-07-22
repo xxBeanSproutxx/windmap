@@ -980,6 +980,8 @@
           { direction: 'top', className: 'grid-tooltip', sticky: true }
         );
 
+        rect.on('click', function() { this.bringToFront(); });
+
         gridHeatmapLayers.push(rect);
       });
     }
@@ -1050,6 +1052,8 @@
         rect.bindTooltip(finalTip,
           { direction: 'top', className: 'grid-tooltip', sticky: true }
         );
+
+        rect.on('click', function() { this.bringToFront(); });
 
         gridHeatmapLayers.push(rect);
       });
