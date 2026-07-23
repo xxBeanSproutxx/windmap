@@ -686,9 +686,11 @@
   <!-- Legend -->
   <div class="legend" id="legend">
     <div class="legend-title">Surface Impact</div>
-    <div class="legend-item"><span class="legend-swatch" style="background:var(--impact-high)"></span>High (&gt;0.40)</div>
-    <div class="legend-item"><span class="legend-swatch" style="background:var(--impact-medium)"></span>Medium (0.15–0.40)</div>
-    <div class="legend-item"><span class="legend-swatch" style="background:var(--impact-low)"></span>Low (&lt;0.15)</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#db2777"></span>Very High (≥0.80)</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#ef4444"></span>High (0.60–0.80)</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#f97316"></span>Elevated (0.40–0.60)</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#eab308"></span>Moderate (0.20–0.40)</div>
+    <div class="legend-item"><span class="legend-swatch" style="background:#10b981"></span>Low (0.00–0.20)</div>
   </div>
 
   <!-- Wind indicator card -->
@@ -736,10 +738,45 @@
       return colors[category] || '#15be53';
     }
 
+    function lerpColor(a, b, t) {
+      return [
+        Math.round(a[0] + (b[0] - a[0]) * t),
+        Math.round(a[1] + (b[1] - a[1]) * t),
+        Math.round(a[2] + (b[2] - a[2]) * t)
+      ];
+    }
+
     function gridImpactColor(score) {
-      if (score > 0.40) return '#ea2261';
-      if (score > 0.15) return '#f59e0b';
-      return '#15be53';
+      // 5-anchor continuous gradient
+      const anchors = [
+        { score: 0.00, rgb: [0x10, 0xb9, 0x81] },  // green  — LOW
+        { score: 0.20, rgb: [0xea, 0xb3, 0x08] },  // yellow — MODERATE
+        { score: 0.40, rgb: [0xf9, 0x73, 0x16] },  // orange — ELEVATED
+        { score: 0.60, rgb: [0xef, 0x44, 0x44] },  // red    — HIGH
+        { score: 0.80, rgb: [0xdb, 0x27, 0x77] }   // magenta — VERY HIGH
+      ];
+
+      // Clamp to anchor range
+      if (score <= anchors[0].score) {
+        const c = anchors[0].rgb;
+        return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+      }
+      if (score >= anchors[anchors.length - 1].score) {
+        const c = anchors[anchors.length - 1].rgb;
+        return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+      }
+
+      // Find bracketing anchors and lerp
+      for (let i = 0; i < anchors.length - 1; i++) {
+        if (score >= anchors[i].score && score <= anchors[i + 1].score) {
+          const t = (score - anchors[i].score) / (anchors[i + 1].score - anchors[i].score);
+          const lerp = lerpColor(anchors[i].rgb, anchors[i + 1].rgb, t);
+          return '#' + lerp.map(v => v.toString(16).padStart(2, '0')).join('');
+        }
+      }
+
+      // Fallback (shouldn't reach here)
+      return '#10b981';
     }
 
     function impactLabel(category) {
@@ -861,7 +898,7 @@
           forecast.push({
             timestamp: timeStr,
             speed_ms: Math.round(hourly.wind_speed_10m[i] * KMH_TO_MS * 100) / 100,
-            speed_mph: Math.round(hourly.wind_speed_10m[i] * 0.6214),
+            speed_mph: Math.round(hourly.wind_speed_10m[i] * 0.6214 * 10) / 10,
             gust_mph: Math.round((hourly.wind_gusts_10m ? hourly.wind_gusts_10m[i] : hourly.wind_speed_10m[i]) * 0.6214),
             direction_deg: hourly.wind_direction_10m[i]
           });
@@ -1150,8 +1187,9 @@
         const displayHour = hour % 12 || 12;
         const timeStr = displayHour + ':00 ' + ampm;
 
-        pill.innerHTML = timeStr + '<span class="pill-speed">' + (f.speed_mph ?? '—') + ' mph</span>';
-        pill.title = f.timestamp + ' — ' + f.speed_mph + ' mph from ' + f.direction_deg + '°';
+        const mphStr = f.speed_mph != null ? f.speed_mph.toFixed(1) : '—';
+        pill.innerHTML = timeStr + '<span class="pill-speed">' + mphStr + ' mph · ' + f.direction_deg + '°</span>';
+        pill.title = f.timestamp + ' — ' + mphStr + ' mph from ' + f.direction_deg + '°';
 
         pill.addEventListener('click', () => selectTimeSlot(idx));
 
