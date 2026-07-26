@@ -240,13 +240,18 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      overflow-x: auto;
-      -webkit-overflow-scrolling: touch;
-      scrollbar-width: none;
       box-shadow: 0 1px 2px rgba(50,50,93,0.04);
     }
 
-    .time-selector-bar::-webkit-scrollbar { display: none; }
+    .time-pills-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+      flex: 1;
+      min-width: 0;
+    }
+
+    .time-pills-scroll::-webkit-scrollbar { display: none; }
 
     /* Gradient fade on right edge to indicate scrollable content */
     .time-selector-bar::after {
@@ -299,7 +304,6 @@
       background: var(--accent);
       color: #fff;
       border-color: var(--accent);
-      box-shadow: 0 2px 6px rgba(83,58,253,0.3);
       font-weight: 600;
     }
 
@@ -586,16 +590,12 @@
       .header-subtitle { display: none; }
       .brand-icon { width: 22px; height: 22px; font-size: 11px; }
       .header-meta { gap: 6px; overflow: hidden; }
-      .header-stat { font-size: 12px; }
-      .header-stat .stat-label { display: none; }
-      #gustStat { display: none; }
       .header-badge { display: none; }
       .refresh-btn { width: 36px; height: 36px; min-width: 36px; min-height: 36px; font-size: 16px; }
       .landcover-toggle {
         font-size: 11px;
         padding: 6px 10px;
         min-height: 36px;
-        max-width: 80px;
       }
       .time-selector-bar {
         top: 48px;
@@ -628,8 +628,6 @@
         font-size: 11px;
         padding: 6px 8px;
         min-height: 32px;
-        max-width: 44px;
-        overflow: hidden;
       }
     }
   </style>
@@ -652,22 +650,6 @@
       <span class="header-subtitle">Wave-fetch fishing conditions</span>
     </div>
     <div class="header-meta">
-      <div class="header-stat" id="windStat">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5">
-          <path d="M2 8h10a2 2 0 1 0 0-4H3" stroke-linecap="round"/>
-          <path d="M3 12h8a2 2 0 1 0 0-4H4" stroke-linecap="round"/>
-        </svg>
-        <span class="stat-value" id="windSpeed">—</span>
-        <span class="stat-label">mph</span>
-      </div>
-      <div class="header-stat" id="gustStat">
-        <span class="stat-value" id="windGust">—</span>
-        <span class="stat-label">gust</span>
-      </div>
-      <div class="header-stat" id="dirStat">
-        <span class="stat-value" id="windDir">—</span>
-        <span class="stat-label">°</span>
-      </div>
       <span class="header-badge" id="impactBadge">—</span>
       <button class="refresh-btn" id="refreshBtn" title="Refresh data">↻</button>
       <button class="landcover-toggle" id="landcoverToggle" data-short="🌲">🌲 Land Cover</button>
@@ -677,7 +659,9 @@
   <!-- Time selector -->
   <div class="time-selector-bar" id="timeBar">
     <span class="time-selector-label">Forecast</span>
-    <div id="timePills" style="display:flex;gap:8px;"></div>
+    <div class="time-pills-scroll">
+      <div id="timePills" style="display:flex;gap:8px;"></div>
+    </div>
   </div>
 
   <!-- Map -->
@@ -724,8 +708,8 @@
     // ── Impact classification ──
     function classifyImpact(score) {
       if (score == null || isNaN(score)) return 'low';
-      if (score > 0.40) return 'high';
-      if (score > 0.15) return 'medium';
+      if (score > 0.45) return 'high';
+      if (score > 0.30) return 'medium';
       return 'low';
     }
 
@@ -750,8 +734,8 @@
       // 5-anchor continuous gradient
       const anchors = [
         { score: 0.00, rgb: [0x10, 0xb9, 0x81] },  // green  — LOW
-        { score: 0.20, rgb: [0xea, 0xb3, 0x08] },  // yellow — MODERATE
-        { score: 0.40, rgb: [0xf9, 0x73, 0x16] },  // orange — ELEVATED
+        { score: 0.35, rgb: [0xea, 0xb3, 0x08] },  // yellow — MODERATE
+        { score: 0.45, rgb: [0xf9, 0x73, 0x16] },  // orange — ELEVATED
         { score: 0.60, rgb: [0xef, 0x44, 0x44] },  // red    — HIGH
         { score: 0.80, rgb: [0xdb, 0x27, 0x77] }   // magenta — VERY HIGH
       ];
@@ -872,44 +856,155 @@
       }
     }
 
-    // ── Live wind fetch from Open-Meteo (Task 2) ──
+    // ── Live wind fetch from NWS (National Weather Service) ──
     async function fetchLiveWind(lat, lon) {
-      const url = 'https://api.open-meteo.com/v1/forecast'
-        + '?latitude=' + lat + '&longitude=' + lon
-        + '&hourly=wind_speed_10m,wind_direction_10m,wind_gusts_10m'
-        + '&forecast_days=1';
+      const NWS_GRID_URL = 'https://api.weather.gov/gridpoints/MPX/100,96';
+      const NWS_STATION_URL = 'https://api.weather.gov/stations/KPNM/observations/latest';
+      const NWS_UA = 'blue-lake-wave/1.0';
 
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 10000);
+      const timeout = setTimeout(() => controller.abort(), 15000);
       try {
-        const resp = await fetch(url, { signal: controller.signal });
+        const resp = await fetch(NWS_GRID_URL, {
+          signal: controller.signal,
+          headers: { 'User-Agent': NWS_UA }
+        });
+        if (!resp.ok) {
+          console.error('NWS gridpoint fetch failed:', resp.status, resp.statusText);
+          return [];
+        }
         const raw = await resp.json();
-        const hourly = raw.hourly;
+        const props = raw.properties;
+        if (!props || !props.windSpeed || !props.windDirection) {
+          console.error('NWS gridpoint response missing wind data');
+          return [];
+        }
+
+        const parseTime = (vt) => vt.split('/')[0];
+
+        const speedMap = {};
+        for (const entry of props.windSpeed.values) {
+          speedMap[parseTime(entry.validTime)] = entry.value;
+        }
+
+        const dirMap = {};
+        for (const entry of props.windDirection.values) {
+          dirMap[parseTime(entry.validTime)] = entry.value;
+        }
+
+        const times = Object.keys(speedMap).filter(t => t in dirMap).sort();
+
+        if (times.length === 0) {
+          console.error('NWS gridpoint: no overlapping wind speed+direction entries');
+          return [];
+        }
+
+        let stationObs = null;
+        try {
+          const stationResp = await fetch(NWS_STATION_URL, {
+            signal: controller.signal,
+            headers: { 'User-Agent': NWS_UA }
+          });
+          if (stationResp.ok) {
+            const stationData = await stationResp.json();
+            const sp = stationData.properties;
+            if (sp && sp.windSpeed && sp.windDirection) {
+              stationObs = {
+                speed_kmh: sp.windSpeed.value,
+                direction_deg: sp.windDirection.value,
+              };
+            }
+          }
+        } catch (e) {
+          console.warn('NWS station fetch failed (using gridpoint only):', e.message);
+        }
 
         const KMH_TO_MS = 1.0 / 3.6;
+        const KMH_TO_MPH = 0.6214;
         const forecast = [];
-        for (let i = 0; i < hourly.time.length; i++) {
-          // Convert UTC to CDT (UTC-5)
-          const utcTime = hourly.time[i];
-          const localDt = new Date(utcTime + 'Z');
+
+        for (let i = 0; i < times.length; i++) {
+          const utcIso = times[i];
+          const localDt = new Date(utcIso);
           localDt.setHours(localDt.getHours() - 5);
-          const timeStr = localDt.toISOString().slice(0, 16); // "2026-07-20T07:00"
+          const timeStr = localDt.toISOString().slice(0, 16);
+
+          let speedKmh = speedMap[utcIso];
+          let dirDeg = dirMap[utcIso];
+
+          if (i === 0 && stationObs) {
+            speedKmh = stationObs.speed_kmh;
+            dirDeg = stationObs.direction_deg;
+          }
 
           forecast.push({
             timestamp: timeStr,
-            speed_ms: Math.round(hourly.wind_speed_10m[i] * KMH_TO_MS * 100) / 100,
-            speed_mph: Math.round(hourly.wind_speed_10m[i] * 0.6214 * 10) / 10,
-            gust_mph: Math.round((hourly.wind_gusts_10m ? hourly.wind_gusts_10m[i] : hourly.wind_speed_10m[i]) * 0.6214),
-            direction_deg: hourly.wind_direction_10m[i]
+            speed_ms: Math.round(speedKmh * KMH_TO_MS * 100) / 100,
+            speed_mph: Math.round(speedKmh * KMH_TO_MPH * 10) / 10,
+            gust_mph: null,
+            direction_deg: dirDeg
           });
         }
+
         return forecast;
+      } catch (err) {
+        if (err.name === 'AbortError') {
+          console.error('NWS wind fetch timed out');
+        } else {
+          console.error('NWS wind fetch error:', err);
+        }
+        return [];
       } finally {
         clearTimeout(timeout);
       }
     }
 
     // ── Wind impact math (Task 3) — mirrors Python compute_shield_factor + compute_grid ──
+
+    // Compute directional fetch: ray-cast from (lat,lon) in windDirDeg direction
+    // to the closest polygon boundary edge, returning distance in km.
+    // windDirDeg = direction wind is coming FROM (meteorological convention).
+    // polygon = array of [lon, lat] pairs (same convention as data.lake_polygon).
+    function computeDirectionalFetch(lat, lon, windDirDeg, polygon) {
+      if (!polygon || polygon.length < 3) return FETCH_CAP_KM; // fallback cap
+
+      const rad = windDirDeg * Math.PI / 180;
+
+      // Tangent-plane approximation centered on the point
+      const kmPerDegLat = 111.32;
+      const kmPerDegLon = 111.32 * Math.cos(lat * Math.PI / 180);
+
+      // Ray direction in local km coordinates (dx east, dy north)
+      const rdx = Math.sin(rad);  // east component
+      const rdy = Math.cos(rad);  // north component
+
+      let minDistKm = Infinity;
+
+      for (let i = 0; i < polygon.length; i++) {
+        const j = (i + 1) % polygon.length;
+        // polygon coords are [lon, lat]
+        const x1 = (polygon[i][0] - lon) * kmPerDegLon;  // km east of point
+        const y1 = (polygon[i][1] - lat) * kmPerDegLat;  // km north of point
+        const x2 = (polygon[j][0] - lon) * kmPerDegLon;
+        const y2 = (polygon[j][1] - lat) * kmPerDegLat;
+
+        const sx = x2 - x1;
+        const sy = y2 - y1;
+
+        // Solve: rdx * t = x1 + sx * u,  rdy * t = y1 + sy * u
+        const denom = rdx * sy - rdy * sx;
+        if (Math.abs(denom) < 1e-12) continue;  // parallel
+
+        const t = (x1 * sy - y1 * sx) / denom;
+        const u = (x1 * rdy - y1 * rdx) / denom;
+
+        if (t > 0 && u >= 0 && u <= 1) {
+          if (t < minDistKm) minDistKm = t;
+        }
+      }
+
+      return minDistKm < Infinity ? minDistKm : FETCH_CAP_KM;
+    }
 
     // Mirror Python compute_shield_factor()
     function computeShieldFactorJS(distanceM, waterNormalDeg, windDirDeg, nlcdReduction) {
@@ -938,7 +1033,9 @@
       );
       const effectiveWind = windSpeedMs * shieldFactor;
       const windFactor = effectiveWind / 7.82;  // 7.82 m/s normalization
-      return Math.min(cell.fetch_km / GRID_FETCH_CAP_KM, 1.0) * windFactor;
+      // Compute fetch LIVE based on current wind direction (not stale static data)
+      const fetchKm = computeDirectionalFetch(cell.lat, cell.lon, windDirDeg, data.lake_polygon);
+      return Math.min(fetchKm / GRID_FETCH_CAP_KM, 1.0) * windFactor;
     }
 
     // Shoreline impact: mirrors Python compute_shoreline()
@@ -962,7 +1059,11 @@
       const wy = Math.cos(rad);  // lat component
 
       const dot = nx * wx + ny * wy;
-      const normalizedFetch = Math.min(seg.fetch_km / FETCH_CAP_KM, 1.0);
+      // Use midpoint for fetch computation
+      const midLat = (p1[1] + p2[1]) / 2;
+      const midLon = (p1[0] + p2[0]) / 2;
+      const fetchKm = computeDirectionalFetch(midLat, midLon, windDirDeg, data.lake_polygon);
+      const normalizedFetch = Math.min(fetchKm / FETCH_CAP_KM, 1.0);
       return Math.max(0, dot) * normalizedFetch;
     }
 
@@ -1121,17 +1222,10 @@
     // ── Update wind UI ──
     function updateWindUI(wind) {
       if (!wind) {
-        $windSpeed.textContent = '—';
-        $windGust.textContent = '—';
-        $windDir.textContent = '—';
         $impactBadge.textContent = '—';
         $windCard.style.display = 'none';
         return;
       }
-
-      $windSpeed.textContent = wind.speed_mph ?? '—';
-      $windGust.textContent = wind.gust_mph ?? '—';
-      $windDir.textContent = wind.direction_deg ?? '—';
 
       // Determine overall impact for badge
       const speeds = (data.shoreline_segments || []).map(s => s.impact_score || 0);
@@ -1241,7 +1335,7 @@
           staticData = await staticResp.json();
         }
 
-        // Fetch live wind from Open-Meteo
+        // Fetch live wind from NWS
         const forecast = await fetchLiveWind(45.49, -93.50);
         if (!forecast || forecast.length === 0) throw new Error('No wind forecast');
 
@@ -1329,7 +1423,7 @@
       overlay.id = 'noDataOverlay';
 
       if (isWindError) {
-        overlay.innerHTML = '\n        <div class="no-data-card">\n          <div class="icon-circle">~</div>\n          <h2>Could not fetch wind data</h2>\n          <p>Open-Meteo may be unavailable or the<br>network connection was lost.</p>\n          <button class="retry-btn" id="retryBtn">Try Again</button>\n        </div>\n      ';
+        overlay.innerHTML = '\n        <div class="no-data-card">\n          <div class="icon-circle">~</div>\n          <h2>Could not fetch wind data</h2>\n          <p>NWS may be unavailable or the<br>network connection was lost.</p>\n          <button class="retry-btn" id="retryBtn">Try Again</button>\n        </div>\n      ';
         document.body.appendChild(overlay);
         document.getElementById('retryBtn').addEventListener('click', function() {
           document.getElementById('noDataOverlay').remove();
