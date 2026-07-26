@@ -6,6 +6,12 @@
     "center_lon": -93.438
   },
   {
+    "id": "71001600",
+    "name": "Fremont Lake",
+    "center_lat": 45.4533,
+    "center_lon": -93.5774
+  },
+  {
     "id": "71004000",
     "name": "Sandy Lake",
     "center_lat": 45.4866,
