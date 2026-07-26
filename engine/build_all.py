@@ -16,6 +16,7 @@ from pathlib import Path
 LAKE_NAMES = {
     "blue_lake": "Blue Lake",
     "spectacle": "Spectacle Lake",
+    "71004000": "Sandy Lake",
 }
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent

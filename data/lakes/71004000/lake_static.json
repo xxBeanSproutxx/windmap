@@ -1,0 +1,2356 @@
+{
+  "lake": {
+    "name": "Sandy Lake",
+    "polygon": [
+      [
+        -93.514469,
+        45.488091
+      ],
+      [
+        -93.514278,
+        45.487633
+      ],
+      [
+        -93.5142,
+        45.48726
+      ],
+      [
+        -93.514187,
+        45.486762
+      ],
+      [
+        -93.514343,
+        45.486559
+      ],
+      [
+        -93.514517,
+        45.486276
+      ],
+      [
+        -93.514562,
+        45.486021
+      ],
+      [
+        -93.514644,
+        45.485863
+      ],
+      [
+        -93.514893,
+        45.48562
+      ],
+      [
+        -93.514995,
+        45.485586
+      ],
+      [
+        -93.515452,
+        45.48563
+      ],
+      [
+        -93.515702,
+        45.485544
+      ],
+      [
+        -93.51597,
+        45.485313
+      ],
+      [
+        -93.516256,
+        45.485024
+      ],
+      [
+        -93.516542,
+        45.484695
+      ],
+      [
+        -93.516718,
+        45.484577
+      ],
+      [
+        -93.516904,
+        45.484595
+      ],
+      [
+        -93.5171,
+        45.48464
+      ],
+      [
+        -93.517258,
+        45.48464
+      ],
+      [
+        -93.517416,
+        45.484554
+      ],
+      [
+        -93.517685,
+        45.484487
+      ],
+      [
+        -93.518039,
+        45.484433
+      ],
+      [
+        -93.518634,
+        45.484411
+      ],
+      [
+        -93.518876,
+        45.48439
+      ],
+      [
+        -93.519212,
+        45.484428
+      ],
+      [
+        -93.519551,
+        45.484538
+      ],
+      [
+        -93.519707,
+        45.484589
+      ],
+      [
+        -93.520126,
+        45.484607
+      ],
+      [
+        -93.520368,
+        45.484625
+      ],
+      [
+        -93.520385,
+        45.484622
+      ],
+      [
+        -93.520665,
+        45.484572
+      ],
+      [
+        -93.520982,
+        45.48459
+      ],
+      [
+        -93.5213,
+        45.484693
+      ],
+      [
+        -93.521618,
+        45.484882
+      ],
+      [
+        -93.522094,
+        45.48505
+      ],
+      [
+        -93.522495,
+        45.485107
+      ],
+      [
+        -93.522776,
+        45.485263
+      ],
+      [
+        -93.522907,
+        45.485354
+      ],
+      [
+        -93.522935,
+        45.485373
+      ],
+      [
+        -93.523188,
+        45.485529
+      ],
+      [
+        -93.523414,
+        45.485745
+      ],
+      [
+        -93.523509,
+        45.485973
+      ],
+      [
+        -93.523539,
+        45.486235
+      ],
+      [
+        -93.523533,
+        45.486602
+      ],
+      [
+        -93.523499,
+        45.486884
+      ],
+      [
+        -93.523346,
+        45.48726
+      ],
+      [
+        -93.523326,
+        45.48731
+      ],
+      [
+        -93.52315,
+        45.487442
+      ],
+      [
+        -93.523075,
+        45.487463
+      ],
+      [
+        -93.523029,
+        45.487475
+      ],
+      [
+        -93.522968,
+        45.487533
+      ],
+      [
+        -93.522863,
+        45.487633
+      ],
+      [
+        -93.522381,
+        45.487852
+      ],
+      [
+        -93.521889,
+        45.488018
+      ],
+      [
+        -93.521369,
+        45.488144
+      ],
+      [
+        -93.520363,
+        45.488156
+      ],
+      [
+        -93.520233,
+        45.48815
+      ],
+      [
+        -93.520018,
+        45.488079
+      ],
+      [
+        -93.51917,
+        45.488056
+      ],
+      [
+        -93.518229,
+        45.487982
+      ],
+      [
+        -93.517764,
+        45.487951
+      ],
+      [
+        -93.517457,
+        45.487985
+      ],
+      [
+        -93.517253,
+        45.488091
+      ],
+      [
+        -93.517246,
+        45.488092
+      ],
+      [
+        -93.51715,
+        45.488098
+      ],
+      [
+        -93.517077,
+        45.488184
+      ],
+      [
+        -93.517124,
+        45.488275
+      ],
+      [
+        -93.517246,
+        45.488327
+      ],
+      [
+        -93.517358,
+        45.488411
+      ],
+      [
+        -93.517405,
+        45.488457
+      ],
+      [
+        -93.51741,
+        45.48849
+      ],
+      [
+        -93.517415,
+        45.488529
+      ],
+      [
+        -93.517313,
+        45.488615
+      ],
+      [
+        -93.517025,
+        45.488701
+      ],
+      [
+        -93.51657,
+        45.488782
+      ],
+      [
+        -93.516235,
+        45.488842
+      ],
+      [
+        -93.51604,
+        45.488843
+      ],
+      [
+        -93.515517,
+        45.488741
+      ],
+      [
+        -93.514929,
+        45.488527
+      ],
+      [
+        -93.514648,
+        45.488358
+      ],
+      [
+        -93.514469,
+        45.488091
+      ]
+    ]
+  },
+  "shoreline": [
+    {
+      "segment": [
+        [
+          -93.514469,
+          45.488091
+        ],
+        [
+          -93.514278,
+          45.487633
+        ]
+      ],
+      "midpoint": [
+        -93.5143735,
+        45.487862
+      ],
+      "fetch_km": 5.0,
+      "is_calm": true,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "segment": [
+        [
+          -93.515452,
+          45.48563
+        ],
+        [
+          -93.515702,
+          45.485544
+        ]
+      ],
+      "midpoint": [
+        -93.51557700000001,
+        45.485586999999995
+      ],
+      "fetch_km": 5.0,
+      "is_calm": true,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "segment": [
+        [
+          -93.517685,
+          45.484487
+        ],
+        [
+          -93.518039,
+          45.484433
+        ]
+      ],
+      "midpoint": [
+        -93.51786200000001,
+        45.48446
+      ],
+      "fetch_km": 5.0,
+      "is_calm": true,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "segment": [
+        [
+          -93.520665,
+          45.484572
+        ],
+        [
+          -93.520982,
+          45.48459
+        ]
+      ],
+      "midpoint": [
+        -93.5208235,
+        45.484581
+      ],
+      "fetch_km": 5.0,
+      "is_calm": true,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "segment": [
+        [
+          -93.523414,
+          45.485745
+        ],
+        [
+          -93.523509,
+          45.485973
+        ]
+      ],
+      "midpoint": [
+        -93.5234615,
+        45.485859000000005
+      ],
+      "fetch_km": 0.047,
+      "is_calm": true,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "segment": [
+        [
+          -93.522968,
+          45.487533
+        ],
+        [
+          -93.522863,
+          45.487633
+        ]
+      ],
+      "midpoint": [
+        -93.52291550000001,
+        45.487583
+      ],
+      "fetch_km": 0.389,
+      "is_calm": false,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "segment": [
+        [
+          -93.517764,
+          45.487951
+        ],
+        [
+          -93.517457,
+          45.487985
+        ]
+      ],
+      "midpoint": [
+        -93.51761049999999,
+        45.487968
+      ],
+      "fetch_km": 0.309,
+      "is_calm": false,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "segment": [
+        [
+          -93.51741,
+          45.48849
+        ],
+        [
+          -93.517415,
+          45.488529
+        ]
+      ],
+      "midpoint": [
+        -93.5174125,
+        45.4885095
+      ],
+      "fetch_km": 0.023,
+      "is_calm": true,
+      "nlcd_class": 95,
+      "nlcd_class_name": "Emergent Herbaceous Wetlands",
+      "nlcd_reduction": 0.46
+    }
+  ],
+  "grid": [
+    {
+      "lat": 45.48479,
+      "lon": -93.521139,
+      "fetch_km": 0.026,
+      "shore_distance_m": 15.1,
+      "shore_normal_deg": 17.9,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48479,
+      "lon": -93.520739,
+      "fetch_km": 0.026,
+      "shore_distance_m": 23.7,
+      "shore_normal_deg": 3.2,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48479,
+      "lon": -93.520339,
+      "fetch_km": 0.023,
+      "shore_distance_m": 18.5,
+      "shore_normal_deg": 4.3,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48479,
+      "lon": -93.519939,
+      "fetch_km": 0.026,
+      "shore_distance_m": 21.2,
+      "shore_normal_deg": 2.5,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48479,
+      "lon": -93.519539,
+      "fetch_km": 0.047,
+      "shore_distance_m": 25.8,
+      "shore_normal_deg": 18.1,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48479,
+      "lon": -93.519139,
+      "fetch_km": 0.052,
+      "shore_distance_m": 39.0,
+      "shore_normal_deg": 18.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48479,
+      "lon": -93.518739,
+      "fetch_km": 0.049,
+      "shore_distance_m": 42.9,
+      "shore_normal_deg": 355.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48479,
+      "lon": -93.518339,
+      "fetch_km": 0.047,
+      "shore_distance_m": 40.9,
+      "shore_normal_deg": 357.9,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48479,
+      "lon": -93.517939,
+      "fetch_km": 0.039,
+      "shore_distance_m": 37.2,
+      "shore_normal_deg": 351.3,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48479,
+      "lon": -93.517539,
+      "fetch_km": 0.027,
+      "shore_distance_m": 26.6,
+      "shore_normal_deg": 331.4,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48479,
+      "lon": -93.517139,
+      "fetch_km": 0.023,
+      "shore_distance_m": 16.7,
+      "shore_normal_deg": 0.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48479,
+      "lon": -93.516739,
+      "fetch_km": 0.019,
+      "shore_distance_m": 18.3,
+      "shore_normal_deg": 326.2,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.522339,
+      "fetch_km": 0.016,
+      "shore_distance_m": 11.5,
+      "shore_normal_deg": 8.1,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.521939,
+      "fetch_km": 0.037,
+      "shore_distance_m": 19.4,
+      "shore_normal_deg": 19.4,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.521539,
+      "fetch_km": 0.077,
+      "shore_distance_m": 33.4,
+      "shore_normal_deg": 19.4,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.521139,
+      "fetch_km": 0.08,
+      "shore_distance_m": 50.3,
+      "shore_normal_deg": 30.7,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.520739,
+      "fetch_km": 0.076,
+      "shore_distance_m": 68.1,
+      "shore_normal_deg": 349.9,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.520339,
+      "fetch_km": 0.078,
+      "shore_distance_m": 62.9,
+      "shore_normal_deg": 4.3,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.519939,
+      "fetch_km": 0.097,
+      "shore_distance_m": 65.7,
+      "shore_normal_deg": 2.5,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.519539,
+      "fetch_km": 0.104,
+      "shore_distance_m": 68.2,
+      "shore_normal_deg": 18.1,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.519139,
+      "fetch_km": 0.101,
+      "shore_distance_m": 79.4,
+      "shore_normal_deg": 18.1,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.518739,
+      "fetch_km": 0.099,
+      "shore_distance_m": 87.1,
+      "shore_normal_deg": 357.9,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.518339,
+      "fetch_km": 0.093,
+      "shore_distance_m": 85.4,
+      "shore_normal_deg": 357.9,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.517939,
+      "fetch_km": 0.081,
+      "shore_distance_m": 80.4,
+      "shore_normal_deg": 346.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.517539,
+      "fetch_km": 0.074,
+      "shore_distance_m": 65.0,
+      "shore_normal_deg": 0.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.517139,
+      "fetch_km": 0.074,
+      "shore_distance_m": 61.2,
+      "shore_normal_deg": 0.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.516739,
+      "fetch_km": 0.047,
+      "shore_distance_m": 41.8,
+      "shore_normal_deg": 311.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48519,
+      "lon": -93.516339,
+      "fetch_km": 0.017,
+      "shore_distance_m": 15.9,
+      "shore_normal_deg": 314.7,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.523139,
+      "fetch_km": 0.027,
+      "shore_distance_m": 7.1,
+      "shore_normal_deg": 43.7,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.522739,
+      "fetch_km": 0.067,
+      "shore_distance_m": 28.2,
+      "shore_normal_deg": 31.7,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.522339,
+      "fetch_km": 0.087,
+      "shore_distance_m": 49.7,
+      "shore_normal_deg": 29.0,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.521939,
+      "fetch_km": 0.127,
+      "shore_distance_m": 61.3,
+      "shore_normal_deg": 8.1,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.521539,
+      "fetch_km": 0.133,
+      "shore_distance_m": 73.2,
+      "shore_normal_deg": 19.4,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.521139,
+      "fetch_km": 0.128,
+      "shore_distance_m": 87.2,
+      "shore_normal_deg": 19.4,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.520739,
+      "fetch_km": 0.131,
+      "shore_distance_m": 104.5,
+      "shore_normal_deg": 30.7,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.520339,
+      "fetch_km": 0.147,
+      "shore_distance_m": 107.4,
+      "shore_normal_deg": 4.3,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.519939,
+      "fetch_km": 0.157,
+      "shore_distance_m": 110.1,
+      "shore_normal_deg": 2.5,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.519539,
+      "fetch_km": 0.154,
+      "shore_distance_m": 112.2,
+      "shore_normal_deg": 18.1,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.519139,
+      "fetch_km": 0.152,
+      "shore_distance_m": 119.9,
+      "shore_normal_deg": 18.1,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.518739,
+      "fetch_km": 0.146,
+      "shore_distance_m": 131.5,
+      "shore_normal_deg": 357.9,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.518339,
+      "fetch_km": 0.136,
+      "shore_distance_m": 129.9,
+      "shore_normal_deg": 357.9,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.517939,
+      "fetch_km": 0.125,
+      "shore_distance_m": 118.4,
+      "shore_normal_deg": 0.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.517539,
+      "fetch_km": 0.128,
+      "shore_distance_m": 108.0,
+      "shore_normal_deg": 0.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.517139,
+      "fetch_km": 0.103,
+      "shore_distance_m": 92.5,
+      "shore_normal_deg": 314.7,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.516739,
+      "fetch_km": 0.073,
+      "shore_distance_m": 66.9,
+      "shore_normal_deg": 314.7,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.516339,
+      "fetch_km": 0.045,
+      "shore_distance_m": 41.8,
+      "shore_normal_deg": 319.2,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48559,
+      "lon": -93.515939,
+      "fetch_km": 0.019,
+      "shore_distance_m": 17.6,
+      "shore_normal_deg": 319.2,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.523139,
+      "fetch_km": 0.119,
+      "shore_distance_m": 28.2,
+      "shore_normal_deg": 67.4,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.522739,
+      "fetch_km": 0.136,
+      "shore_distance_m": 58.2,
+      "shore_normal_deg": 67.4,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.522339,
+      "fetch_km": 0.177,
+      "shore_distance_m": 82.3,
+      "shore_normal_deg": 31.7,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.521939,
+      "fetch_km": 0.186,
+      "shore_distance_m": 103.5,
+      "shore_normal_deg": 34.8,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.521539,
+      "fetch_km": 0.18,
+      "shore_distance_m": 113.3,
+      "shore_normal_deg": 19.4,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.521139,
+      "fetch_km": 0.183,
+      "shore_distance_m": 127.0,
+      "shore_normal_deg": 19.4,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.520739,
+      "fetch_km": 0.197,
+      "shore_distance_m": 141.1,
+      "shore_normal_deg": 30.7,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.520339,
+      "fetch_km": 0.209,
+      "shore_distance_m": 152.0,
+      "shore_normal_deg": 4.3,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.519939,
+      "fetch_km": 0.207,
+      "shore_distance_m": 154.6,
+      "shore_normal_deg": 2.5,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.519539,
+      "fetch_km": 0.205,
+      "shore_distance_m": 156.5,
+      "shore_normal_deg": 18.1,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.519139,
+      "fetch_km": 0.199,
+      "shore_distance_m": 162.1,
+      "shore_normal_deg": 18.1,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.518739,
+      "fetch_km": 0.19,
+      "shore_distance_m": 173.3,
+      "shore_normal_deg": 18.1,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.518339,
+      "fetch_km": 0.177,
+      "shore_distance_m": 172.3,
+      "shore_normal_deg": 0.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.517939,
+      "fetch_km": 0.183,
+      "shore_distance_m": 159.4,
+      "shore_normal_deg": 0.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.517539,
+      "fetch_km": 0.158,
+      "shore_distance_m": 143.6,
+      "shore_normal_deg": 314.7,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.517139,
+      "fetch_km": 0.128,
+      "shore_distance_m": 118.3,
+      "shore_normal_deg": 319.2,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.516739,
+      "fetch_km": 0.1,
+      "shore_distance_m": 94.1,
+      "shore_normal_deg": 319.2,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.516339,
+      "fetch_km": 0.074,
+      "shore_distance_m": 70.3,
+      "shore_normal_deg": 341.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.515939,
+      "fetch_km": 0.053,
+      "shore_distance_m": 52.7,
+      "shore_normal_deg": 341.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.515539,
+      "fetch_km": 0.05,
+      "shore_distance_m": 40.6,
+      "shore_normal_deg": 5.5,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.515139,
+      "fetch_km": 0.043,
+      "shore_distance_m": 39.6,
+      "shore_normal_deg": 315.7,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48599,
+      "lon": -93.514739,
+      "fetch_km": 0.015,
+      "shore_distance_m": 11.8,
+      "shore_normal_deg": 297.4,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.523139,
+      "fetch_km": 0.186,
+      "shore_distance_m": 31.0,
+      "shore_normal_deg": 90.9,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.522739,
+      "fetch_km": 0.227,
+      "shore_distance_m": 62.2,
+      "shore_normal_deg": 90.9,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.522339,
+      "fetch_km": 0.238,
+      "shore_distance_m": 93.4,
+      "shore_normal_deg": 90.9,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.521939,
+      "fetch_km": 0.232,
+      "shore_distance_m": 124.7,
+      "shore_normal_deg": 90.9,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.521539,
+      "fetch_km": 0.235,
+      "shore_distance_m": 155.3,
+      "shore_normal_deg": 19.4,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.521139,
+      "fetch_km": 0.247,
+      "shore_distance_m": 166.8,
+      "shore_normal_deg": 19.4,
+      "nlcd_class": 90,
+      "nlcd_class_name": "Woody Wetlands",
+      "nlcd_reduction": 0.72
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.520739,
+      "fetch_km": 0.261,
+      "shore_distance_m": 180.8,
+      "shore_normal_deg": 19.4,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.520339,
+      "fetch_km": 0.259,
+      "shore_distance_m": 189.7,
+      "shore_normal_deg": 198.3,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.519939,
+      "fetch_km": 0.258,
+      "shore_distance_m": 187.6,
+      "shore_normal_deg": 181.6,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.519539,
+      "fetch_km": 0.253,
+      "shore_distance_m": 186.4,
+      "shore_normal_deg": 181.6,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.519139,
+      "fetch_km": 0.243,
+      "shore_distance_m": 184.0,
+      "shore_normal_deg": 184.5,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.518739,
+      "fetch_km": 0.23,
+      "shore_distance_m": 180.6,
+      "shore_normal_deg": 184.5,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.518339,
+      "fetch_km": 0.238,
+      "shore_distance_m": 177.2,
+      "shore_normal_deg": 183.8,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.517939,
+      "fetch_km": 0.214,
+      "shore_distance_m": 174.3,
+      "shore_normal_deg": 183.8,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.517539,
+      "fetch_km": 0.184,
+      "shore_distance_m": 170.6,
+      "shore_normal_deg": 319.2,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.517139,
+      "fetch_km": 0.156,
+      "shore_distance_m": 146.4,
+      "shore_normal_deg": 341.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.516739,
+      "fetch_km": 0.129,
+      "shore_distance_m": 124.2,
+      "shore_normal_deg": 341.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.516339,
+      "fetch_km": 0.107,
+      "shore_distance_m": 106.5,
+      "shore_normal_deg": 341.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.515939,
+      "fetch_km": 0.102,
+      "shore_distance_m": 92.7,
+      "shore_normal_deg": 5.5,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.515539,
+      "fetch_km": 0.098,
+      "shore_distance_m": 80.8,
+      "shore_normal_deg": 301.6,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.515139,
+      "fetch_km": 0.071,
+      "shore_distance_m": 50.2,
+      "shore_normal_deg": 301.6,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48639,
+      "lon": -93.514739,
+      "fetch_km": 0.03,
+      "shore_distance_m": 20.9,
+      "shore_normal_deg": 301.6,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.523139,
+      "fetch_km": 0.277,
+      "shore_distance_m": 28.9,
+      "shore_normal_deg": 96.9,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.522739,
+      "fetch_km": 0.29,
+      "shore_distance_m": 59.9,
+      "shore_normal_deg": 112.1,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.522339,
+      "fetch_km": 0.285,
+      "shore_distance_m": 89.9,
+      "shore_normal_deg": 112.1,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.521939,
+      "fetch_km": 0.287,
+      "shore_distance_m": 114.2,
+      "shore_normal_deg": 165.4,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.521539,
+      "fetch_km": 0.297,
+      "shore_distance_m": 134.9,
+      "shore_normal_deg": 155.6,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.521139,
+      "fetch_km": 0.313,
+      "shore_distance_m": 148.3,
+      "shore_normal_deg": 166.4,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.520739,
+      "fetch_km": 0.312,
+      "shore_distance_m": 151.5,
+      "shore_normal_deg": 179.3,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.520339,
+      "fetch_km": 0.31,
+      "shore_distance_m": 145.7,
+      "shore_normal_deg": 198.3,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.519939,
+      "fetch_km": 0.306,
+      "shore_distance_m": 143.1,
+      "shore_normal_deg": 181.6,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.519539,
+      "fetch_km": 0.297,
+      "shore_distance_m": 141.9,
+      "shore_normal_deg": 181.6,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.519139,
+      "fetch_km": 0.282,
+      "shore_distance_m": 139.8,
+      "shore_normal_deg": 184.5,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.518739,
+      "fetch_km": 0.29,
+      "shore_distance_m": 136.3,
+      "shore_normal_deg": 184.5,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.518339,
+      "fetch_km": 0.27,
+      "shore_distance_m": 132.9,
+      "shore_normal_deg": 183.8,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.517939,
+      "fetch_km": 0.24,
+      "shore_distance_m": 130.0,
+      "shore_normal_deg": 183.8,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.517539,
+      "fetch_km": 0.212,
+      "shore_distance_m": 130.4,
+      "shore_normal_deg": 183.8,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.517139,
+      "fetch_km": 0.184,
+      "shore_distance_m": 135.3,
+      "shore_normal_deg": 173.7,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.516739,
+      "fetch_km": 0.161,
+      "shore_distance_m": 144.3,
+      "shore_normal_deg": 173.7,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.516339,
+      "fetch_km": 0.154,
+      "shore_distance_m": 146.4,
+      "shore_normal_deg": 341.0,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.515939,
+      "fetch_km": 0.154,
+      "shore_distance_m": 124.6,
+      "shore_normal_deg": 301.6,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.515539,
+      "fetch_km": 0.126,
+      "shore_distance_m": 95.9,
+      "shore_normal_deg": 301.6,
+      "nlcd_class": 11,
+      "nlcd_class_name": "Open Water",
+      "nlcd_reduction": 0.0
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.515139,
+      "fetch_km": 0.088,
+      "shore_distance_m": 67.2,
+      "shore_normal_deg": 301.6,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.514739,
+      "fetch_km": 0.047,
+      "shore_distance_m": 39.4,
+      "shore_normal_deg": 307.5,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48679,
+      "lon": -93.514339,
+      "fetch_km": 0.014,
+      "shore_distance_m": 11.8,
+      "shore_normal_deg": 268.5,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.523139,
+      "fetch_km": 0.343,
+      "shore_distance_m": 17.7,
+      "shore_normal_deg": 112.1,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.522739,
+      "fetch_km": 0.338,
+      "shore_distance_m": 39.0,
+      "shore_normal_deg": 165.4,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.522339,
+      "fetch_km": 0.34,
+      "shore_distance_m": 62.2,
+      "shore_normal_deg": 136.4,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.521939,
+      "fetch_km": 0.347,
+      "shore_distance_m": 80.6,
+      "shore_normal_deg": 155.6,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.521539,
+      "fetch_km": 0.365,
+      "shore_distance_m": 94.9,
+      "shore_normal_deg": 161.4,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.521139,
+      "fetch_km": 0.365,
+      "shore_distance_m": 106.2,
+      "shore_normal_deg": 166.4,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.520739,
+      "fetch_km": 0.363,
+      "shore_distance_m": 107.0,
+      "shore_normal_deg": 179.3,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.520339,
+      "fetch_km": 0.359,
+      "shore_distance_m": 102.1,
+      "shore_normal_deg": 198.3,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.519939,
+      "fetch_km": 0.351,
+      "shore_distance_m": 98.7,
+      "shore_normal_deg": 181.6,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.519539,
+      "fetch_km": 0.335,
+      "shore_distance_m": 97.4,
+      "shore_normal_deg": 181.6,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.519139,
+      "fetch_km": 0.342,
+      "shore_distance_m": 95.5,
+      "shore_normal_deg": 184.5,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.518739,
+      "fetch_km": 0.326,
+      "shore_distance_m": 92.1,
+      "shore_normal_deg": 184.5,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.518339,
+      "fetch_km": 0.296,
+      "shore_distance_m": 88.6,
+      "shore_normal_deg": 184.5,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.517939,
+      "fetch_km": 0.267,
+      "shore_distance_m": 85.6,
+      "shore_normal_deg": 183.8,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.517539,
+      "fetch_km": 0.24,
+      "shore_distance_m": 86.4,
+      "shore_normal_deg": 173.7,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.517139,
+      "fetch_km": 0.215,
+      "shore_distance_m": 91.9,
+      "shore_normal_deg": 173.7,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.516739,
+      "fetch_km": 0.206,
+      "shore_distance_m": 104.7,
+      "shore_normal_deg": 173.7,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.516339,
+      "fetch_km": 0.208,
+      "shore_distance_m": 119.3,
+      "shore_normal_deg": 176.4,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.515939,
+      "fetch_km": 0.182,
+      "shore_distance_m": 135.4,
+      "shore_normal_deg": 258.2,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.515539,
+      "fetch_km": 0.145,
+      "shore_distance_m": 104.5,
+      "shore_normal_deg": 258.2,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.515139,
+      "fetch_km": 0.103,
+      "shore_distance_m": 73.4,
+      "shore_normal_deg": 268.5,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.514739,
+      "fetch_km": 0.07,
+      "shore_distance_m": 42.2,
+      "shore_normal_deg": 268.5,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48719,
+      "lon": -93.514339,
+      "fetch_km": 0.021,
+      "shore_distance_m": 11.0,
+      "shore_normal_deg": 268.5,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.522739,
+      "fetch_km": 0.392,
+      "shore_distance_m": 9.3,
+      "shore_normal_deg": 155.6,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.522339,
+      "fetch_km": 0.397,
+      "shore_distance_m": 26.3,
+      "shore_normal_deg": 155.6,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.521939,
+      "fetch_km": 0.417,
+      "shore_distance_m": 41.2,
+      "shore_normal_deg": 161.4,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.521539,
+      "fetch_km": 0.418,
+      "shore_distance_m": 54.0,
+      "shore_normal_deg": 166.4,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.521139,
+      "fetch_km": 0.416,
+      "shore_distance_m": 62.0,
+      "shore_normal_deg": 179.3,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.520739,
+      "fetch_km": 0.412,
+      "shore_distance_m": 62.5,
+      "shore_normal_deg": 179.3,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.520339,
+      "fetch_km": 0.404,
+      "shore_distance_m": 59.9,
+      "shore_normal_deg": 198.3,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.519939,
+      "fetch_km": 0.39,
+      "shore_distance_m": 54.2,
+      "shore_normal_deg": 181.6,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.519539,
+      "fetch_km": 0.394,
+      "shore_distance_m": 52.9,
+      "shore_normal_deg": 181.6,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.519139,
+      "fetch_km": 0.381,
+      "shore_distance_m": 51.3,
+      "shore_normal_deg": 184.5,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.518739,
+      "fetch_km": 0.351,
+      "shore_distance_m": 47.8,
+      "shore_normal_deg": 184.5,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.518339,
+      "fetch_km": 0.323,
+      "shore_distance_m": 44.3,
+      "shore_normal_deg": 184.5,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.517939,
+      "fetch_km": 0.295,
+      "shore_distance_m": 41.3,
+      "shore_normal_deg": 183.8,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.517539,
+      "fetch_km": 0.269,
+      "shore_distance_m": 42.4,
+      "shore_normal_deg": 173.7,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.517139,
+      "fetch_km": 0.258,
+      "shore_distance_m": 50.5,
+      "shore_normal_deg": 173.7,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.516739,
+      "fetch_km": 0.262,
+      "shore_distance_m": 65.0,
+      "shore_normal_deg": 176.4,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.516339,
+      "fetch_km": 0.237,
+      "shore_distance_m": 84.9,
+      "shore_normal_deg": 176.4,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.515939,
+      "fetch_km": 0.203,
+      "shore_distance_m": 110.1,
+      "shore_normal_deg": 176.4,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.515539,
+      "fetch_km": 0.159,
+      "shore_distance_m": 95.8,
+      "shore_normal_deg": 247.4,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.515139,
+      "fetch_km": 0.126,
+      "shore_distance_m": 65.8,
+      "shore_normal_deg": 247.4,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.514739,
+      "fetch_km": 0.08,
+      "shore_distance_m": 35.9,
+      "shore_normal_deg": 247.4,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48759,
+      "lon": -93.514339,
+      "fetch_km": 0.013,
+      "shore_distance_m": 5.4,
+      "shore_normal_deg": 258.2,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.521939,
+      "fetch_km": 0.471,
+      "shore_distance_m": 1.1,
+      "shore_normal_deg": 161.4,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.521539,
+      "fetch_km": 0.468,
+      "shore_distance_m": 11.9,
+      "shore_normal_deg": 166.4,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.521139,
+      "fetch_km": 0.466,
+      "shore_distance_m": 17.4,
+      "shore_normal_deg": 179.3,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.520739,
+      "fetch_km": 0.458,
+      "shore_distance_m": 18.0,
+      "shore_normal_deg": 179.3,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.520339,
+      "fetch_km": 0.444,
+      "shore_distance_m": 18.3,
+      "shore_normal_deg": 182.6,
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.519939,
+      "fetch_km": 0.445,
+      "shore_distance_m": 9.7,
+      "shore_normal_deg": 181.6,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.519539,
+      "fetch_km": 0.436,
+      "shore_distance_m": 8.5,
+      "shore_normal_deg": 181.6,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.519139,
+      "fetch_km": 0.407,
+      "shore_distance_m": 7.0,
+      "shore_normal_deg": 184.5,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.518739,
+      "fetch_km": 0.378,
+      "shore_distance_m": 3.6,
+      "shore_normal_deg": 184.5,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.518339,
+      "fetch_km": 0.35,
+      "shore_distance_m": 0.1,
+      "shore_normal_deg": 184.5,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.517139,
+      "fetch_km": 0.316,
+      "shore_distance_m": 12.1,
+      "shore_normal_deg": 176.4,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.516739,
+      "fetch_km": 0.293,
+      "shore_distance_m": 33.7,
+      "shore_normal_deg": 310.3,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.516339,
+      "fetch_km": 0.261,
+      "shore_distance_m": 61.5,
+      "shore_normal_deg": 310.3,
+      "nlcd_class": 21,
+      "nlcd_class_name": "Developed, Open Space",
+      "nlcd_reduction": 0.64
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.515939,
+      "fetch_km": 0.216,
+      "shore_distance_m": 89.4,
+      "shore_normal_deg": 191.0,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.515539,
+      "fetch_km": 0.182,
+      "shore_distance_m": 75.0,
+      "shore_normal_deg": 200.0,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.515139,
+      "fetch_km": 0.14,
+      "shore_distance_m": 52.1,
+      "shore_normal_deg": 236.2,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48799,
+      "lon": -93.514739,
+      "fetch_km": 0.074,
+      "shore_distance_m": 23.4,
+      "shore_normal_deg": 247.4,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48839,
+      "lon": -93.517139,
+      "fetch_km": 0.348,
+      "shore_distance_m": 10.3,
+      "shore_normal_deg": 203.1,
+      "nlcd_class": 95,
+      "nlcd_class_name": "Emergent Herbaceous Wetlands",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48839,
+      "lon": -93.516739,
+      "fetch_km": 0.317,
+      "shore_distance_m": 32.7,
+      "shore_normal_deg": 242.7,
+      "nlcd_class": 95,
+      "nlcd_class_name": "Emergent Herbaceous Wetlands",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48839,
+      "lon": -93.516339,
+      "fetch_km": 0.272,
+      "shore_distance_m": 46.7,
+      "shore_normal_deg": 169.8,
+      "nlcd_class": 95,
+      "nlcd_class_name": "Emergent Herbaceous Wetlands",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48839,
+      "lon": -93.515939,
+      "fetch_km": 0.237,
+      "shore_distance_m": 46.5,
+      "shore_normal_deg": 191.0,
+      "nlcd_class": 95,
+      "nlcd_class_name": "Emergent Herbaceous Wetlands",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48839,
+      "lon": -93.515539,
+      "fetch_km": 0.199,
+      "shore_distance_m": 35.5,
+      "shore_normal_deg": 200.0,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48839,
+      "lon": -93.515139,
+      "fetch_km": 0.135,
+      "shore_distance_m": 21.1,
+      "shore_normal_deg": 200.0,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48839,
+      "lon": -93.514739,
+      "fetch_km": 0.04,
+      "shore_distance_m": 1.9,
+      "shore_normal_deg": 211.0,
+      "nlcd_class": 81,
+      "nlcd_class_name": "Pasture/Hay",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48879,
+      "lon": -93.516339,
+      "fetch_km": 0.294,
+      "shore_distance_m": 3.6,
+      "shore_normal_deg": 169.8,
+      "nlcd_class": 95,
+      "nlcd_class_name": "Emergent Herbaceous Wetlands",
+      "nlcd_reduction": 0.46
+    },
+    {
+      "lat": 45.48879,
+      "lon": -93.515939,
+      "fetch_km": 0.258,
+      "shore_distance_m": 3.6,
+      "shore_normal_deg": 191.0,
+      "nlcd_class": 95,
+      "nlcd_class_name": "Emergent Herbaceous Wetlands",
+      "nlcd_reduction": 0.46
+    }
+  ],
+  "generated_at": "2026-07-26T22:58:33.375518",
+  "generated_wind_direction_deg": 148,
+  "generated_wind_speed_ms": 1.53
+}
