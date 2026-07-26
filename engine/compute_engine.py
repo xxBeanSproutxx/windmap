@@ -19,12 +19,7 @@ import argparse
 import os
 from datetime import datetime, timedelta
 import time
-# ── Configuration ──────────────────────────────────────────────────────────
-KML_PATH = "data/blue_lake.kml"
-OUTPUT_PATH = "data/lake_data.json"
-LAKE_NAME = "Blue Lake"
-LAKE_CENTER_LAT = 45.49
-LAKE_CENTER_LON = -93.50
+# ── Math / Geometry Constants ───────────────────────────────────────────────
 FETCH_CAP_KM = 5.0          # shoreline fetch cap
 GRID_FETCH_CAP_KM = 1.0     # grid impact_score cap (tighter for dead-flat green = short fetch)
 NEAR_SHORE_DEPTH_M = 2.0    # assumed depth for wave height calculation
@@ -704,21 +699,47 @@ def compute_grid(polygon, wind_dir, wind_speed_ms, shoreline):
 
 # ── 6. Main ────────────────────────────────────────────────────────────────
 
+def compute_centroid(polygon):
+    """Compute centroid (lon, lat) from polygon vertices."""
+    cx = sum(p[0] for p in polygon) / len(polygon)
+    cy = sum(p[1] for p in polygon) / len(polygon)
+    return cx, cy
+
+
 def main():
-    parser = argparse.ArgumentParser(description="Blue Lake Wave-Fetch Compute Engine")
-    parser.add_argument("--output", type=str, default=OUTPUT_PATH,
-                        help=f"Output JSON path (default: {OUTPUT_PATH})")
+    parser = argparse.ArgumentParser(description="Lake Wave-Fetch Compute Engine")
+    parser.add_argument("--kml", type=str, required=True,
+                        help="Path to KML file containing the lake shoreline")
+    parser.add_argument("--name", type=str, required=True,
+                        help="Lake display name (e.g. 'Blue Lake')")
+    parser.add_argument("--lake-id", type=str, required=True,
+                        help="Lake identifier for output path (e.g. 'blue_lake')")
+    parser.add_argument("--center-lat", type=float, default=None,
+                        help="Lake center latitude for wind forecast (default: computed from polygon)")
+    parser.add_argument("--center-lon", type=float, default=None,
+                        help="Lake center longitude for wind forecast (default: computed from polygon)")
+    parser.add_argument("--output", type=str, default=None,
+                        help="Output JSON path (default: data/lakes/<lake-id>/lake_static.json)")
     parser.add_argument("--static", action="store_true",
                         help="Output static geometry data only (no wind forecast array, no impact scores)")
     args = parser.parse_args()
 
-    print("Parsing KML...")
-    polygon = parse_kml(KML_PATH)
+    # Resolve output path
+    if args.output is None:
+        args.output = f"data/lakes/{args.lake_id}/lake_static.json"
+
+    print(f"Parsing KML: {args.kml}...")
+    polygon = parse_kml(args.kml)
     print(f"  Extracted {len(polygon)} polygon vertices")
+
+    # Determine center coordinates for wind forecast
+    center_lat = args.center_lat if args.center_lat is not None else compute_centroid(polygon)[1]
+    center_lon = args.center_lon if args.center_lon is not None else compute_centroid(polygon)[0]
+    print(f"  Center: ({center_lat:.4f}, {center_lon:.4f})")
 
     print("Fetching wind data from Open-Meteo...")
     try:
-        wind_hourly = fetch_wind_data(LAKE_CENTER_LAT, LAKE_CENTER_LON)
+        wind_hourly = fetch_wind_data(center_lat, center_lon)
         print(f"  Got {len(wind_hourly)} hourly forecast points")
         print(f"  Current wind: {wind_hourly[0]['speed_ms']} m/s from {wind_hourly[0]['direction_deg']}°")
     except (urllib.error.URLError, OSError) as e:
@@ -740,7 +761,7 @@ def main():
     if args.static:
         static_output = {
             "lake": {
-                "name": LAKE_NAME,
+                "name": args.name,
                 "polygon": polygon,
             },
             "shoreline": [],
@@ -768,19 +789,19 @@ def main():
                 stripped[k] = v
             static_output["grid"].append(stripped)
 
-        static_path = os.path.join(os.path.dirname(os.path.abspath(args.output)), "lake_static.json")
-        os.makedirs(os.path.dirname(static_path), exist_ok=True)
-        with open(static_path, "w") as f:
+        output_path = args.output
+        os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
+        with open(output_path, "w") as f:
             json.dump(static_output, f, indent=2)
-        print(f"Static data written to {static_path}")
+        print(f"Static data written to {output_path}")
         print(f"  Shoreline segments: {len(static_output['shoreline'])}")
         print(f"  Grid cells: {len(static_output['grid'])}")
         return
 
-    # Build output
+    # Build output (non-static / full mode)
     output = {
         "lake": {
-            "name": LAKE_NAME,
+            "name": args.name,
             "polygon": polygon,
         },
         "wind": {

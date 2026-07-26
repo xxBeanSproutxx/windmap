@@ -1,0 +1,14 @@
+[
+  {
+    "id": "blue_lake",
+    "name": "Blue Lake",
+    "center_lat": 45.4773,
+    "center_lon": -93.5003
+  },
+  {
+    "id": "spectacle",
+    "name": "Spectacle Lake",
+    "center_lat": 45.5746,
+    "center_lon": -93.4054
+  }
+]

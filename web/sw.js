@@ -1,4 +1,4 @@
-const CACHE_NAME = 'blue-lake-wave-v16';
+const CACHE_NAME = 'blue-lake-wave-v17';
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -42,7 +42,7 @@ self.addEventListener('fetch', (event) => {
   }
 
   // Network-only for data — never cache
-  if (event.request.url.includes('lake_data') || event.request.url.includes('lake_static') || event.request.url.includes('open-meteo')) {
+  if (event.request.url.includes('lake_static') || event.request.url.includes('lake_data') || event.request.url.includes('open-meteo') || event.request.url.includes('data/lakes')) {
     return;
   }
 
