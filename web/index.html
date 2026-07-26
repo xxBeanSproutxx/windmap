@@ -630,6 +630,15 @@
         min-height: 32px;
       }
     }
+
+    @media (max-width: 500px) {
+      .legend .legend-item {
+        display: none;
+      }
+      .legend:not(.collapsed) .legend-item {
+        display: flex;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1461,7 +1470,7 @@
         $legend.classList.toggle('collapsed');
       });
       // Default collapsed on mobile
-      if (window.innerWidth <= 640) {
+      if (window.innerWidth < 500) {
         $legend.classList.add('collapsed');
       }
       loadData();
