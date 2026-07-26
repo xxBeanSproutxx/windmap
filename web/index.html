@@ -117,6 +117,49 @@
       white-space: nowrap;
     }
 
+    /* Lake selector dropdown */
+    .lake-select {
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--heading);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 6px 30px 6px 10px;
+      appearance: none;
+      -webkit-appearance: none;
+      -moz-appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23533afd'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      background-size: 10px 6px;
+      cursor: pointer;
+      transition: border-color 0.15s ease;
+      max-width: 180px;
+      min-height: 36px;
+      touch-action: manipulation;
+    }
+
+    .lake-select:hover {
+      border-color: var(--accent);
+    }
+
+    .lake-select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(83,58,253,0.15);
+    }
+
+    @media (max-width: 640px) {
+      .lake-select {
+        font-size: 12px;
+        max-width: 130px;
+        padding: 4px 24px 4px 8px;
+        min-height: 32px;
+      }
+    }
+
     .header-meta {
       display: flex;
       align-items: center;
@@ -658,6 +701,7 @@
       <span class="header-title">Blue Lake <span class="dot">·</span> Wave Forecast</span>
       <span class="header-subtitle">Wave-fetch fishing conditions</span>
     </div>
+    <select class="lake-select" id="lakeSelect"></select>
     <div class="header-meta">
       <span class="header-badge" id="impactBadge">—</span>
       <button class="refresh-btn" id="refreshBtn" title="Refresh data">↻</button>
@@ -703,13 +747,26 @@
     'use strict';
 
     // ── Constants ──
-    const BLUE_LAKE_CENTER = [45.491, -93.499];
     const DEFAULT_ZOOM = 14;
-    const STATIC_URL = 'data/lake_static.json';
     const GRID_CELL_SIZE = 0.0004; // degrees — matches compute engine spacing
     const SHIELD_DISTANCE_M = 100;
     const FETCH_CAP_KM = 5.0;       // shoreline fetch cap (matches engine)
     const GRID_FETCH_CAP_KM = 1.0;  // grid impact cap (matches engine)
+
+    // ── Lake state ──
+    let currentLake = null;
+    let manifest = null;
+
+    // ── Dynamic constants ──
+    function getLakeCenter() {
+      if (currentLake) return [currentLake.center_lat, currentLake.center_lon];
+      return [45.491, -93.499]; // fallback Blue Lake
+    }
+
+    function getStaticUrl() {
+      if (currentLake) return 'data/lakes/' + currentLake.id + '/lake_static.json';
+      return 'data/lake_static.json'; // backward compat fallback
+    }
 
     // ── Selection state ──
     var selectedCell = null;
@@ -821,7 +878,7 @@
     // ── Init map ──
     function initMap() {
       map = L.map('map', {
-        center: BLUE_LAKE_CENTER,
+        center: getLakeCenter(),
         zoom: DEFAULT_ZOOM,
         zoomControl: false,
         attributionControl: false
@@ -865,24 +922,37 @@
       }
     }
 
-    // ── Live wind fetch from NWS (National Weather Service) ──
+    // ── Live wind fetch from NWS (National Weather Service) — dynamic gridpoint resolution ──
     async function fetchLiveWind(lat, lon) {
-      const NWS_GRID_URL = 'https://api.weather.gov/gridpoints/MPX/100,96';
-      const NWS_STATION_URL = 'https://api.weather.gov/stations/KPNM/observations/latest';
       const NWS_UA = 'blue-lake-wave/1.0';
 
       const controller = new AbortController();
       const timeout = setTimeout(() => controller.abort(), 15000);
       try {
-        const resp = await fetch(NWS_GRID_URL, {
+        // Step 1: Resolve gridpoint and station from lat/lon
+        const pointsUrl = 'https://api.weather.gov/points/' + lat.toFixed(4) + ',' + lon.toFixed(4);
+        const pointsResp = await fetch(pointsUrl, {
           signal: controller.signal,
           headers: { 'User-Agent': NWS_UA }
         });
-        if (!resp.ok) {
-          console.error('NWS gridpoint fetch failed:', resp.status, resp.statusText);
+        if (!pointsResp.ok) {
+          console.error('NWS points fetch failed:', pointsResp.status, pointsResp.statusText);
           return [];
         }
-        const raw = await resp.json();
+        const pointsData = await pointsResp.json();
+        const gridpointUrl = pointsData.properties.forecast.replace('/forecast', '');
+        const stationsUrl = pointsData.properties.observationStations;
+
+        // Step 2: Get hourly forecast from resolved gridpoint
+        const gridResp = await fetch(gridpointUrl, {
+          signal: controller.signal,
+          headers: { 'User-Agent': NWS_UA }
+        });
+        if (!gridResp.ok) {
+          console.error('NWS gridpoint fetch failed:', gridResp.status, gridResp.statusText);
+          return [];
+        }
+        const raw = await gridResp.json();
         const props = raw.properties;
         if (!props || !props.windSpeed || !props.windDirection) {
           console.error('NWS gridpoint response missing wind data');
@@ -908,24 +978,38 @@
           return [];
         }
 
+        // Step 3: Try station observation for current hour override
         let stationObs = null;
-        try {
-          const stationResp = await fetch(NWS_STATION_URL, {
-            signal: controller.signal,
-            headers: { 'User-Agent': NWS_UA }
-          });
-          if (stationResp.ok) {
-            const stationData = await stationResp.json();
-            const sp = stationData.properties;
-            if (sp && sp.windSpeed && sp.windDirection) {
-              stationObs = {
-                speed_kmh: sp.windSpeed.value,
-                direction_deg: sp.windDirection.value,
-              };
+        if (stationsUrl) {
+          try {
+            const stationResp = await fetch(stationsUrl, {
+              signal: controller.signal,
+              headers: { 'User-Agent': NWS_UA }
+            });
+            if (stationResp.ok) {
+              const stationList = await stationResp.json();
+              const stations = stationList.observationStations || [];
+              if (stations.length > 0) {
+                const latestUrl = stations[0] + '/observations/latest';
+                const obsResp = await fetch(latestUrl, {
+                  signal: controller.signal,
+                  headers: { 'User-Agent': NWS_UA }
+                });
+                if (obsResp.ok) {
+                  const stationData = await obsResp.json();
+                  const sp = stationData.properties;
+                  if (sp && sp.windSpeed && sp.windDirection) {
+                    stationObs = {
+                      speed_kmh: sp.windSpeed.value,
+                      direction_deg: sp.windDirection.value,
+                    };
+                  }
+                }
+              }
             }
+          } catch (e) {
+            console.warn('NWS station fetch failed (using gridpoint only):', e.message);
           }
-        } catch (e) {
-          console.warn('NWS station fetch failed (using gridpoint only):', e.message);
         }
 
         const KMH_TO_MS = 1.0 / 3.6;
@@ -1331,6 +1415,52 @@
       }
     }
 
+    // ── Load manifest ──
+    async function loadManifest() {
+      try {
+        const resp = await fetch('data/lakes/manifest.json');
+        if (!resp.ok) throw new Error('Manifest HTTP ' + resp.status);
+        manifest = await resp.json();
+        if (!manifest || manifest.length === 0) {
+          console.warn('Manifest is empty, falling back to hardcoded Blue Lake');
+          manifest = null;
+          return;
+        }
+        return manifest;
+      } catch (err) {
+        console.warn('Could not load lake manifest, using fallback:', err.message);
+        manifest = null;
+      }
+    }
+
+    // ── Switch lake ──
+    async function switchLake(lakeId) {
+      if (!manifest) return;
+      currentLake = manifest.find(function(l) { return l.id === lakeId; });
+      if (!currentLake) return;
+
+      // Clear all layers
+      clearGridHeatmap();
+      if (lakePolygonLayer) map.removeLayer(lakePolygonLayer);
+
+      // Recenter map
+      map.setView([currentLake.center_lat, currentLake.center_lon], DEFAULT_ZOOM);
+
+      // Reset state and reload
+      staticData = null;
+      data = null;
+      currentTimeIdx = -1;
+
+      await loadData();
+
+      // Update URL hash
+      window.location.hash = 'lake=' + lakeId;
+
+      // Update page title
+      document.title = currentLake.name + ' · Wave Forecast';
+      document.querySelector('.header-title').textContent = currentLake.name;
+    }
+
     // ── Load data (dual-fetch: static geometry + live wind) ──
     async function loadData() {
       $loadingBar.classList.add('visible');
@@ -1339,13 +1469,15 @@
       try {
         // Fetch static geometry (cached by browser after first load)
         if (!staticData) {
-          const staticResp = await fetch(STATIC_URL);
+          const staticUrl = getStaticUrl();
+          const staticResp = await fetch(staticUrl);
           if (!staticResp.ok) throw new Error('Static data HTTP ' + staticResp.status);
           staticData = await staticResp.json();
         }
 
-        // Fetch live wind from NWS
-        const forecast = await fetchLiveWind(45.49, -93.50);
+        // Fetch live wind from NWS using lake center
+        const center = getLakeCenter();
+        const forecast = await fetchLiveWind(center[0], center[1]);
         if (!forecast || forecast.length === 0) throw new Error('No wind forecast');
 
         // Build the combined data object the render pipeline expects
@@ -1452,13 +1584,74 @@
     }
 
     // ── Boot ──
-    function boot() {
+    async function boot() {
       injectTooltipStyles();
       initMap();
+
+      // Load lake manifest
+      await loadManifest();
+
+      // Determine current lake from URL hash or default
+      let lakeId = 'blue_lake';
+      const hash = window.location.hash;
+      const hashMatch = hash.match(/lake=([a-z0-9_-]+)/);
+      if (hashMatch) lakeId = hashMatch[1];
+
+      // Set current lake from manifest or fallback
+      if (manifest) {
+        currentLake = manifest.find(function(l) { return l.id === lakeId; });
+        if (!currentLake && manifest.length > 0) {
+          currentLake = manifest[0];
+          lakeId = currentLake.id;
+        }
+      }
+
+      // Populate lake selector dropdown
+      const $lakeSelect = document.getElementById('lakeSelect');
+      if (manifest && manifest.length > 1) {
+        manifest.forEach(function(l) {
+          const opt = document.createElement('option');
+          opt.value = l.id;
+          opt.textContent = l.name;
+          if (l.id === lakeId) opt.selected = true;
+          $lakeSelect.appendChild(opt);
+        });
+        $lakeSelect.style.display = '';
+        $lakeSelect.addEventListener('change', function() {
+          switchLake(this.value);
+        });
+      } else if (manifest && manifest.length === 1) {
+        // Single lake: show but disable
+        const opt = document.createElement('option');
+        opt.value = manifest[0].id;
+        opt.textContent = manifest[0].name;
+        opt.selected = true;
+        $lakeSelect.appendChild(opt);
+        $lakeSelect.style.display = '';
+      } else {
+        // No manifest: hide selector
+        $lakeSelect.style.display = 'none';
+      }
+
+      // Update title for initial lake
+      if (currentLake) {
+        document.title = currentLake.name + ' · Wave Forecast';
+        document.querySelector('.header-title').textContent = currentLake.name;
+      }
+
       document.getElementById('landcoverToggle').addEventListener('click', toggleLandCover);
       document.getElementById('refreshBtn').addEventListener('click', function() {
         staticData = null;  // force re-fetch of static geometry
         loadData();
+      });
+
+      // URL hash change handler (browser back/forward)
+      window.addEventListener('hashchange', function() {
+        const newHash = window.location.hash;
+        const m = newHash.match(/lake=([a-z0-9_-]+)/);
+        if (m && manifest && currentLake && m[1] !== currentLake.id) {
+          switchLake(m[1]);
+        }
       });
 
       // Legend: click title to toggle collapse
