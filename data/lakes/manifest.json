@@ -6,6 +6,12 @@
     "center_lon": -93.5187
   },
   {
+    "id": "71006900",
+    "name": "Ann Lake",
+    "center_lat": 45.4225,
+    "center_lon": -93.6902
+  },
+  {
     "id": "blue_lake",
     "name": "Blue Lake",
     "center_lat": 45.4773,
