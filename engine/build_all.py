@@ -19,6 +19,7 @@ LAKE_NAMES = {
     "71004000": "Sandy Lake",
     "71006900": "Ann Lake",
     "71005500": "Elk Lake",
+    "30013600": "Green Lake",
 }
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent

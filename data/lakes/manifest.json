@@ -1,5 +1,11 @@
 [
   {
+    "id": "30013600",
+    "name": "Green Lake",
+    "center_lat": 45.573,
+    "center_lon": -93.438
+  },
+  {
     "id": "71004000",
     "name": "Sandy Lake",
     "center_lat": 45.4866,
