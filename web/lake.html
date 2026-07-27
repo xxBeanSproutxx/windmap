@@ -709,7 +709,7 @@
   <header class="header">
     <a href="/" class="header-back-link">← Dashboard</a>
     <div class="header-brand">
-      <div class="brand-icon">~</div>
+      <div class="brand-icon"><svg width="16" height="12" viewBox="0 0 16 12"><path d="M0 6c2-3 4 3 6 0s4-3 6 0 4 3 4 0" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></div>
       <span class="header-title">Blue Lake <span class="dot">·</span> Wave Forecast</span>
       <span class="header-subtitle">Wave-fetch fishing conditions</span>
     </div>
@@ -1120,7 +1120,12 @@
       });
 
       // Only build pills from startIdx onward (current + future)
-      for (let i = startIdx; i < forecast.length; i++) {
+      const maxVisible = 10;
+      const totalPills = forecast.length - startIdx;
+      const showAll = totalPills <= maxVisible;
+
+      const endIdx = showAll ? forecast.length : startIdx + maxVisible;
+      for (let i = startIdx; i < endIdx; i++) {
         const f = forecast[i];
         const idx = i;
 
@@ -1141,6 +1146,33 @@
         pill.addEventListener('click', () => selectTimeSlot(idx));
 
         $timePills.appendChild(pill);
+      }
+
+      if (!showAll) {
+        const moreBtn = document.createElement('button');
+        moreBtn.className = 'time-pill';
+        moreBtn.style.cssText = 'background:rgba(83,58,253,0.06);color:var(--accent);font-weight:600;';
+        moreBtn.textContent = '+ ' + (totalPills - maxVisible) + ' more';
+        moreBtn.addEventListener('click', () => {
+          moreBtn.remove();
+          for (let i = endIdx; i < forecast.length; i++) {
+            const f = forecast[i];
+            const idx = i;
+            const pill = document.createElement('button');
+            pill.className = 'time-pill';
+            pill.dataset.idx = idx;
+            const hour = parseInt(f.timestamp.split('T')[1], 10);
+            const ampm = hour >= 12 ? 'PM' : 'AM';
+            const displayHour = hour % 12 || 12;
+            const timeStr = displayHour + ':00 ' + ampm;
+            const mphStr = f.speed_mph != null ? f.speed_mph.toFixed(1) : '—';
+            pill.innerHTML = timeStr + '<span class="pill-speed">' + mphStr + ' mph · ' + f.direction_deg + '°</span>';
+            pill.title = f.timestamp + ' — ' + mphStr + ' mph from ' + f.direction_deg + '°';
+            pill.addEventListener('click', () => selectTimeSlot(idx));
+            $timePills.appendChild(pill);
+          }
+        });
+        $timePills.appendChild(moreBtn);
       }
     }
 
