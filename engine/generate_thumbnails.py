@@ -16,7 +16,7 @@ from matplotlib.path import Path
 import numpy as np
 
 KML_NS = 'http://www.opengis.net/kml/2.2'
-THUMB_W, THUMB_H = 300, 200
+THUMB_W, THUMB_H = 200, 300  # portrait — taller than wide for card sidebar
 DPI = 72  # screen resolution — CSS will scale down
 
 def parse_kml_coordinates(kml_path):
@@ -63,9 +63,13 @@ def render_thumbnail(points, out_path, lake_name=''):
     pad = 0.12
     fig, ax = plt.subplots(figsize=(THUMB_W/DPI, THUMB_H/DPI), dpi=DPI)
     
-    # Dark background
-    fig.patch.set_facecolor('#1a1a2e')
-    ax.set_facecolor('#1a1a2e')
+    # Light background matching card theme
+    BG = '#e8edf2'
+    LAKE_FILL = '#5b9bd5'
+    LAKE_STROKE = '#3a7cc3'
+    
+    fig.patch.set_facecolor(BG)
+    ax.set_facecolor(BG)
     
     # Scale coordinates to fill the canvas
     scaled_pts = []
@@ -79,14 +83,14 @@ def render_thumbnail(points, out_path, lake_name=''):
     
     path = Path(scaled_pts)
     patch = Polygon(scaled_pts, closed=True, 
-                    facecolor='#4a90d9', edgecolor='#7ab8f5',
-                    linewidth=1.8, alpha=0.85, zorder=2)
+                    facecolor=LAKE_FILL, edgecolor=LAKE_STROKE,
+                    linewidth=1.8, alpha=0.9, zorder=2)
     ax.add_patch(patch)
     
     # Subtle glow effect — larger, more transparent outline
     glow = Polygon(scaled_pts, closed=True,
-                   facecolor='none', edgecolor='#4a90d9',
-                   linewidth=4, alpha=0.3, zorder=1)
+                   facecolor='none', edgecolor=LAKE_FILL,
+                   linewidth=4, alpha=0.25, zorder=1)
     ax.add_patch(glow)
     
     # Clean axes
@@ -96,7 +100,7 @@ def render_thumbnail(points, out_path, lake_name=''):
     ax.axis('off')
     
     plt.tight_layout(pad=0)
-    fig.savefig(out_path, dpi=DPI, facecolor='#1a1a2e', 
+    fig.savefig(out_path, dpi=DPI, facecolor=BG, 
                 edgecolor='none', bbox_inches='tight', pad_inches=0)
     plt.close(fig)
     
