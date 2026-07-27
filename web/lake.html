@@ -753,6 +753,7 @@
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="shared.js"></script>
 
   <script>
   (function() {
@@ -761,9 +762,6 @@
     // ── Constants ──
     const DEFAULT_ZOOM = 14;
     const GRID_CELL_SIZE = 0.0004; // degrees — matches compute engine spacing
-    const SHIELD_DISTANCE_M = 100;
-    const FETCH_CAP_KM = 5.0;       // shoreline fetch cap (matches engine)
-    const GRID_FETCH_CAP_KM = 1.0;  // grid impact cap (matches engine)
 
     // ── Lake state ──
     let currentLake = null;
@@ -798,47 +796,6 @@
         low:    '#15be53'
       };
       return colors[category] || '#15be53';
-    }
-
-    function lerpColor(a, b, t) {
-      return [
-        Math.round(a[0] + (b[0] - a[0]) * t),
-        Math.round(a[1] + (b[1] - a[1]) * t),
-        Math.round(a[2] + (b[2] - a[2]) * t)
-      ];
-    }
-
-    function gridImpactColor(score) {
-      // 5-anchor continuous gradient
-      const anchors = [
-        { score: 0.00, rgb: [0x10, 0xb9, 0x81] },  // green  — LOW
-        { score: 0.35, rgb: [0xea, 0xb3, 0x08] },  // yellow — MODERATE
-        { score: 0.45, rgb: [0xf9, 0x73, 0x16] },  // orange — ELEVATED
-        { score: 0.60, rgb: [0xef, 0x44, 0x44] },  // red    — HIGH
-        { score: 0.80, rgb: [0xdb, 0x27, 0x77] }   // magenta — VERY HIGH
-      ];
-
-      // Clamp to anchor range
-      if (score <= anchors[0].score) {
-        const c = anchors[0].rgb;
-        return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
-      }
-      if (score >= anchors[anchors.length - 1].score) {
-        const c = anchors[anchors.length - 1].rgb;
-        return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
-      }
-
-      // Find bracketing anchors and lerp
-      for (let i = 0; i < anchors.length - 1; i++) {
-        if (score >= anchors[i].score && score <= anchors[i + 1].score) {
-          const t = (score - anchors[i].score) / (anchors[i + 1].score - anchors[i].score);
-          const lerp = lerpColor(anchors[i].rgb, anchors[i + 1].rgb, t);
-          return '#' + lerp.map(v => v.toString(16).padStart(2, '0')).join('');
-        }
-      }
-
-      // Fallback (shouldn't reach here)
-      return '#10b981';
     }
 
     function impactLabel(category) {
@@ -934,215 +891,6 @@
       }
     }
 
-    // ── Live wind fetch from NWS (National Weather Service) — dynamic gridpoint resolution ──
-    async function fetchLiveWind(lat, lon) {
-      const NWS_UA = 'blue-lake-wave/1.0';
-
-      const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 15000);
-      try {
-        // Step 1: Resolve gridpoint and station from lat/lon
-        const pointsUrl = 'https://api.weather.gov/points/' + lat.toFixed(4) + ',' + lon.toFixed(4);
-        const pointsResp = await fetch(pointsUrl, {
-          signal: controller.signal,
-          headers: { 'User-Agent': NWS_UA }
-        });
-        if (!pointsResp.ok) {
-          console.error('NWS points fetch failed:', pointsResp.status, pointsResp.statusText);
-          return [];
-        }
-        const pointsData = await pointsResp.json();
-        const gridpointUrl = pointsData.properties.forecast.replace('/forecast', '');
-        const stationsUrl = pointsData.properties.observationStations;
-
-        // Step 2: Get hourly forecast from resolved gridpoint
-        const gridResp = await fetch(gridpointUrl, {
-          signal: controller.signal,
-          headers: { 'User-Agent': NWS_UA }
-        });
-        if (!gridResp.ok) {
-          console.error('NWS gridpoint fetch failed:', gridResp.status, gridResp.statusText);
-          return [];
-        }
-        const raw = await gridResp.json();
-        const props = raw.properties;
-        if (!props || !props.windSpeed || !props.windDirection) {
-          console.error('NWS gridpoint response missing wind data');
-          return [];
-        }
-
-        const parseTime = (vt) => vt.split('/')[0];
-
-        const speedMap = {};
-        for (const entry of props.windSpeed.values) {
-          speedMap[parseTime(entry.validTime)] = entry.value;
-        }
-
-        const dirMap = {};
-        for (const entry of props.windDirection.values) {
-          dirMap[parseTime(entry.validTime)] = entry.value;
-        }
-
-        const times = Object.keys(speedMap).filter(t => t in dirMap).sort();
-
-        if (times.length === 0) {
-          console.error('NWS gridpoint: no overlapping wind speed+direction entries');
-          return [];
-        }
-
-        // Step 3: Try station observation for current hour override
-        let stationObs = null;
-        if (stationsUrl) {
-          try {
-            const stationResp = await fetch(stationsUrl, {
-              signal: controller.signal,
-              headers: { 'User-Agent': NWS_UA }
-            });
-            if (stationResp.ok) {
-              const stationList = await stationResp.json();
-              const stations = stationList.observationStations || [];
-              if (stations.length > 0) {
-                const latestUrl = stations[0] + '/observations/latest';
-                const obsResp = await fetch(latestUrl, {
-                  signal: controller.signal,
-                  headers: { 'User-Agent': NWS_UA }
-                });
-                if (obsResp.ok) {
-                  const stationData = await obsResp.json();
-                  const sp = stationData.properties;
-                  if (sp && sp.windSpeed && sp.windDirection) {
-                    stationObs = {
-                      speed_kmh: sp.windSpeed.value,
-                      direction_deg: sp.windDirection.value,
-                    };
-                  }
-                }
-              }
-            }
-          } catch (e) {
-            console.warn('NWS station fetch failed (using gridpoint only):', e.message);
-          }
-        }
-
-        const KMH_TO_MS = 1.0 / 3.6;
-        const KMH_TO_MPH = 0.6214;
-        const forecast = [];
-
-        for (let i = 0; i < times.length; i++) {
-          const utcIso = times[i];
-          const localDt = new Date(utcIso);
-          localDt.setHours(localDt.getHours() - 5);
-          const timeStr = localDt.toISOString().slice(0, 16);
-
-          let speedKmh = speedMap[utcIso];
-          let dirDeg = dirMap[utcIso];
-
-          if (i === 0 && stationObs) {
-            speedKmh = stationObs.speed_kmh;
-            dirDeg = stationObs.direction_deg;
-          }
-
-          forecast.push({
-            timestamp: timeStr,
-            speed_ms: Math.round(speedKmh * KMH_TO_MS * 100) / 100,
-            speed_mph: Math.round(speedKmh * KMH_TO_MPH * 10) / 10,
-            gust_mph: null,
-            direction_deg: dirDeg
-          });
-        }
-
-        return forecast;
-      } catch (err) {
-        if (err.name === 'AbortError') {
-          console.error('NWS wind fetch timed out');
-        } else {
-          console.error('NWS wind fetch error:', err);
-        }
-        return [];
-      } finally {
-        clearTimeout(timeout);
-      }
-    }
-
-    // ── Wind impact math (Task 3) — mirrors Python compute_shield_factor + compute_grid ──
-
-    // Compute directional fetch: ray-cast from (lat,lon) in windDirDeg direction
-    // to the closest polygon boundary edge, returning distance in km.
-    // windDirDeg = direction wind is coming FROM (meteorological convention).
-    // polygon = array of [lon, lat] pairs (same convention as data.lake_polygon).
-    function computeDirectionalFetch(lat, lon, windDirDeg, polygon) {
-      if (!polygon || polygon.length < 3) return FETCH_CAP_KM; // fallback cap
-
-      const rad = windDirDeg * Math.PI / 180;
-
-      // Tangent-plane approximation centered on the point
-      const kmPerDegLat = 111.32;
-      const kmPerDegLon = 111.32 * Math.cos(lat * Math.PI / 180);
-
-      // Ray direction in local km coordinates (dx east, dy north)
-      const rdx = Math.sin(rad);  // east component
-      const rdy = Math.cos(rad);  // north component
-
-      let minDistKm = Infinity;
-
-      for (let i = 0; i < polygon.length; i++) {
-        const j = (i + 1) % polygon.length;
-        // polygon coords are [lon, lat]
-        const x1 = (polygon[i][0] - lon) * kmPerDegLon;  // km east of point
-        const y1 = (polygon[i][1] - lat) * kmPerDegLat;  // km north of point
-        const x2 = (polygon[j][0] - lon) * kmPerDegLon;
-        const y2 = (polygon[j][1] - lat) * kmPerDegLat;
-
-        const sx = x2 - x1;
-        const sy = y2 - y1;
-
-        // Solve: rdx * t = x1 + sx * u,  rdy * t = y1 + sy * u
-        const denom = rdx * sy - rdy * sx;
-        if (Math.abs(denom) < 1e-12) continue;  // parallel
-
-        const t = (x1 * sy - y1 * sx) / denom;
-        const u = (x1 * rdy - y1 * rdx) / denom;
-
-        if (t > 0 && u >= 0 && u <= 1) {
-          if (t < minDistKm) minDistKm = t;
-        }
-      }
-
-      return minDistKm < Infinity ? minDistKm : FETCH_CAP_KM;
-    }
-
-    // Mirror Python compute_shield_factor()
-    function computeShieldFactorJS(distanceM, waterNormalDeg, windDirDeg, nlcdReduction) {
-      if (distanceM == null || distanceM >= SHIELD_DISTANCE_M) return 1.0;
-
-      // Wind TO direction: where wind is going
-      const windToDeg = (windDirDeg + 180) % 360;
-      let diff = Math.abs(windToDeg - waterNormalDeg);
-      if (diff > 180) diff = 360 - diff;
-
-      // Onshore wind (within 90° of water-facing normal)
-      if (diff < 90) {
-        const shoreShield = 1.0 - (nlcdReduction != null ? nlcdReduction : 0.5);
-        return shoreShield + (1.0 - shoreShield) * (distanceM / SHIELD_DISTANCE_M);
-      }
-      return 1.0;
-    }
-
-    // Mirror Python compute_grid() impact formula
-    function recomputeImpactScore(cell, windSpeedMs, windDirDeg) {
-      const shieldFactor = computeShieldFactorJS(
-        cell.shore_distance_m,
-        cell.shore_normal_deg,
-        windDirDeg,
-        cell.nlcd_reduction != null ? cell.nlcd_reduction : 0.5
-      );
-      const effectiveWind = windSpeedMs * shieldFactor;
-      const windFactor = effectiveWind / 7.82;  // 7.82 m/s normalization
-      // Compute fetch LIVE based on current wind direction (not stale static data)
-      const fetchKm = computeDirectionalFetch(cell.lat, cell.lon, windDirDeg, data.lake_polygon);
-      return Math.min(fetchKm / GRID_FETCH_CAP_KM, 1.0) * windFactor;
-    }
-
     // Shoreline impact: mirrors Python compute_shoreline()
     function recomputeShorelineImpact(seg, windDirDeg) {
       // Reconstruct dot product of shore normal and wind vector
@@ -1184,7 +932,7 @@
         // Only render cells inside the lake polygon
         if (lakePolygon && !pointInPolygon(cell.lat, cell.lon, lakePolygon)) return;
 
-        const impactScore = recomputeImpactScore(cell, windSpeedMs, windDirDeg);
+        const impactScore = cellImpact(cell, windSpeedMs, windDirDeg, data.lake_polygon);
         const color = gridImpactColor(impactScore);
         const half = GRID_CELL_SIZE / 2;
         const bounds = [
@@ -1205,13 +953,13 @@
           + '<strong>Impact:</strong> ' + (impactScore * 100).toFixed(0) + '%';
 
         // Show wave height estimate for reference
-        const waveH = 0.017 * (windSpeedMs * computeShieldFactorJS(
+        const waveH = 0.017 * (windSpeedMs * computeShieldFactor(
           cell.shore_distance_m, cell.shore_normal_deg, windDirDeg,
           cell.nlcd_reduction != null ? cell.nlcd_reduction : 0.5
         )) * Math.sqrt((cell.fetch_km || 0) * 1000);
         tipText += '<br><strong>Wave:</strong> ' + (waveH * 3.28084).toFixed(1) + ' ft';
 
-        const shieldFactor = computeShieldFactorJS(
+        const shieldFactor = computeShieldFactor(
           cell.shore_distance_m, cell.shore_normal_deg, windDirDeg,
           cell.nlcd_reduction != null ? cell.nlcd_reduction : 0.5
         );
@@ -1490,7 +1238,7 @@
 
         // Fetch live wind from NWS using lake center
         const center = getLakeCenter();
-        const forecast = await fetchLiveWind(center[0], center[1]);
+        const forecast = await fetchLakeWind(center[0], center[1]);
         if (!forecast || forecast.length === 0) throw new Error('No wind forecast');
 
         // Build the combined data object the render pipeline expects
@@ -1504,7 +1252,7 @@
         // Recompute impact scores for current wind (first forecast hour)
         const currentWind = forecast[0];
         data.grid_cells = staticData.grid.map(cell => Object.assign({}, cell, {
-          impact_score: recomputeImpactScore(cell, currentWind.speed_ms, currentWind.direction_deg)
+          impact_score: cellImpact(cell, currentWind.speed_ms, currentWind.direction_deg, data.lake_polygon)
         }));
         data.shoreline_segments = staticData.shoreline.map(seg => Object.assign({}, seg, {
           impact_score: recomputeShorelineImpact(seg, currentWind.direction_deg)
