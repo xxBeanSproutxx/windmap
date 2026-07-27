@@ -134,8 +134,13 @@
       align-items: stretch;
       border-left: 4px solid var(--border);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
-      cursor: default;
+      cursor: pointer;
       overflow: hidden;
+    }
+
+    .lake-card:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 16px rgba(50,50,93,0.2);
     }
 
     .lake-card:active { transform: scale(0.985); }
@@ -213,8 +218,7 @@
       font-size: 11px;
       font-weight: 400;
       color: var(--body);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.02em;
     }
 
     .stat-value {
@@ -298,23 +302,13 @@
       letter-spacing: 0.05em;
     }
 
-    /* ── Section headers ── */
-    .section-label {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--body);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      padding: 0 4px;
-      margin-bottom: -6px;
-    }
   </style>
 </head>
 <body>
 
 <header class="header">
   <div class="header-brand">
-    <div class="brand-icon">~</div>
+    <div class="brand-icon"><svg width="16" height="12" viewBox="0 0 16 12"><path d="M0 6c2-3 4 3 6 0s4-3 6 0 4 3 4 0" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></div>
     <h1 class="header-title">Lake Dashboard</h1>
   </div>
 </header>
@@ -483,22 +477,11 @@
     $statusText.textContent = successCount + ' of ' + sorted.length + ' lakes loaded';
 
     let html = '';
-    let currentCat = null;
     let successRank = 0;
 
     for (const r of sorted) {
       if (!r.error) {
         successRank++;
-        const cat = classifyImpact(r.highPct);
-        if (cat !== currentCat) {
-          currentCat = cat;
-          html += '<div class="section-label">' + impactLabel(cat) + '</div>';
-        }
-      } else {
-        if (currentCat !== 'unavailable') {
-          currentCat = 'unavailable';
-          html += '<div class="section-label">Unavailable</div>';
-        }
       }
       html += renderLakeCard(r.lake, r, r.error ? '—' : successRank, r.lake.id);
     }
