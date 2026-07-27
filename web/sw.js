@@ -1,4 +1,4 @@
-const CACHE_NAME = 'blue-lake-wave-v21';
+const CACHE_NAME = 'blue-lake-wave-v22';
 const STATIC_ASSETS = [
   '/',
   '/lake.html',
