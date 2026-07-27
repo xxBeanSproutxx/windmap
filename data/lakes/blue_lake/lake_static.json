@@ -6866,9 +6866,9 @@
       ],
       "fetch_km": 0.355,
       "is_calm": false,
-      "nlcd_class": null,
-      "nlcd_class_name": null,
-      "nlcd_reduction": 0.5
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
     },
     {
       "segment": [
@@ -6887,9 +6887,9 @@
       ],
       "fetch_km": 0.358,
       "is_calm": false,
-      "nlcd_class": null,
-      "nlcd_class_name": null,
-      "nlcd_reduction": 0.5
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
     },
     {
       "segment": [
@@ -6908,9 +6908,9 @@
       ],
       "fetch_km": 0.362,
       "is_calm": false,
-      "nlcd_class": null,
-      "nlcd_class_name": null,
-      "nlcd_reduction": 0.5
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
     },
     {
       "segment": [
@@ -14008,9 +14008,9 @@
       "fetch_km": 0.349,
       "shore_distance_m": 6.6,
       "shore_normal_deg": 109.5,
-      "nlcd_class": null,
-      "nlcd_class_name": null,
-      "nlcd_reduction": 0.5
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
     },
     {
       "lat": 45.480672,
@@ -14018,9 +14018,9 @@
       "fetch_km": 0.313,
       "shore_distance_m": 37.5,
       "shore_normal_deg": 109.5,
-      "nlcd_class": null,
-      "nlcd_class_name": null,
-      "nlcd_reduction": 0.5
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
     },
     {
       "lat": 45.480672,
@@ -14028,9 +14028,9 @@
       "fetch_km": 0.288,
       "shore_distance_m": 68.2,
       "shore_normal_deg": 116.6,
-      "nlcd_class": null,
-      "nlcd_class_name": null,
-      "nlcd_reduction": 0.5
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
     },
     {
       "lat": 45.480672,
@@ -14038,9 +14038,9 @@
       "fetch_km": 0.264,
       "shore_distance_m": 98.4,
       "shore_normal_deg": 116.6,
-      "nlcd_class": null,
-      "nlcd_class_name": null,
-      "nlcd_reduction": 0.5
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
     },
     {
       "lat": 45.480672,
@@ -14048,9 +14048,9 @@
       "fetch_km": 0.241,
       "shore_distance_m": 129.1,
       "shore_normal_deg": 116.6,
-      "nlcd_class": null,
-      "nlcd_class_name": null,
-      "nlcd_reduction": 0.5
+      "nlcd_class": 41,
+      "nlcd_class_name": "Deciduous Forest",
+      "nlcd_reduction": 0.75
     },
     {
       "lat": 45.480672,
@@ -16043,7 +16043,7 @@
       "nlcd_reduction": 0.46
     }
   ],
-  "generated_at": "2026-07-26T22:59:04.405881",
+  "generated_at": "2026-07-26T23:43:24.396717",
   "generated_wind_direction_deg": 130,
   "generated_wind_speed_ms": 1.69
 }
