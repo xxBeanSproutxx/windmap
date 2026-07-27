@@ -107,27 +107,6 @@
       flex-shrink: 0;
     }
 
-    .header-title {
-      font-family: var(--font);
-      font-weight: 300;
-      font-size: 20px;
-      color: var(--heading);
-      letter-spacing: -0.2px;
-      white-space: nowrap;
-    }
-
-    .header-title .dot {
-      color: var(--accent);
-      font-weight: 400;
-    }
-
-    .header-subtitle {
-      font-size: 13px;
-      font-weight: 400;
-      color: var(--body);
-      white-space: nowrap;
-    }
-
     /* Lake selector dropdown */
     .lake-select {
       font-family: var(--font);
@@ -628,10 +607,6 @@
       z-index: 10000 !important;
     }
 
-    @media (max-width: 1024px) {
-      .header-subtitle { display: none; }
-    }
-
     /* ── Responsive ── */
     @media (max-width: 640px) {
       .header {
@@ -640,8 +615,6 @@
         flex-wrap: nowrap;
         min-height: 44px;
       }
-      .header-title { font-size: 14px; }
-      .header-subtitle { display: none; }
       .brand-icon { width: 22px; height: 22px; font-size: 11px; }
       .header-meta { gap: 6px; overflow: hidden; }
       .header-badge { display: none; }
@@ -710,8 +683,6 @@
     <a href="/" class="header-back-link">← Dashboard</a>
     <div class="header-brand">
       <div class="brand-icon"><svg width="16" height="12" viewBox="0 0 16 12"><path d="M0 6c2-3 4 3 6 0s4-3 6 0 4 3 4 0" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></div>
-      <span class="header-title">Blue Lake <span class="dot">·</span> Wave Forecast</span>
-      <span class="header-subtitle">Wave-fetch fishing conditions</span>
     </div>
     <select class="lake-select" id="lakeSelect"></select>
     <div class="header-meta">
@@ -1251,7 +1222,6 @@
 
       // Update page title
       document.title = currentLake.name + ' · Wave Forecast';
-      document.querySelector('.header-title').textContent = currentLake.name;
     }
 
     // ── Load data (dual-fetch: static geometry + live wind) ──
@@ -1433,7 +1403,6 @@
       // Update title for initial lake
       if (currentLake) {
         document.title = currentLake.name + ' · Wave Forecast';
-        document.querySelector('.header-title').textContent = currentLake.name;
       }
 
       document.getElementById('landcoverToggle').addEventListener('click', toggleLandCover);
