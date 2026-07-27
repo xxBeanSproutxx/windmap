@@ -3,3 +3,4 @@ __pycache__/
 lake_data_sim.json
 data/lake_data.json
 web/data
+.venv/
