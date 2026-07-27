@@ -204,13 +204,6 @@
 
     .stat-value.small { font-size: 14px; }
 
-    /* ── Sparkline ── */
-    .card-sparkline {
-      width: 100%;
-      height: 35px;
-      margin-top: 2px;
-    }
-
     /* ── Loading state ── */
     .skeleton {
       background: var(--bg);
@@ -358,135 +351,10 @@
     };
   }
 
-  // ── Past wind history (localStorage) ──
-  function loadWindHistory() {
-    try {
-      const raw = localStorage.getItem('wind_history');
-      return raw ? JSON.parse(raw) : {};
-    } catch (e) {
-      return {};
-    }
-  }
-
-  function saveWindHistory(history) {
-    try {
-      localStorage.setItem('wind_history', JSON.stringify(history));
-    } catch (e) {
-      // Storage full or unavailable
-    }
-  }
-
-  function recordWindHistory(lakeId, wind) {
-    const history = loadWindHistory();
-    if (!history[lakeId]) history[lakeId] = [];
-
-    // Only add if timestamp is different from last entry
-    const entries = history[lakeId];
-    if (entries.length === 0 || entries[entries.length - 1].timestamp !== wind.timestamp) {
-      entries.push({
-        timestamp: wind.timestamp,
-        speed_mph: wind.speed_mph,
-        direction_deg: wind.direction_deg
-      });
-      // Keep last 24 entries
-      if (entries.length > 24) entries.shift();
-    }
-
-    saveWindHistory(history);
-  }
-
-  // ── Sparkline SVG ──
-  function renderSparkline(forecast, lakeId) {
-    if (!forecast || forecast.length < 2) return '';
-
-    const history = loadWindHistory();
-    const pastEntries = (history[lakeId] || []).slice(-4);
-
-    // Build combined data: past (up to 4) + forecast (up to 20)
-    const pastPoints = pastEntries.map(e => ({
-      speed_mph: e.speed_mph,
-      isPast: true
-    }));
-
-    const forecastPoints = forecast.slice(0, 20).map(f => ({
-      speed_mph: f.speed_mph,
-      isPast: false
-    }));
-
-    const allPoints = pastPoints.concat(forecastPoints);
-    if (allPoints.length < 2) return '';
-
-    const speeds = allPoints.map(p => p.speed_mph);
-    const minSpeed = Math.min.apply(null, speeds);
-    const maxSpeed = Math.max.apply(null, speeds);
-    const range = maxSpeed - minSpeed || 1;
-
-    const width = 200;
-    const height = 35;
-    const padY = 5;
-
-    // Scale X positions: past points condensed to left 20%, forecast fills rest
-    const forecastCount = forecastPoints.length || 1;
-    const pastCount = pastPoints.length;
-
-    // Allocate width: past gets up to 20% of width, forecast gets the rest
-    const pastWidth = pastCount > 0 ? width * 0.20 : 0;
-    const forecastWidth = width - pastWidth;
-
-    let pointsStr = '';
-    let fillPts = '';
-    const pastXStep = pastCount > 1 ? pastWidth / (pastCount - 1) : pastWidth / 2;
-    const forecastXStep = forecastCount > 1 ? forecastWidth / (forecastCount - 1) : forecastWidth / 2;
-
-    for (let i = 0; i < allPoints.length; i++) {
-      let x;
-      if (i < pastCount) {
-        x = i * pastXStep;
-      } else {
-        x = pastWidth + (i - pastCount) * forecastXStep;
-      }
-      const y = height - padY - ((allPoints[i].speed_mph - minSpeed) / range) * (height - 2 * padY);
-      pointsStr += (i > 0 ? ' ' : '') + x.toFixed(1) + ',' + y.toFixed(1);
-    }
-
-    // Fill polygon
-    fillPts = pointsStr + ' ' + width.toFixed(1) + ',' + (height - padY).toFixed(1) + ' 0,' + (height - padY).toFixed(1);
-
-    let svg = '<svg class="card-sparkline" viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="none">';
-
-    // Fill
-    svg += '<defs><linearGradient id="sparkGrad_' + lakeId + '" x1="0" y1="0" x2="0" y2="1">';
-    svg += '<stop offset="0%" stop-color="#533afd" stop-opacity="0.10"/>';
-    svg += '<stop offset="100%" stop-color="#533afd" stop-opacity="0.01"/>';
-    svg += '</linearGradient></defs>';
-
-    svg += '<polygon points="' + fillPts + '" fill="url(#sparkGrad_' + lakeId + ')"/>';
-
-    // Line
-    svg += '<polyline points="' + pointsStr + '" fill="none" stroke="#533afd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
-
-    // Current hour dot (first forecast point)
-    if (forecastPoints.length > 0) {
-      const dotIdx = pastCount;
-      let dotX;
-      if (dotIdx < pastCount) {
-        dotX = dotIdx * pastXStep;
-      } else {
-        dotX = pastWidth + (dotIdx - pastCount) * forecastXStep;
-      }
-      const dotY = height - padY - ((allPoints[dotIdx].speed_mph - minSpeed) / range) * (height - 2 * padY);
-      svg += '<circle cx="' + dotX.toFixed(1) + '" cy="' + dotY.toFixed(1) + '" r="4" fill="#533afd"/>';
-    }
-
-    svg += '</svg>';
-    return svg;
-  }
-
   // ── Card HTML ──
-  function renderLakeCard(lake, result, rank, forecast, lakeId) {
+  function renderLakeCard(lake, result, rank, lakeId) {
     const name = lake.name;
     let cardClass, badgeClass, badgeText, speedStr, coverStr, impactStr;
-    const sparklineSvg = renderSparkline(forecast, lakeId);
 
     if (result.error) {
       cardClass = 'unavailable';
@@ -528,7 +396,6 @@
           '<span class="stat-value small">' + impactStr + '</span>' +
         '</div>' +
       '</div>' +
-      sparklineSvg +
     '</div></a>';
   }
 
@@ -543,7 +410,7 @@
           fetchLakeStatic(lake.id)
         ]);
 
-        const currentWind = forecast[0];
+        const currentWind = getCurrentWind(forecast);
 
         // Compute aggregate impact from ALL grid cells
         const agg = computeAggregateImpact(
@@ -553,16 +420,12 @@
           staticData.polygon
         );
 
-        // Record wind history for sparkline
-        recordWindHistory(lake.id, currentWind);
-
         return {
           lake,
           speed_mph: currentWind.speed_mph,
           direction_deg: currentWind.direction_deg,
           highPct: agg.highPct,
           avgImpact: agg.avgImpact,
-          forecast: forecast,
           error: null
         };
       } catch (err) {
@@ -573,7 +436,6 @@
           direction_deg: null,
           highPct: null,
           avgImpact: null,
-          forecast: null,
           error: err.message
         };
       }
@@ -614,7 +476,7 @@
           html += '<div class="section-label">Unavailable</div>';
         }
       }
-      html += renderLakeCard(r.lake, r, r.error ? '—' : successRank, r.forecast, r.lake.id);
+      html += renderLakeCard(r.lake, r, r.error ? '—' : successRank, r.lake.id);
     }
 
     $lakeList.innerHTML = html;
