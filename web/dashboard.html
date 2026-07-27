@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Lake Dashboard · Wave Forecast</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+  <style>
+    /* ── Reset & Base ── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #ffffff;
+      --heading: #061b31;
+      --accent: #533afd;
+      --body: #64748d;
+      --border: #e5edf5;
+      --card-shadow: 0 2px 12px rgba(50,50,93,0.15);
+      --radius: 6px;
+      --radius-lg: 10px;
+      --font: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+      --impact-high: #ea2261;
+      --impact-medium: #f59e0b;
+      --impact-low: #15be53;
+    }
+
+    html, body {
+      min-height: 100%;
+      font-family: var(--font);
+      font-weight: 400;
+      color: var(--body);
+      background: #f6f8fc;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ── Header ── */
+    .header {
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      box-shadow: 0 1px 3px rgba(50,50,93,0.08);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .header-brand .brand-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, var(--accent) 0%, #7c6fff 100%);
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: 16px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--heading);
+      letter-spacing: -0.01em;
+    }
+
+    .header-back {
+      font-size: 14px;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      flex-shrink: 0;
+    }
+
+    .header-back:hover { opacity: 0.8; }
+
+    /* ── Status bar ── */
+    .status-bar {
+      padding: 10px 20px;
+      font-size: 13px;
+      color: var(--body);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg);
+    }
+
+    .status-bar .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .status-bar .dot.loading { background: #f59e0b; animation: pulse 1.5s ease-in-out infinite; }
+    .status-bar .dot.ready { background: #15be53; }
+    .status-bar .dot.error { background: #ea2261; }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+
+    /* ── Main content ── */
+    .main {
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      max-width: 640px;
+      margin: 0 auto;
+    }
+
+    /* ── Lake card ── */
+    .lake-card {
+      background: var(--bg);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--card-shadow);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-left: 4px solid var(--border);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      cursor: default;
+    }
+
+    .lake-card:active { transform: scale(0.985); }
+
+    .lake-card.impact-high   { border-left-color: var(--impact-high); }
+    .lake-card.impact-medium { border-left-color: var(--impact-medium); }
+    .lake-card.impact-low    { border-left-color: var(--impact-low); }
+    .lake-card.unavailable   { border-left-color: #94a3b8; opacity: 0.7; }
+
+    .lake-card-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .lake-name {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--heading);
+      letter-spacing: -0.01em;
+    }
+
+    .impact-badge {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 10px;
+      border-radius: 100px;
+      white-space: nowrap;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      flex-shrink: 0;
+    }
+
+    .impact-badge.high   { background: var(--impact-high); color: #fff; }
+    .impact-badge.medium { background: var(--impact-medium); color: #fff; }
+    .impact-badge.low    { background: var(--impact-low); color: #fff; }
+    .impact-badge.unavailable { background: #94a3b8; color: #fff; }
+
+    .lake-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    .stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--body);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-value {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--heading);
+    }
+
+    .stat-value.small { font-size: 14px; }
+
+    /* ── Loading state ── */
+    .skeleton {
+      background: var(--bg);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--card-shadow);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      border-left: 4px solid var(--border);
+    }
+
+    .skeleton-line {
+      height: 16px;
+      background: linear-gradient(90deg, var(--border) 25%, #f0f3f7 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      border-radius: 4px;
+      animation: shimmer 1.5s ease-in-out infinite;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .skeleton-line.title { width: 60%; height: 20px; }
+    .skeleton-line.badge { width: 28%; height: 14px; }
+    .skeleton-line.stat  { width: 40%; }
+
+    .skeleton-stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+
+    /* ── Error / empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--body);
+    }
+
+    .empty-state h2 {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--heading);
+      margin-bottom: 8px;
+    }
+
+    .retry-btn {
+      margin-top: 16px;
+      padding: 10px 24px;
+      font-family: var(--font);
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      background: var(--accent);
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+    }
+
+    .retry-btn:hover { opacity: 0.9; }
+
+    /* ── Rank number ── */
+    .rank {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--body);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Section headers ── */
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--body);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0 4px;
+      margin-bottom: -6px;
+    }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-brand">
+    <div class="brand-icon">~</div>
+    <h1 class="header-title">Lake Dashboard</h1>
+  </div>
+  <a href="index.html" class="header-back">← Back</a>
+</header>
+
+<div class="status-bar" id="statusBar">
+  <span class="dot loading"></span>
+  <span id="statusText">Fetching lake conditions…</span>
+</div>
+
+<main class="main" id="lakeList">
+  <!-- Skeleton placeholders -->
+  <div class="skeleton"><div class="skeleton-line title"></div><div class="skeleton-stats"><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div></div></div>
+  <div class="skeleton"><div class="skeleton-line title"></div><div class="skeleton-stats"><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div></div></div>
+  <div class="skeleton"><div class="skeleton-line title"></div><div class="skeleton-stats"><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div></div></div>
+  <div class="skeleton"><div class="skeleton-line title"></div><div class="skeleton-stats"><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div></div></div>
+  <div class="skeleton"><div class="skeleton-line title"></div><div class="skeleton-stats"><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div></div></div>
+  <div class="skeleton"><div class="skeleton-line title"></div><div class="skeleton-stats"><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div></div></div>
+  <div class="skeleton"><div class="skeleton-line title"></div><div class="skeleton-stats"><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div></div></div>
+</main>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── Constants ──
+  const FETCH_CAP_KM = 5.0;
+  const NWS_UA = 'blue-lake-wave/1.0';
+  const TIMEOUT_MS = 15000;
+
+  // ── DOM refs ──
+  const $lakeList = document.getElementById('lakeList');
+  const $statusBar = document.getElementById('statusBar');
+  const $statusDot = $statusBar.querySelector('.dot');
+  const $statusText = document.getElementById('statusText');
+
+  // ── Classification ──
+  function classifyImpact(score) {
+    if (score == null || isNaN(score)) return 'low';
+    if (score > 0.45) return 'high';
+    if (score > 0.30) return 'medium';
+    return 'low';
+  }
+
+  function impactLabel(category) {
+    const labels = { high: 'High Impact', medium: 'Moderate', low: 'Low' };
+    return labels[category] || 'Low';
+  }
+
+  // ── Directional fetch (matches index.html computeDirectionalFetch) ──
+  // Ray-cast from (lat, lon) in windDirDeg direction to closest polygon edge.
+  // windDirDeg = meteorological (direction wind is FROM).
+  // polygon = array of [lon, lat] pairs.
+  function computeDirectionalFetch(lat, lon, windDirDeg, polygon) {
+    if (!polygon || polygon.length < 3) return FETCH_CAP_KM;
+
+    const rad = windDirDeg * Math.PI / 180;
+    const kmPerDegLat = 111.32;
+    const kmPerDegLon = 111.32 * Math.cos(lat * Math.PI / 180);
+
+    const rdx = Math.sin(rad);
+    const rdy = Math.cos(rad);
+
+    let minDistKm = Infinity;
+
+    for (let i = 0; i < polygon.length; i++) {
+      const j = (i + 1) % polygon.length;
+      const x1 = (polygon[i][0] - lon) * kmPerDegLon;
+      const y1 = (polygon[i][1] - lat) * kmPerDegLat;
+      const x2 = (polygon[j][0] - lon) * kmPerDegLon;
+      const y2 = (polygon[j][1] - lat) * kmPerDegLat;
+
+      const sx = x2 - x1;
+      const sy = y2 - y1;
+
+      const denom = rdx * sy - rdy * sx;
+      if (Math.abs(denom) < 1e-12) continue;
+
+      const t = (x1 * sy - y1 * sx) / denom;
+      const u = (x1 * rdy - y1 * rdx) / denom;
+
+      if (t > 0 && u >= 0 && u <= 1) {
+        if (t < minDistKm) minDistKm = t;
+      }
+    }
+
+    return minDistKm < Infinity ? minDistKm : FETCH_CAP_KM;
+  }
+
+  // ── NWS wind fetch for a single lake ──
+  async function fetchLakeWind(lat, lon) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
+
+    try {
+      // Step 1: Resolve gridpoint
+      const pointsUrl = 'https://api.weather.gov/points/' + lat.toFixed(4) + ',' + lon.toFixed(4);
+      const pointsResp = await fetch(pointsUrl, {
+        signal: controller.signal,
+        headers: { 'User-Agent': NWS_UA }
+      });
+      if (!pointsResp.ok) throw new Error('NWS points HTTP ' + pointsResp.status);
+
+      const pointsData = await pointsResp.json();
+      const gridpointUrl = pointsData.properties.forecast.replace('/forecast', '');
+      const stationsUrl = pointsData.properties.observationStations;
+
+      // Step 2: Gridpoint wind
+      const gridResp = await fetch(gridpointUrl, {
+        signal: controller.signal,
+        headers: { 'User-Agent': NWS_UA }
+      });
+      if (!gridResp.ok) throw new Error('NWS gridpoint HTTP ' + gridResp.status);
+
+      const raw = await gridResp.json();
+      const props = raw.properties;
+      if (!props || !props.windSpeed || !props.windDirection) {
+        throw new Error('NWS gridpoint missing wind data');
+      }
+
+      const parseTime = (vt) => vt.split('/')[0];
+      const speedMap = {};
+      for (const entry of props.windSpeed.values) {
+        speedMap[parseTime(entry.validTime)] = entry.value;
+      }
+      const dirMap = {};
+      for (const entry of props.windDirection.values) {
+        dirMap[parseTime(entry.validTime)] = entry.value;
+      }
+
+      const times = Object.keys(speedMap).filter(t => t in dirMap).sort();
+      if (times.length === 0) throw new Error('No overlapping wind speed+direction entries');
+
+      // Step 3: Station obs override for current hour
+      let speedKmh = speedMap[times[0]];
+      let dirDeg = dirMap[times[0]];
+
+      if (stationsUrl) {
+        try {
+          const stationResp = await fetch(stationsUrl, {
+            signal: controller.signal,
+            headers: { 'User-Agent': NWS_UA }
+          });
+          if (stationResp.ok) {
+            const stationList = await stationResp.json();
+            const stations = stationList.observationStations || [];
+            if (stations.length > 0) {
+              const obsResp = await fetch(stations[0] + '/observations/latest', {
+                signal: controller.signal,
+                headers: { 'User-Agent': NWS_UA }
+              });
+              if (obsResp.ok) {
+                const sd = await obsResp.json();
+                const sp = sd.properties;
+                if (sp && sp.windSpeed && sp.windDirection) {
+                  speedKmh = sp.windSpeed.value;
+                  dirDeg = sp.windDirection.value;
+                }
+              }
+            }
+          }
+        } catch (e) {
+          console.warn('Station obs failed, using gridpoint:', e.message);
+        }
+      }
+
+      const KMH_TO_MPH = 0.6214;
+      return {
+        speed_mph: Math.round(speedKmh * KMH_TO_MPH * 10) / 10,
+        direction_deg: dirDeg,
+        timestamp: times[0]
+      };
+    } catch (err) {
+      if (err.name === 'AbortError') throw new Error('Timed out');
+      throw err;
+    } finally {
+      clearTimeout(timeout);
+    }
+  }
+
+  // ── Fetch polygon for a lake from its static data ──
+  async function fetchLakePolygon(lakeId) {
+    const url = 'data/lakes/' + lakeId + '/lake_static.json';
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('Static data HTTP ' + resp.status);
+    const json = await resp.json();
+    return json.lake.polygon;
+  }
+
+  // ── Compute impact score for a lake ──
+  function computeLakeScore(speedMph, directionDeg, polygon, centerLat, centerLon) {
+    const fetchKm = computeDirectionalFetch(centerLat, centerLon, directionDeg, polygon);
+    const cappedFetch = Math.min(fetchKm / FETCH_CAP_KM, 1.0);
+    const cappedWind = Math.min(speedMph / 15, 1.0);
+    return Math.round(cappedWind * cappedFetch * 1000) / 1000;
+  }
+
+  // ── Card HTML ──
+  function renderLakeCard(lake, result, rank) {
+    const name = lake.name;
+    let cardClass, badgeClass, badgeText, speedStr, fetchStr, scoreStr;
+
+    if (result.error) {
+      cardClass = 'unavailable';
+      badgeClass = 'unavailable';
+      badgeText = 'Unavailable';
+      speedStr = '—';
+      fetchStr = '—';
+      scoreStr = result.error;
+    } else {
+      const cat = classifyImpact(result.score);
+      cardClass = 'impact-' + cat;
+      badgeClass = cat;
+      badgeText = impactLabel(cat);
+      speedStr = result.speed_mph.toFixed(1) + ' mph';
+      fetchStr = result.fetch_km.toFixed(2) + ' km';
+      scoreStr = (result.score * 100).toFixed(0) + '%';
+    }
+
+    return '<div class="lake-card ' + cardClass + '">' +
+      '<div class="lake-card-top">' +
+        '<div>' +
+          '<div class="rank">#' + rank + '</div>' +
+          '<div class="lake-name">' + name + '</div>' +
+        '</div>' +
+        '<span class="impact-badge ' + badgeClass + '">' + badgeText + '</span>' +
+      '</div>' +
+      '<div class="lake-stats">' +
+        '<div class="stat">' +
+          '<span class="stat-label">Wind</span>' +
+          '<span class="stat-value small">' + speedStr + '</span>' +
+        '</div>' +
+        '<div class="stat">' +
+          '<span class="stat-label">Fetch</span>' +
+          '<span class="stat-value small">' + fetchStr + '</span>' +
+        '</div>' +
+        '<div class="stat">' +
+          '<span class="stat-label">Impact</span>' +
+          '<span class="stat-value small">' + scoreStr + '</span>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }
+
+  // ── Fetch all lake data in parallel ──
+  async function loadAllLakes(manifest) {
+    const lakes = manifest;
+
+    const promises = lakes.map(async (lake) => {
+      try {
+        const [wind, polygon] = await Promise.all([
+          fetchLakeWind(lake.center_lat, lake.center_lon),
+          fetchLakePolygon(lake.id)
+        ]);
+
+        const fetchKm = computeDirectionalFetch(
+          lake.center_lat, lake.center_lon,
+          wind.direction_deg, polygon
+        );
+
+        const score = computeLakeScore(
+          wind.speed_mph, wind.direction_deg,
+          polygon, lake.center_lat, lake.center_lon
+        );
+
+        return {
+          lake,
+          speed_mph: wind.speed_mph,
+          direction_deg: wind.direction_deg,
+          fetch_km: Math.round(fetchKm * 100) / 100,
+          score,
+          error: null
+        };
+      } catch (err) {
+        console.error('Failed to load ' + lake.name + ':', err.message);
+        return {
+          lake,
+          speed_mph: null,
+          direction_deg: null,
+          fetch_km: null,
+          score: null,
+          error: err.message
+        };
+      }
+    });
+
+    return Promise.all(promises);
+  }
+
+  // ── Render ──
+  function render(results) {
+    // Sort by score ascending (lowest impact = best), errors last
+    const sorted = [...results].sort((a, b) => {
+      if (a.error && b.error) return 0;
+      if (a.error) return 1;
+      if (b.error) return -1;
+      return a.score - b.score;
+    });
+
+    const successCount = sorted.filter(r => !r.error).length;
+
+    // Update status
+    $statusDot.className = 'dot ' + (successCount > 0 ? 'ready' : 'error');
+    $statusText.textContent = successCount + ' of ' + sorted.length + ' lakes loaded';
+
+    // Build cards with section headers
+    let html = '';
+    let currentCat = null;
+    let successRank = 0;
+
+    for (const r of sorted) {
+      if (!r.error) {
+        successRank++;
+        const cat = classifyImpact(r.score);
+        if (cat !== currentCat) {
+          currentCat = cat;
+          html += '<div class="section-label">' + impactLabel(cat) + '</div>';
+        }
+      } else {
+        if (currentCat !== 'unavailable') {
+          currentCat = 'unavailable';
+          html += '<div class="section-label">Unavailable</div>';
+        }
+      }
+      html += renderLakeCard(r.lake, r, r.error ? '—' : successRank);
+    }
+
+    $lakeList.innerHTML = html;
+  }
+
+  // ── Show error state ──
+  function showError(msg) {
+    $statusDot.className = 'dot error';
+    $statusText.textContent = 'Failed to load';
+    $lakeList.innerHTML =
+      '<div class="empty-state">' +
+        '<h2>Could not load lakes</h2>' +
+        '<p>' + msg + '</p>' +
+        '<button class="retry-btn" onclick="location.reload()">Retry</button>' +
+      '</div>';
+  }
+
+  // ── Main ──
+  async function main() {
+    try {
+      // Fetch manifest
+      const manifestResp = await fetch('data/lakes/manifest.json');
+      if (!manifestResp.ok) throw new Error('Manifest HTTP ' + manifestResp.status);
+      const manifest = await manifestResp.json();
+
+      if (!manifest || manifest.length === 0) {
+        showError('No lakes found in manifest.');
+        return;
+      }
+
+      $statusText.textContent = 'Loading ' + manifest.length + ' lakes…';
+
+      const results = await loadAllLakes(manifest);
+      render(results);
+    } catch (err) {
+      console.error('Dashboard init error:', err);
+      showError(err.message);
+    }
+  }
+
+  main();
+})();
+</script>
+
+</body>
+</html>
