@@ -152,6 +152,15 @@
       gap: 12px;
     }
 
+    .card-thumb {
+      width: 60px;
+      height: 40px;
+      border-radius: 6px;
+      object-fit: contain;
+      flex-shrink: 0;
+      background: #1a1a2e;
+    }
+
     .lake-name {
       font-size: 18px;
       font-weight: 600;
@@ -376,6 +385,7 @@
     return '<a href="lake.html#lake=' + lake.id + '" class="lake-card-link">' +
       '<div class="lake-card ' + cardClass + '">' +
       '<div class="lake-card-top">' +
+        '<img class="card-thumb" src="data/lakes/' + lake.id + '/thumb.png" alt="" width="60" height="40" loading="lazy">' +
         '<div>' +
           '<div class="rank">#' + rank + '</div>' +
           '<div class="lake-name">' + name + '</div>' +
