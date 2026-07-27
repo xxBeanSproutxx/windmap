@@ -342,14 +342,14 @@
   // ── Classification ──
   function classifyImpact(highPct) {
     if (highPct == null || isNaN(highPct)) return 'low';
-    if (highPct >= 0.75) return 'very-high';
-    if (highPct >= 0.50) return 'high';
-    if (highPct >= 0.25) return 'medium';
+    if (highPct >= 0.50) return 'very-high';
+    if (highPct >= 0.30) return 'high';
+    if (highPct >= 0.15) return 'medium';
     return 'low';
   }
 
   function impactLabel(category) {
-    const labels = { 'very-high': 'Very High', high: 'High Impact', medium: 'Moderate', low: 'Low' };
+    const labels = { 'very-high': 'Very High', high: 'High', medium: 'Moderate', low: 'Low' };
     return labels[category] || 'Low';
   }
 
@@ -752,7 +752,7 @@
           '<span class="stat-value small">' + speedStr + '</span>' +
         '</div>' +
         '<div class="stat">' +
-          '<span class="stat-label">Cover</span>' +
+          '<span class="stat-label">Exposed</span>' +
           '<span class="stat-value small">' + coverStr + '</span>' +
         '</div>' +
         '<div class="stat">' +
