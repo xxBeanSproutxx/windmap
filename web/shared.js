@@ -246,3 +246,15 @@ async function fetchLakeWind(lat, lon) {
     clearTimeout(timeout);
   }
 }
+
+// Find the forecast entry closest to current time
+function getCurrentWind(forecast) {
+  const now = new Date();
+  let best = forecast[0];
+  let bestDiff = Infinity;
+  for (const f of forecast) {
+    const d = Math.abs(new Date(f.timestamp + ':00') - now);
+    if (d < bestDiff) { bestDiff = d; best = f; }
+  }
+  return best;
+}

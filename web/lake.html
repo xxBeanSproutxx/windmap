@@ -1250,7 +1250,7 @@
         };
 
         // Recompute impact scores for current wind (first forecast hour)
-        const currentWind = forecast[0];
+        const currentWind = getCurrentWind(forecast);
         data.grid_cells = staticData.grid.map(cell => Object.assign({}, cell, {
           impact_score: cellImpact(cell, currentWind.speed_ms, currentWind.direction_deg, data.lake_polygon)
         }));
