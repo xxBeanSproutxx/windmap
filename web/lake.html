@@ -377,51 +377,6 @@
       margin-top: -1px;
     }
 
-    /* ── Wind Trend Sparkline ── */
-    .trend-bar {
-      position: absolute;
-      top: 132px;
-      left: 0;
-      right: 0;
-      z-index: 998;
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      padding: 8px 24px;
-      height: 60px;
-      display: none;
-      align-items: center;
-      gap: 12px;
-      box-shadow: 0 1px 2px rgba(50,50,93,0.04);
-    }
-
-    .trend-bar.visible { display: flex; }
-
-    .trend-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--body);
-      text-transform: uppercase;
-      letter-spacing: 0.8px;
-      flex-shrink: 0;
-      white-space: nowrap;
-    }
-
-    .trend-sparkline {
-      flex: 1;
-      height: 100%;
-      min-width: 0;
-    }
-
-    @media (max-width: 640px) {
-      .trend-bar {
-        top: 86px;
-        padding: 6px 10px;
-        height: 50px;
-        gap: 8px;
-      }
-      .trend-label { font-size: 10px; }
-    }
-
     /* ── Map Container ── */
     #map {
       position: absolute;
@@ -774,12 +729,6 @@
     </div>
   </div>
 
-  <!-- Wind trend sparkline -->
-  <div class="trend-bar" id="trendBar">
-    <span class="trend-label">Hourly Wind</span>
-    <svg class="trend-sparkline" id="trendSparkline" viewBox="0 0 300 50" preserveAspectRatio="none"></svg>
-  </div>
-
   <!-- Map -->
   <div id="map"></div>
 
@@ -937,8 +886,6 @@
     const $windCard = document.getElementById('windCard');
     const $windCardText = document.getElementById('windCardText');
     const $windArrow = document.getElementById('windArrow');
-    const $trendBar = document.getElementById('trendBar');
-    const $trendSparkline = document.getElementById('trendSparkline');
 
     // ── Init map ──
     function initMap() {
@@ -1449,69 +1396,6 @@
       }
     }
 
-    // ── Render wind trend sparkline ──
-    function renderTrend(forecast) {
-      if (!forecast || forecast.length < 2) {
-        $trendBar.classList.remove('visible');
-        return;
-      }
-
-      // Take up to 24 entries (24 hours)
-      const entries = forecast.slice(0, Math.min(forecast.length, 24));
-      if (entries.length < 2) {
-        $trendBar.classList.remove('visible');
-        return;
-      }
-
-      // Find min/max speed for Y scaling
-      const speeds = entries.map(function(e) { return e.speed_mph; });
-      const minSpeed = Math.min.apply(null, speeds);
-      const maxSpeed = Math.max.apply(null, speeds);
-      const range = maxSpeed - minSpeed || 1; // avoid div-by-zero if flat
-
-      var width = 300;
-      var height = 50;
-      var padY = 8; // top/bottom padding in SVG units
-
-      // Build polyline points (x evenly spaced, y inverted)
-      var xStep = width / (entries.length - 1);
-      var points = '';
-      for (var i = 0; i < entries.length; i++) {
-        var x = i * xStep;
-        var y = height - padY - ((entries[i].speed_mph - minSpeed) / range) * (height - 2 * padY);
-        points += (i > 0 ? ' ' : '') + x.toFixed(1) + ',' + y.toFixed(1);
-      }
-
-      var svg = '';
-
-      // Subtle fill gradient below the line
-      svg += '<defs><linearGradient id="trendGrad" x1="0" y1="0" x2="0" y2="1">';
-      svg += '<stop offset="0%" stop-color="#533afd" stop-opacity="0.12"/>';
-      svg += '<stop offset="100%" stop-color="#533afd" stop-opacity="0.02"/>';
-      svg += '</linearGradient></defs>';
-
-      // Fill polygon (line down to bottom edge)
-      var fillPts = points + ' ' + width.toFixed(1) + ',' + (height - padY).toFixed(1) + ' 0,' + (height - padY).toFixed(1);
-      svg += '<polygon points="' + fillPts + '" fill="url(#trendGrad)"/>';
-
-      // Sparkline stroke
-      svg += '<polyline points="' + points + '" fill="none" stroke="#533afd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
-
-      // Mark current selected hour with a dot
-      if (currentTimeIdx >= 0 && currentTimeIdx < entries.length) {
-        var cx = currentTimeIdx * xStep;
-        var cy = height - padY - ((entries[currentTimeIdx].speed_mph - minSpeed) / range) * (height - 2 * padY);
-        svg += '<circle cx="' + cx.toFixed(1) + '" cy="' + cy.toFixed(1) + '" r="3" fill="#533afd"/>';
-      }
-
-      $trendSparkline.innerHTML = svg;
-      $trendBar.classList.add('visible');
-
-      // Adjust wind indicator position so it doesn't overlap trend bar
-      var isMobile = window.innerWidth <= 640;
-      $windCard.style.top = isMobile ? '142px' : '198px';
-    }
-
     // ── Select time slot (with live recompute) ──
     function selectTimeSlot(idx) {
       if (!data || !data.wind_forecast) return;
@@ -1578,7 +1462,6 @@
       staticData = null;
       data = null;
       currentTimeIdx = -1;
-      $trendBar.classList.remove('visible');
       $windCard.style.top = '';   // reset to CSS default
 
       await loadData();
@@ -1640,9 +1523,6 @@
 
         // Build time selector
         buildTimePills(data.wind_forecast);
-
-        // Render wind trend sparkline
-        renderTrend(data.wind_forecast);
 
         // Initial time slot — pick the forecast hour closest to now
         if (data.wind_forecast && data.wind_forecast.length > 0) {

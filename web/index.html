@@ -21,6 +21,7 @@
       --radius: 6px;
       --radius-lg: 10px;
       --font: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+      --impact-very-high: #db2777;
       --impact-high: #ea2261;
       --impact-medium: #f59e0b;
       --impact-low: #15be53;
@@ -138,6 +139,7 @@
 
     .lake-card:active { transform: scale(0.985); }
 
+    .lake-card.impact-very-high { border-left-color: var(--impact-very-high); }
     .lake-card.impact-high   { border-left-color: var(--impact-high); }
     .lake-card.impact-medium { border-left-color: var(--impact-medium); }
     .lake-card.impact-low    { border-left-color: var(--impact-low); }
@@ -168,6 +170,7 @@
       flex-shrink: 0;
     }
 
+    .impact-badge.very-high { background: var(--impact-very-high); color: #fff; }
     .impact-badge.high   { background: var(--impact-high); color: #fff; }
     .impact-badge.medium { background: var(--impact-medium); color: #fff; }
     .impact-badge.low    { background: var(--impact-low); color: #fff; }
@@ -200,6 +203,13 @@
     }
 
     .stat-value.small { font-size: 14px; }
+
+    /* ── Sparkline ── */
+    .card-sparkline {
+      width: 100%;
+      height: 35px;
+      margin-top: 2px;
+    }
 
     /* ── Loading state ── */
     .skeleton {
@@ -317,6 +327,9 @@
 
   // ── Constants ──
   const FETCH_CAP_KM = 5.0;
+  const GRID_FETCH_CAP_KM = 1.0;
+  const SHIELD_DISTANCE_M = 100;
+  const HIGH_IMPACT_THRESHOLD = 0.45;
   const NWS_UA = 'blue-lake-wave/1.0';
   const TIMEOUT_MS = 15000;
 
@@ -327,22 +340,55 @@
   const $statusText = document.getElementById('statusText');
 
   // ── Classification ──
-  function classifyImpact(score) {
-    if (score == null || isNaN(score)) return 'low';
-    if (score > 0.45) return 'high';
-    if (score > 0.30) return 'medium';
+  function classifyImpact(highPct) {
+    if (highPct == null || isNaN(highPct)) return 'low';
+    if (highPct >= 0.75) return 'very-high';
+    if (highPct >= 0.50) return 'high';
+    if (highPct >= 0.25) return 'medium';
     return 'low';
   }
 
   function impactLabel(category) {
-    const labels = { high: 'High Impact', medium: 'Moderate', low: 'Low' };
+    const labels = { 'very-high': 'Very High', high: 'High Impact', medium: 'Moderate', low: 'Low' };
     return labels[category] || 'Low';
   }
 
-  // ── Directional fetch (matches index.html computeDirectionalFetch) ──
-  // Ray-cast from (lat, lon) in windDirDeg direction to closest polygon edge.
-  // windDirDeg = meteorological (direction wind is FROM).
-  // polygon = array of [lon, lat] pairs.
+  // ── Grid impact color (matches lake.html gridImpactColor) ──
+  function lerpColor(a, b, t) {
+    return [
+      Math.round(a[0] + (b[0] - a[0]) * t),
+      Math.round(a[1] + (b[1] - a[1]) * t),
+      Math.round(a[2] + (b[2] - a[2]) * t)
+    ];
+  }
+
+  function gridImpactColor(score) {
+    const anchors = [
+      { score: 0.00, rgb: [0x10, 0xb9, 0x81] },
+      { score: 0.35, rgb: [0xea, 0xb3, 0x08] },
+      { score: 0.45, rgb: [0xf9, 0x73, 0x16] },
+      { score: 0.60, rgb: [0xef, 0x44, 0x44] },
+      { score: 0.80, rgb: [0xdb, 0x27, 0x77] }
+    ];
+    if (score <= anchors[0].score) {
+      const c = anchors[0].rgb;
+      return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+    }
+    if (score >= anchors[anchors.length - 1].score) {
+      const c = anchors[anchors.length - 1].rgb;
+      return '#' + c.map(v => v.toString(16).padStart(2, '0')).join('');
+    }
+    for (let i = 0; i < anchors.length - 1; i++) {
+      if (score >= anchors[i].score && score <= anchors[i + 1].score) {
+        const t = (score - anchors[i].score) / (anchors[i + 1].score - anchors[i].score);
+        const lerp = lerpColor(anchors[i].rgb, anchors[i + 1].rgb, t);
+        return '#' + lerp.map(v => v.toString(16).padStart(2, '0')).join('');
+      }
+    }
+    return '#10b981';
+  }
+
+  // ── Directional fetch ──
   function computeDirectionalFetch(lat, lon, windDirDeg, polygon) {
     if (!polygon || polygon.length < 3) return FETCH_CAP_KM;
 
@@ -379,13 +425,59 @@
     return minDistKm < Infinity ? minDistKm : FETCH_CAP_KM;
   }
 
-  // ── NWS wind fetch for a single lake ──
+  // ── Shield factor (mirrors lake.html computeShieldFactorJS) ──
+  function computeShieldFactor(distanceM, waterNormalDeg, windDirDeg, nlcdReduction) {
+    if (distanceM == null || distanceM >= SHIELD_DISTANCE_M) return 1.0;
+
+    const windToDeg = (windDirDeg + 180) % 360;
+    let diff = Math.abs(windToDeg - waterNormalDeg);
+    if (diff > 180) diff = 360 - diff;
+
+    if (diff < 90) {
+      const shoreShield = 1.0 - (nlcdReduction != null ? nlcdReduction : 0.5);
+      return shoreShield + (1.0 - shoreShield) * (distanceM / SHIELD_DISTANCE_M);
+    }
+    return 1.0;
+  }
+
+  // ── Per-cell impact score ──
+  function cellImpact(cell, windSpeedMs, windDirDeg, polygon) {
+    const shieldFactor = computeShieldFactor(
+      cell.shore_distance_m, cell.shore_normal_deg, windDirDeg,
+      cell.nlcd_reduction != null ? cell.nlcd_reduction : 0.5
+    );
+    const effectiveWind = windSpeedMs * shieldFactor;
+    const windFactor = effectiveWind / 7.82;
+    const fetchKm = computeDirectionalFetch(cell.lat, cell.lon, windDirDeg, polygon);
+    return Math.min(fetchKm / GRID_FETCH_CAP_KM, 1.0) * windFactor;
+  }
+
+  // ── Aggregate score from grid cells ──
+  function computeAggregateImpact(gridCells, windSpeedMs, windDirDeg, polygon) {
+    if (!gridCells || gridCells.length === 0) return { highPct: 0, avgImpact: 0, coverPct: 0 };
+
+    let highCount = 0;
+    let totalImpact = 0;
+
+    for (const cell of gridCells) {
+      const impact = cellImpact(cell, windSpeedMs, windDirDeg, polygon);
+      totalImpact += impact;
+      if (impact >= HIGH_IMPACT_THRESHOLD) highCount++;
+    }
+
+    return {
+      highPct: highCount / gridCells.length,
+      avgImpact: totalImpact / gridCells.length,
+      coverPct: highCount / gridCells.length
+    };
+  }
+
+  // ── NWS wind fetch — returns FULL forecast array ──
   async function fetchLakeWind(lat, lon) {
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
 
     try {
-      // Step 1: Resolve gridpoint
       const pointsUrl = 'https://api.weather.gov/points/' + lat.toFixed(4) + ',' + lon.toFixed(4);
       const pointsResp = await fetch(pointsUrl, {
         signal: controller.signal,
@@ -397,7 +489,6 @@
       const gridpointUrl = pointsData.properties.forecast.replace('/forecast', '');
       const stationsUrl = pointsData.properties.observationStations;
 
-      // Step 2: Gridpoint wind
       const gridResp = await fetch(gridpointUrl, {
         signal: controller.signal,
         headers: { 'User-Agent': NWS_UA }
@@ -423,9 +514,9 @@
       const times = Object.keys(speedMap).filter(t => t in dirMap).sort();
       if (times.length === 0) throw new Error('No overlapping wind speed+direction entries');
 
-      // Step 3: Station obs override for current hour
-      let speedKmh = speedMap[times[0]];
-      let dirDeg = dirMap[times[0]];
+      // Station obs override for current hour
+      let stationSpeedKmh = null;
+      let stationDirDeg = null;
 
       if (stationsUrl) {
         try {
@@ -445,8 +536,8 @@
                 const sd = await obsResp.json();
                 const sp = sd.properties;
                 if (sp && sp.windSpeed && sp.windDirection) {
-                  speedKmh = sp.windSpeed.value;
-                  dirDeg = sp.windDirection.value;
+                  stationSpeedKmh = sp.windSpeed.value;
+                  stationDirDeg = sp.windDirection.value;
                 }
               }
             }
@@ -456,12 +547,29 @@
         }
       }
 
+      const KMH_TO_MS = 1.0 / 3.6;
       const KMH_TO_MPH = 0.6214;
-      return {
-        speed_mph: Math.round(speedKmh * KMH_TO_MPH * 10) / 10,
-        direction_deg: dirDeg,
-        timestamp: times[0]
-      };
+      const forecast = [];
+
+      for (let i = 0; i < times.length; i++) {
+        const utcIso = times[i];
+        let speedKmh = speedMap[utcIso];
+        let dirDeg = dirMap[utcIso];
+
+        if (i === 0 && stationSpeedKmh != null) {
+          speedKmh = stationSpeedKmh;
+          dirDeg = stationDirDeg;
+        }
+
+        forecast.push({
+          timestamp: utcIso,
+          speed_ms: Math.round(speedKmh * KMH_TO_MS * 100) / 100,
+          speed_mph: Math.round(speedKmh * KMH_TO_MPH * 10) / 10,
+          direction_deg: dirDeg
+        });
+      }
+
+      return forecast;
     } catch (err) {
       if (err.name === 'AbortError') throw new Error('Timed out');
       throw err;
@@ -470,43 +578,163 @@
     }
   }
 
-  // ── Fetch polygon for a lake from its static data ──
-  async function fetchLakePolygon(lakeId) {
+  // ── Fetch lake static data ──
+  async function fetchLakeStatic(lakeId) {
     const url = 'data/lakes/' + lakeId + '/lake_static.json';
     const resp = await fetch(url);
     if (!resp.ok) throw new Error('Static data HTTP ' + resp.status);
     const json = await resp.json();
-    return json.lake.polygon;
+    return {
+      polygon: json.lake.polygon,
+      grid_cells: json.grid || []
+    };
   }
 
-  // ── Compute impact score for a lake ──
-  function computeLakeScore(speedMph, directionDeg, polygon, centerLat, centerLon) {
-    const fetchKm = computeDirectionalFetch(centerLat, centerLon, directionDeg, polygon);
-    const cappedFetch = Math.min(fetchKm / FETCH_CAP_KM, 1.0);
-    const cappedWind = Math.min(speedMph / 15, 1.0);
-    return Math.round(cappedWind * cappedFetch * 1000) / 1000;
+  // ── Past wind history (localStorage) ──
+  function loadWindHistory() {
+    try {
+      const raw = localStorage.getItem('wind_history');
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveWindHistory(history) {
+    try {
+      localStorage.setItem('wind_history', JSON.stringify(history));
+    } catch (e) {
+      // Storage full or unavailable
+    }
+  }
+
+  function recordWindHistory(lakeId, wind) {
+    const history = loadWindHistory();
+    if (!history[lakeId]) history[lakeId] = [];
+
+    // Only add if timestamp is different from last entry
+    const entries = history[lakeId];
+    if (entries.length === 0 || entries[entries.length - 1].timestamp !== wind.timestamp) {
+      entries.push({
+        timestamp: wind.timestamp,
+        speed_mph: wind.speed_mph,
+        direction_deg: wind.direction_deg
+      });
+      // Keep last 24 entries
+      if (entries.length > 24) entries.shift();
+    }
+
+    saveWindHistory(history);
+  }
+
+  // ── Sparkline SVG ──
+  function renderSparkline(forecast, lakeId) {
+    if (!forecast || forecast.length < 2) return '';
+
+    const history = loadWindHistory();
+    const pastEntries = (history[lakeId] || []).slice(-4);
+
+    // Build combined data: past (up to 4) + forecast (up to 20)
+    const pastPoints = pastEntries.map(e => ({
+      speed_mph: e.speed_mph,
+      isPast: true
+    }));
+
+    const forecastPoints = forecast.slice(0, 20).map(f => ({
+      speed_mph: f.speed_mph,
+      isPast: false
+    }));
+
+    const allPoints = pastPoints.concat(forecastPoints);
+    if (allPoints.length < 2) return '';
+
+    const speeds = allPoints.map(p => p.speed_mph);
+    const minSpeed = Math.min.apply(null, speeds);
+    const maxSpeed = Math.max.apply(null, speeds);
+    const range = maxSpeed - minSpeed || 1;
+
+    const width = 200;
+    const height = 35;
+    const padY = 5;
+
+    // Scale X positions: past points condensed to left 20%, forecast fills rest
+    const forecastCount = forecastPoints.length || 1;
+    const pastCount = pastPoints.length;
+
+    // Allocate width: past gets up to 20% of width, forecast gets the rest
+    const pastWidth = pastCount > 0 ? width * 0.20 : 0;
+    const forecastWidth = width - pastWidth;
+
+    let pointsStr = '';
+    let fillPts = '';
+    const pastXStep = pastCount > 1 ? pastWidth / (pastCount - 1) : pastWidth / 2;
+    const forecastXStep = forecastCount > 1 ? forecastWidth / (forecastCount - 1) : forecastWidth / 2;
+
+    for (let i = 0; i < allPoints.length; i++) {
+      let x;
+      if (i < pastCount) {
+        x = i * pastXStep;
+      } else {
+        x = pastWidth + (i - pastCount) * forecastXStep;
+      }
+      const y = height - padY - ((allPoints[i].speed_mph - minSpeed) / range) * (height - 2 * padY);
+      pointsStr += (i > 0 ? ' ' : '') + x.toFixed(1) + ',' + y.toFixed(1);
+    }
+
+    // Fill polygon
+    fillPts = pointsStr + ' ' + width.toFixed(1) + ',' + (height - padY).toFixed(1) + ' 0,' + (height - padY).toFixed(1);
+
+    let svg = '<svg class="card-sparkline" viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="none">';
+
+    // Fill
+    svg += '<defs><linearGradient id="sparkGrad_' + lakeId + '" x1="0" y1="0" x2="0" y2="1">';
+    svg += '<stop offset="0%" stop-color="#533afd" stop-opacity="0.10"/>';
+    svg += '<stop offset="100%" stop-color="#533afd" stop-opacity="0.01"/>';
+    svg += '</linearGradient></defs>';
+
+    svg += '<polygon points="' + fillPts + '" fill="url(#sparkGrad_' + lakeId + ')"/>';
+
+    // Line
+    svg += '<polyline points="' + pointsStr + '" fill="none" stroke="#533afd" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>';
+
+    // Current hour dot (first forecast point)
+    if (forecastPoints.length > 0) {
+      const dotIdx = pastCount;
+      let dotX;
+      if (dotIdx < pastCount) {
+        dotX = dotIdx * pastXStep;
+      } else {
+        dotX = pastWidth + (dotIdx - pastCount) * forecastXStep;
+      }
+      const dotY = height - padY - ((allPoints[dotIdx].speed_mph - minSpeed) / range) * (height - 2 * padY);
+      svg += '<circle cx="' + dotX.toFixed(1) + '" cy="' + dotY.toFixed(1) + '" r="4" fill="#533afd"/>';
+    }
+
+    svg += '</svg>';
+    return svg;
   }
 
   // ── Card HTML ──
-  function renderLakeCard(lake, result, rank) {
+  function renderLakeCard(lake, result, rank, forecast, lakeId) {
     const name = lake.name;
-    let cardClass, badgeClass, badgeText, speedStr, fetchStr, scoreStr;
+    let cardClass, badgeClass, badgeText, speedStr, coverStr, impactStr;
+    const sparklineSvg = renderSparkline(forecast, lakeId);
 
     if (result.error) {
       cardClass = 'unavailable';
       badgeClass = 'unavailable';
       badgeText = 'Unavailable';
       speedStr = '—';
-      fetchStr = '—';
-      scoreStr = result.error;
+      coverStr = '—';
+      impactStr = result.error;
     } else {
-      const cat = classifyImpact(result.score);
+      const cat = classifyImpact(result.highPct);
       cardClass = 'impact-' + cat;
       badgeClass = cat;
       badgeText = impactLabel(cat);
       speedStr = result.speed_mph.toFixed(1) + ' mph';
-      fetchStr = result.fetch_km.toFixed(2) + ' km';
-      scoreStr = (result.score * 100).toFixed(0) + '%';
+      coverStr = (result.highPct * 100).toFixed(0) + '%';
+      impactStr = (result.avgImpact * 100).toFixed(0) + '%';
     }
 
     return '<a href="lake.html?id=' + lake.id + '" class="lake-card-link">' +
@@ -524,14 +752,15 @@
           '<span class="stat-value small">' + speedStr + '</span>' +
         '</div>' +
         '<div class="stat">' +
-          '<span class="stat-label">Fetch</span>' +
-          '<span class="stat-value small">' + fetchStr + '</span>' +
+          '<span class="stat-label">Cover</span>' +
+          '<span class="stat-value small">' + coverStr + '</span>' +
         '</div>' +
         '<div class="stat">' +
           '<span class="stat-label">Impact</span>' +
-          '<span class="stat-value small">' + scoreStr + '</span>' +
+          '<span class="stat-value small">' + impactStr + '</span>' +
         '</div>' +
       '</div>' +
+      sparklineSvg +
     '</div></a>';
   }
 
@@ -541,27 +770,31 @@
 
     const promises = lakes.map(async (lake) => {
       try {
-        const [wind, polygon] = await Promise.all([
+        const [forecast, staticData] = await Promise.all([
           fetchLakeWind(lake.center_lat, lake.center_lon),
-          fetchLakePolygon(lake.id)
+          fetchLakeStatic(lake.id)
         ]);
 
-        const fetchKm = computeDirectionalFetch(
-          lake.center_lat, lake.center_lon,
-          wind.direction_deg, polygon
+        const currentWind = forecast[0];
+
+        // Compute aggregate impact from ALL grid cells
+        const agg = computeAggregateImpact(
+          staticData.grid_cells,
+          currentWind.speed_ms,
+          currentWind.direction_deg,
+          staticData.polygon
         );
 
-        const score = computeLakeScore(
-          wind.speed_mph, wind.direction_deg,
-          polygon, lake.center_lat, lake.center_lon
-        );
+        // Record wind history for sparkline
+        recordWindHistory(lake.id, currentWind);
 
         return {
           lake,
-          speed_mph: wind.speed_mph,
-          direction_deg: wind.direction_deg,
-          fetch_km: Math.round(fetchKm * 100) / 100,
-          score,
+          speed_mph: currentWind.speed_mph,
+          direction_deg: currentWind.direction_deg,
+          highPct: agg.highPct,
+          avgImpact: agg.avgImpact,
+          forecast: forecast,
           error: null
         };
       } catch (err) {
@@ -570,8 +803,9 @@
           lake,
           speed_mph: null,
           direction_deg: null,
-          fetch_km: null,
-          score: null,
+          highPct: null,
+          avgImpact: null,
+          forecast: null,
           error: err.message
         };
       }
@@ -582,21 +816,18 @@
 
   // ── Render ──
   function render(results) {
-    // Sort by score ascending (lowest impact = best), errors last
     const sorted = [...results].sort((a, b) => {
       if (a.error && b.error) return 0;
       if (a.error) return 1;
       if (b.error) return -1;
-      return a.score - b.score;
+      return a.highPct - b.highPct;
     });
 
     const successCount = sorted.filter(r => !r.error).length;
 
-    // Update status
     $statusDot.className = 'dot ' + (successCount > 0 ? 'ready' : 'error');
     $statusText.textContent = successCount + ' of ' + sorted.length + ' lakes loaded';
 
-    // Build cards with section headers
     let html = '';
     let currentCat = null;
     let successRank = 0;
@@ -604,7 +835,7 @@
     for (const r of sorted) {
       if (!r.error) {
         successRank++;
-        const cat = classifyImpact(r.score);
+        const cat = classifyImpact(r.highPct);
         if (cat !== currentCat) {
           currentCat = cat;
           html += '<div class="section-label">' + impactLabel(cat) + '</div>';
@@ -615,7 +846,7 @@
           html += '<div class="section-label">Unavailable</div>';
         }
       }
-      html += renderLakeCard(r.lake, r, r.error ? '—' : successRank);
+      html += renderLakeCard(r.lake, r, r.error ? '—' : successRank, r.forecast, r.lake.id);
     }
 
     $lakeList.innerHTML = html;
@@ -636,7 +867,6 @@
   // ── Main ──
   async function main() {
     try {
-      // Fetch manifest
       const manifestResp = await fetch('data/lakes/manifest.json');
       if (!manifestResp.ok) throw new Error('Manifest HTTP ' + manifestResp.status);
       const manifest = await manifestResp.json();
