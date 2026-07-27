@@ -1,6 +1,7 @@
-const CACHE_NAME = 'blue-lake-wave-v17';
+const CACHE_NAME = 'blue-lake-wave-v18';
 const STATIC_ASSETS = [
   '/',
+  '/lake.html',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
