@@ -1604,11 +1604,15 @@
       // Load lake manifest
       await loadManifest();
 
-      // Determine current lake from URL hash or default
+      // Determine current lake from URL hash, query param, or default
       let lakeId = 'blue_lake';
       const hash = window.location.hash;
       const hashMatch = hash.match(/lake=([a-z0-9_-]+)/);
       if (hashMatch) lakeId = hashMatch[1];
+      // Also check ?id= query param as fallback
+      const search = window.location.search;
+      const searchMatch = search.match(/[?&]id=([a-z0-9_-]+)/);
+      if (searchMatch) lakeId = searchMatch[1];
 
       // Set current lake from manifest or fallback
       if (manifest) {

@@ -737,7 +737,7 @@
       impactStr = (result.avgImpact * 100).toFixed(0) + '%';
     }
 
-    return '<a href="lake.html?id=' + lake.id + '" class="lake-card-link">' +
+    return '<a href="lake.html#lake=' + lake.id + '" class="lake-card-link">' +
       '<div class="lake-card ' + cardClass + '">' +
       '<div class="lake-card-top">' +
         '<div>' +
@@ -820,7 +820,7 @@
       if (a.error && b.error) return 0;
       if (a.error) return 1;
       if (b.error) return -1;
-      return a.highPct - b.highPct;
+      return b.highPct - a.highPct;
     });
 
     const successCount = sorted.filter(r => !r.error).length;
