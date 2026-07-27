@@ -341,11 +341,11 @@
   const $statusText = document.getElementById('statusText');
 
   // ── Classification ──
-  function classifyImpact(highPct) {
-    if (highPct == null || isNaN(highPct)) return 'low';
-    if (highPct >= 0.50) return 'very-high';
-    if (highPct >= 0.30) return 'high';
-    if (highPct >= 0.15) return 'medium';
+  function classifyImpact(avgImpact) {
+    if (avgImpact == null || isNaN(avgImpact)) return 'low';
+    if (avgImpact >= 0.50) return 'very-high';
+    if (avgImpact >= 0.30) return 'high';
+    if (avgImpact >= 0.15) return 'medium';
     return 'low';
   }
 
@@ -379,7 +379,7 @@
       coverStr = '—';
       impactStr = result.error;
     } else {
-      const cat = classifyImpact(result.highPct);
+      const cat = classifyImpact(result.avgImpact);
       cardClass = 'impact-' + cat;
       badgeClass = cat;
       badgeText = impactLabel(cat);
