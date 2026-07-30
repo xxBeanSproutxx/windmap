@@ -724,7 +724,11 @@
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script src="shared.js"></script>
+  <script src="js/constants.js"></script>
+  <script src="js/colors.js"></script>
+  <script src="js/wind.js"></script>
+  <script src="js/fetch.js"></script>
+  <script src="js/main.js"></script>
 
   <script>
   (function() {
@@ -796,6 +800,7 @@
     // ── State ──
     let map = null;
     let lakePolygonLayer = null;
+    let geoJsonOutlineLayer = null;
     let gridHeatmapLayers = [];
     let landCoverLayer = null;  // ponytail: WMS toggle, in initMap not here
     let data = null;
@@ -977,6 +982,35 @@
 
       // Fit bounds with some padding
       map.fitBounds(lakePolygonLayer.getBounds(), { padding: [100, 100] });
+    }
+
+    // ── Add GeoJSON lake outline layer on top of heatmap ──
+    function addGeoJsonOutline() {
+      if (!currentLake) return;
+      if (geoJsonOutlineLayer) map.removeLayer(geoJsonOutlineLayer);
+
+      fetch('data/lakes/' + currentLake.id + '/outline.geojson')
+        .then(function(resp) {
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          return resp.json();
+        })
+        .then(function(geojson) {
+          geoJsonOutlineLayer = L.geoJSON(geojson, {
+            style: {
+              color: '#3a7cc3',
+              weight: 2,
+              opacity: 0.85,
+              fillColor: '#5b9bd5',
+              fillOpacity: 0.0
+            }
+          }).addTo(map);
+
+          // Bring to front so it renders on top of the heatmap
+          geoJsonOutlineLayer.bringToFront();
+        })
+        .catch(function(err) {
+          console.warn('GeoJSON outline failed:', err.message);
+        });
     }
 
     // ── Draw grid heatmap ──
@@ -1205,6 +1239,7 @@
       // Clear all layers
       clearGridHeatmap();
       if (lakePolygonLayer) map.removeLayer(lakePolygonLayer);
+      if (geoJsonOutlineLayer) map.removeLayer(geoJsonOutlineLayer);
 
       // Recenter map
       map.setView([currentLake.center_lat, currentLake.center_lon], DEFAULT_ZOOM);
@@ -1270,6 +1305,9 @@
 
         // Draw grid heatmap
         redrawGridHeatmap(data.grid_cells, currentWind.speed_ms, currentWind.direction_deg);
+
+        // Add GeoJSON outline layer on top of heatmap
+        addGeoJsonOutline();
 
         // Build time selector
         buildTimePills(data.wind_forecast);
