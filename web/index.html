@@ -167,6 +167,16 @@
       background-position: center;
       background-repeat: no-repeat;
       border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .card-thumb svg {
+      width: 100%;
+      height: 100%;
+      display: block;
     }
 
     .card-body {
@@ -394,7 +404,7 @@
 
     return '<a href="lake.html#lake=' + lake.id + '" class="lake-card-link">' +
       '<div class="lake-card ' + cardClass + '">' +
-        '<div class="card-thumb" style="background-image:url(data/lakes/' + lake.id + '/thumb.png)"></div>' +
+        '<div class="card-thumb" data-lake-id="' + lake.id + '"></div>' +
         '<div class="card-body">' +
         '<div class="lake-card-top">' +
           '<div>' +
@@ -491,6 +501,89 @@
     }
 
     $lakeList.innerHTML = html;
+
+    // Load GeoJSON outline thumbnails for all cards
+    loadOutlineThumbnails();
+  }
+
+  // ── Load GeoJSON lake outlines and render as inline SVGs ──
+  function loadOutlineThumbnails() {
+    const thumbs = $lakeList.querySelectorAll('.card-thumb[data-lake-id]');
+    thumbs.forEach(function(thumb) {
+      const lakeId = thumb.getAttribute('data-lake-id');
+      fetch('data/lakes/' + lakeId + '/outline.geojson')
+        .then(function(resp) {
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          return resp.json();
+        })
+        .then(function(geojson) {
+          renderSvgOutline(thumb, geojson);
+        })
+        .catch(function(err) {
+          console.warn('Outline thumbnail failed for ' + lakeId + ':', err.message);
+          // Leave as empty background
+        });
+    });
+  }
+
+  // ── Render a GeoJSON polygon as an inline SVG in a container element ──
+  function renderSvgOutline(container, geojson) {
+    // Extract all coordinates from the FeatureCollection
+    var allCoords = [];
+    if (geojson.features && geojson.features.length > 0) {
+      var geom = geojson.features[0].geometry;
+      if (geom.type === 'Polygon') {
+        allCoords = geom.coordinates[0]; // outer ring
+      }
+    }
+    if (allCoords.length === 0) return;
+
+    // Compute bounds
+    var minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    for (var i = 0; i < allCoords.length; i++) {
+      var lon = allCoords[i][0];
+      var lat = allCoords[i][1];
+      if (lon < minX) minX = lon;
+      if (lon > maxX) maxX = lon;
+      if (lat < minY) minY = lat;
+      if (lat > maxY) maxY = lat;
+    }
+    var rangeX = maxX - minX || 0.001;
+    var rangeY = maxY - minY || 0.001;
+
+    // Determine viewBox aspect — fit landscape or portrait
+    var pad = 12; // padding inside SVG
+    var vbW = 200, vbH = 300; // portrait to match the original 90px sidebar
+    var scaleX = (vbW - 2 * pad) / rangeX;
+    var scaleY = (vbH - 2 * pad) / rangeY;
+    var scale = Math.min(scaleX, scaleY);
+    var offsetX = (vbW - scale * rangeX) / 2;
+    var offsetY = (vbH - scale * rangeY) / 2;
+
+    // Build SVG path
+    var pathD = '';
+    for (var i = 0; i < allCoords.length; i++) {
+      var sx = offsetX + (allCoords[i][0] - minX) * scale;
+      var sy = vbH - (offsetY + (allCoords[i][1] - minY) * scale); // flip Y
+      pathD += (i === 0 ? 'M' : 'L') + sx.toFixed(1) + ',' + sy.toFixed(1);
+    }
+    pathD += 'Z';
+
+    // Build SVG element
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 ' + vbW + ' ' + vbH);
+    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+
+    var path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', pathD);
+    path.setAttribute('fill', '#5b9bd5');
+    path.setAttribute('stroke', '#3a7cc3');
+    path.setAttribute('stroke-width', '1.5');
+    path.setAttribute('stroke-linejoin', 'round');
+
+    svg.appendChild(path);
+    container.innerHTML = '';
+    container.appendChild(svg);
   }
 
   // ── Show error state ──
