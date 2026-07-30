@@ -1209,6 +1209,8 @@
       // Full redraw of grid heatmap with recomputed impact
       if (data.grid_cells && forecastEntry) {
         redrawGridHeatmap(data.grid_cells, forecastEntry.speed_ms, forecastEntry.direction_deg);
+        // Ensure GeoJSON outline stays on top
+        addGeoJsonOutline();
       }
     }
 
