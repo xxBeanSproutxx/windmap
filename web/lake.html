@@ -724,6 +724,7 @@
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
   <script src="js/constants.js"></script>
   <script src="js/colors.js"></script>
   <script src="js/wind.js"></script>
@@ -805,6 +806,7 @@
     let landCoverLayer = null;  // ponytail: WMS toggle, in initMap not here
     let data = null;
     let staticData = null;
+    let turfLakePolygon = null;  // cached Turf polygon for grid clipping
     let currentTimeIdx = -1;
 
     // ── DOM refs ──
@@ -896,6 +898,21 @@
       return Math.max(0, dot) * normalizedFetch;
     }
 
+    // ── Cached Turf lake polygon for grid clipping ──
+    function getTurfLakePolygon() {
+      if (turfLakePolygon) return turfLakePolygon;
+      if (!data || !data.lake_polygon || data.lake_polygon.length < 3) return null;
+      // data.lake_polygon is [lon, lat] pairs — already GeoJSON order
+      const coords = data.lake_polygon.map(p => [p[0], p[1]]);
+      // Close the ring if not already closed
+      const first = coords[0], last = coords[coords.length - 1];
+      if (first[0] !== last[0] || first[1] !== last[1]) {
+        coords.push([first[0], first[1]]);
+      }
+      turfLakePolygon = turf.polygon([coords]);
+      return turfLakePolygon;
+    }
+
     // ── Grid heatmap full redraw with recomputed impact ──
     function redrawGridHeatmap(grid, windSpeedMs, windDirDeg) {
       clearGridHeatmap();
@@ -905,18 +922,30 @@
       const lakePolygon = data.lake_polygon;  // [lon, lat] pairs
 
       grid.forEach(cell => {
-        // Only render cells inside the lake polygon
-        if (lakePolygon && !pointInPolygon(cell.lat, cell.lon, lakePolygon)) return;
-
         const impactScore = cellImpact(cell, windSpeedMs, windDirDeg, data.lake_polygon);
         const color = gridImpactColor(impactScore);
         const half = GRID_CELL_SIZE / 2;
-        const bounds = [
-          [cell.lat - half, cell.lon - half],
-          [cell.lat + half, cell.lon + half]
-        ];
 
-        const rect = L.rectangle(bounds, {
+        // Build cell polygon in GeoJSON [lon, lat] order
+        const cellCoords = [
+          [cell.lon - half, cell.lat - half],
+          [cell.lon + half, cell.lat - half],
+          [cell.lon + half, cell.lat + half],
+          [cell.lon - half, cell.lat + half],
+          [cell.lon - half, cell.lat - half]
+        ];
+        const cellPoly = turf.polygon([cellCoords]);
+        const lakePoly = getTurfLakePolygon();
+        if (!lakePoly) return;
+
+        // Clip cell to lake boundary
+        const clipped = turf.intersect(cellPoly, lakePoly);
+        if (!clipped) return;  // cell entirely outside lake
+
+        // Convert GeoJSON [lon, lat] back to Leaflet [lat, lon]
+        const leafletCoords = clipped.geometry.coordinates[0].map(c => [c[1], c[0]]);
+
+        const poly = L.polygon(leafletCoords, {
           color: color,
           weight: 0.5,
           opacity: 0.6,
@@ -946,11 +975,11 @@
           tipText += '<br><strong>Shore:</strong> ' + (cell.shore_distance_m * 3.28084).toFixed(0) + ' ft';
         }
 
-        rect.bindTooltip(tipText,
+        poly.bindTooltip(tipText,
           { direction: 'top', className: 'grid-tooltip', sticky: true }
         );
 
-        rect.on('click', function() {
+        poly.on('click', function() {
           if (selectedCell && selectedCell !== this) {
             selectedCell.setStyle({weight: 0.5, opacity: 0.6, fillOpacity: 0.55});
           }
@@ -960,7 +989,7 @@
           selectedCell = this;
         });
 
-        gridHeatmapLayers.push(rect);
+        gridHeatmapLayers.push(poly);
       });
     }
 
@@ -1027,17 +1056,30 @@
       const lakePolygon = data.lake_polygon;
 
       grid.forEach(cell => {
-        if (lakePolygon && !pointInPolygon(cell.lat, cell.lon, lakePolygon)) return;
-
         const impactScore = cell.impact_score;
         const color = gridImpactColor(impactScore);
         const half = GRID_CELL_SIZE / 2;
-        const bounds = [
-          [cell.lat - half, cell.lon - half],
-          [cell.lat + half, cell.lon + half]
-        ];
 
-        const rect = L.rectangle(bounds, {
+        // Build cell polygon in GeoJSON [lon, lat] order
+        const cellCoords = [
+          [cell.lon - half, cell.lat - half],
+          [cell.lon + half, cell.lat - half],
+          [cell.lon + half, cell.lat + half],
+          [cell.lon - half, cell.lat + half],
+          [cell.lon - half, cell.lat - half]
+        ];
+        const cellPoly = turf.polygon([cellCoords]);
+        const lakePoly = getTurfLakePolygon();
+        if (!lakePoly) return;
+
+        // Clip cell to lake boundary
+        const clipped = turf.intersect(cellPoly, lakePoly);
+        if (!clipped) return;  // cell entirely outside lake
+
+        // Convert GeoJSON [lon, lat] back to Leaflet [lat, lon]
+        const leafletCoords = clipped.geometry.coordinates[0].map(c => [c[1], c[0]]);
+
+        const poly = L.polygon(leafletCoords, {
           color: color,
           weight: 0.5,
           opacity: 0.6,
@@ -1056,11 +1098,11 @@
         if (cell.shore_distance_m != null && cell.shore_distance_m < 150) {
           finalTip += '<br><strong>Shore:</strong> ' + (cell.shore_distance_m * 3.28084).toFixed(0) + ' ft';
         }
-        rect.bindTooltip(finalTip,
+        poly.bindTooltip(finalTip,
           { direction: 'top', className: 'grid-tooltip', sticky: true }
         );
 
-        rect.on('click', function() {
+        poly.on('click', function() {
           if (selectedCell && selectedCell !== this) {
             selectedCell.setStyle({weight: 0.5, opacity: 0.6, fillOpacity: 0.55});
           }
@@ -1070,7 +1112,7 @@
           selectedCell = this;
         });
 
-        gridHeatmapLayers.push(rect);
+        gridHeatmapLayers.push(poly);
       });
     }
 
@@ -1249,6 +1291,7 @@
       // Reset state and reload
       staticData = null;
       data = null;
+      turfLakePolygon = null;  // invalidate Turf cache
       currentTimeIdx = -1;
       $windCard.style.top = '';   // reset to CSS default
 
@@ -1281,6 +1324,7 @@
         if (!forecast || forecast.length === 0) throw new Error('No wind forecast');
 
         // Build the combined data object the render pipeline expects
+        turfLakePolygon = null;  // invalidate Turf cache
         data = {
           lake_polygon: staticData.lake.polygon,
           grid_cells: staticData.grid,
