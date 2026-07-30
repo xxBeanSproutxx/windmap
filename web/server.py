@@ -24,5 +24,6 @@ class PWAHandler(http.server.SimpleHTTPRequestHandler):
 if __name__ == "__main__":
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
     with socketserver.TCPServer(("", PORT), PWAHandler) as httpd:
+        httpd.allow_reuse_address = True
         print(f"Serving on http://localhost:{PORT}")
         httpd.serve_forever()
