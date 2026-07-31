@@ -95,6 +95,9 @@ async function fetchLakeWind(lat, lon) {
       });
     }
 
+    // Bulletproof chronological order — never trust string sort with mixed formats
+    forecast.sort((a, b) => a.timestamp_ms - b.timestamp_ms);
+
     // Apply station observation to the time slot closest to now
     // (not blindly to forecast[0], which getCurrentWind() may skip)
     if (stationSpeedKmh != null && stationSpeedKmh > 0) {

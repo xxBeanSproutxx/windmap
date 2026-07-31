@@ -1141,17 +1141,22 @@
       $windArrow.style.transform = 'rotate(' + ((wind.direction_deg || 0) - 180) + 'deg)';
     }
 
-    // Local hour for display — uses the phone's own clock (Minnesota for Reid),
-    // no hardcoded offsets, DST handled by the browser automatically.
-    function localHourOf(f) {
-      return new Date(f.timestamp_utc).getHours();
-    }
-
-    // Weekday label so multi-day gaps don't read as duplicate/out-of-order pills
-    function localDayLabel(f) {
+    // Full pill label: "Today 8:00 PM", "Tomorrow 7:00 AM", "Sat 8/1 7:00 AM".
+    // Every pill gets a day marker so gaps and repeated weekdays never read as
+    // out-of-order. Uses the phone's own clock — no hardcoded offsets, DST-safe.
+    function pillTimeLabel(f) {
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       const d = new Date(f.timestamp_utc);
-      return d.toDateString() === new Date().toDateString() ? 'Today' : days[d.getDay()];
+      const hour = d.getHours();
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const time = (hour % 12 || 12) + ':00 ' + ampm;
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      const diffDays = Math.round((day - today) / 86400000);
+      if (diffDays === 0) return 'Today ' + time;
+      if (diffDays === 1) return 'Tomorrow ' + time;
+      return days[d.getDay()] + ' ' + (d.getMonth() + 1) + '/' + d.getDate() + ' ' + time;
     }
 
     // ── Build time pills ──
@@ -1185,11 +1190,8 @@
         pill.className = 'time-pill';
         pill.dataset.idx = idx;
 
-        // display hour from the phone's local clock
-        const hour = localHourOf(f);
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const displayHour = hour % 12 || 12;
-        const timeStr = (localDayLabel(f) !== 'Today' ? localDayLabel(f) + ' ' : '') + displayHour + ':00 ' + ampm;
+        // full label with day marker: "Today 8:00 PM" / "Sat 8/1 7:00 AM"
+        const timeStr = pillTimeLabel(f);
 
         const mphStr = f.speed_mph != null ? f.speed_mph.toFixed(1) : '—';
         pill.innerHTML = timeStr + '<span class="pill-speed">' + mphStr + ' mph · ' + f.direction_deg + '°</span>';
@@ -1213,10 +1215,7 @@
             const pill = document.createElement('button');
             pill.className = 'time-pill';
             pill.dataset.idx = idx;
-            const hour = localHourOf(f);
-            const ampm = hour >= 12 ? 'PM' : 'AM';
-            const displayHour = hour % 12 || 12;
-            const timeStr = (localDayLabel(f) !== 'Today' ? localDayLabel(f) + ' ' : '') + displayHour + ':00 ' + ampm;
+            const timeStr = pillTimeLabel(f);
             const mphStr = f.speed_mph != null ? f.speed_mph.toFixed(1) : '—';
             pill.innerHTML = timeStr + '<span class="pill-speed">' + mphStr + ' mph · ' + f.direction_deg + '°</span>';
             pill.title = f.timestamp_utc + ' — ' + mphStr + ' mph from ' + f.direction_deg + '°';
