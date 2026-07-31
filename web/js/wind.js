@@ -30,18 +30,41 @@ async function fetchLakeWind(lat, lon) {
       throw new Error('NWS gridpoint missing wind data');
     }
 
-    const parseTime = (vt) => vt.split('/')[0];
+    // NWS validTime format: "2026-07-31T15:00:00+00:00/PT3H"
+    // The /PTnH part is a DURATION — the value holds for n hours. We must
+    // expand each entry into every hour it covers, or we only match the
+    // start-hours where speed and direction arrays coincide (36 of 178 slots)
+    // and manufacture fake gaps (e.g. 9 PM -> 7 AM).
+    const parseDurationHours = (vt) => {
+      const durPart = vt.split('/')[1] || 'PT1H';
+      const m = /PT(\d+(?:\.\d+)?)H/.exec(durPart);
+      return m ? parseFloat(m[1]) : 1;
+    };
+
+    // Map from hour-start epoch (ms) -> value, expanded across durations
     const speedMap = {};
     for (const entry of props.windSpeed.values) {
-      speedMap[parseTime(entry.validTime)] = entry.value;
+      const startMs = Date.parse(entry.validTime.split('/')[0]);
+      const durH = parseDurationHours(entry.validTime);
+      for (let h = 0; h < Math.floor(durH); h++) {
+        const hourStart = Math.floor((startMs + h * 3600000) / 3600000) * 3600000;
+        speedMap[hourStart] = entry.value;
+      }
     }
     const dirMap = {};
     for (const entry of props.windDirection.values) {
-      dirMap[parseTime(entry.validTime)] = entry.value;
+      const startMs = Date.parse(entry.validTime.split('/')[0]);
+      const durH = parseDurationHours(entry.validTime);
+      for (let h = 0; h < Math.floor(durH); h++) {
+        const hourStart = Math.floor((startMs + h * 3600000) / 3600000) * 3600000;
+        dirMap[hourStart] = entry.value;
+      }
     }
 
-    const times = Object.keys(speedMap).filter(t => t in dirMap).sort();
-    if (times.length === 0) throw new Error('No overlapping wind speed+direction entries');
+    const hourKeys = Object.keys(speedMap)
+      .filter(k => k in dirMap)
+      .sort((a, b) => Number(a) - Number(b));
+    if (hourKeys.length === 0) throw new Error('No overlapping wind speed+direction entries');
 
     // Station obs override for current hour
     let stationSpeedKmh = null;
@@ -80,10 +103,11 @@ async function fetchLakeWind(lat, lon) {
     const KMH_TO_MPH = 0.6214;
     const forecast = [];
 
-    for (let i = 0; i < times.length; i++) {
-      const utcIso = times[i];
-      const speedKmh = speedMap[utcIso];
-      const dirDeg = dirMap[utcIso];
+    for (let i = 0; i < hourKeys.length; i++) {
+      const hourStartMs = Number(hourKeys[i]);
+      const utcIso = new Date(hourStartMs).toISOString();
+      const speedKmh = speedMap[hourStartMs];
+      const dirDeg = dirMap[hourStartMs];
 
       forecast.push({
         timestamp_utc: utcIso,             // raw NWS UTC ISO (e.g. 2026-07-31T22:00:00+00:00)
