@@ -85,13 +85,9 @@ async function fetchLakeWind(lat, lon) {
       const speedKmh = speedMap[utcIso];
       const dirDeg = dirMap[utcIso];
 
-      // Convert UTC to local CDT (UTC-5)
-      const localDt = new Date(utcIso);
-      localDt.setHours(localDt.getHours() - 5);
-      const timeStr = localDt.toISOString().slice(0, 16);
-
       forecast.push({
-        timestamp: timeStr,
+        timestamp_utc: utcIso,             // raw NWS UTC ISO (e.g. 2026-07-31T22:00:00+00:00)
+        timestamp_ms: Date.parse(utcIso),  // epoch ms — single source of truth for comparisons
         speed_ms: Math.round(speedKmh * KMH_TO_MS * 100) / 100,
         speed_mph: Math.round(speedKmh * KMH_TO_MPH * 10) / 10,
         direction_deg: dirDeg,
@@ -102,12 +98,12 @@ async function fetchLakeWind(lat, lon) {
     // Apply station observation to the time slot closest to now
     // (not blindly to forecast[0], which getCurrentWind() may skip)
     if (stationSpeedKmh != null && stationSpeedKmh > 0) {
-      const now = new Date();
+      const now = Date.now();
       let closestIdx = 0;
       let closestDiff = Infinity;
       for (let i = 0; i < forecast.length; i++) {
-        const d = Math.abs(new Date(forecast[i].timestamp + ':00') - now);
-        if (d < closestDiff) { closestDiff = d; closestIdx = i; }
+        const d = Math.abs(forecast[i].timestamp_ms - now);
+        if (d <= closestDiff) { closestDiff = d; closestIdx = i; }
       }
       const entry = forecast[closestIdx];
       entry.speed_ms = Math.round(stationSpeedKmh * KMH_TO_MS * 100) / 100;
@@ -124,14 +120,15 @@ async function fetchLakeWind(lat, lon) {
   }
 }
 
-// Find the forecast entry closest to current time
+// Find the forecast entry closest to current time.
+// Tie-break with <= so an exact tie picks the LATER (future) entry, not the past one.
 function getCurrentWind(forecast) {
-  const now = new Date();
+  const now = Date.now();
   let best = forecast[0];
   let bestDiff = Infinity;
   for (const f of forecast) {
-    const d = Math.abs(new Date(f.timestamp + ':00') - now);
-    if (d < bestDiff) { bestDiff = d; best = f; }
+    const d = Math.abs(f.timestamp_ms - now);
+    if (d <= bestDiff) { bestDiff = d; best = f; }
   }
   return best;
 }
