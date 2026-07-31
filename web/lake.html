@@ -1141,6 +1141,19 @@
       $windArrow.style.transform = 'rotate(' + ((wind.direction_deg || 0) - 180) + 'deg)';
     }
 
+    // Local hour for display — uses the phone's own clock (Minnesota for Reid),
+    // no hardcoded offsets, DST handled by the browser automatically.
+    function localHourOf(f) {
+      return new Date(f.timestamp_utc).getHours();
+    }
+
+    // Weekday label so multi-day gaps don't read as duplicate/out-of-order pills
+    function localDayLabel(f) {
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      const d = new Date(f.timestamp_utc);
+      return d.toDateString() === new Date().toDateString() ? 'Today' : days[d.getDay()];
+    }
+
     // ── Build time pills ──
     function buildTimePills(forecast) {
       $timePills.innerHTML = '';
@@ -1155,16 +1168,8 @@
         return;
       }
 
-      // Find the closest forecast entry to current CDT hour
-      const nowHour = new Date().getHours();
-      let startIdx = 0;
-      let bestDiff = Infinity;
-      forecast.forEach((f, i) => {
-        const h = parseInt(f.timestamp.split('T')[1], 10);
-        let diff = Math.abs(h - nowHour);
-        if (diff > 12) diff = 24 - diff;
-        if (diff < bestDiff) { bestDiff = diff; startIdx = i; }
-      });
+      // Start pills at the entry closest to now — same algorithm as getCurrentWind
+      const startIdx = Math.max(0, forecast.indexOf(getCurrentWind(forecast)));
 
       // Only build pills from startIdx onward (current + future)
       const maxVisible = 10;
@@ -1180,15 +1185,15 @@
         pill.className = 'time-pill';
         pill.dataset.idx = idx;
 
-        // parse hour directly from UTC timestamp (YYYY-MM-DDTHH:00)
-        const hour = parseInt(f.timestamp.split('T')[1], 10);
+        // display hour from the phone's local clock
+        const hour = localHourOf(f);
         const ampm = hour >= 12 ? 'PM' : 'AM';
         const displayHour = hour % 12 || 12;
-        const timeStr = displayHour + ':00 ' + ampm;
+        const timeStr = (localDayLabel(f) !== 'Today' ? localDayLabel(f) + ' ' : '') + displayHour + ':00 ' + ampm;
 
         const mphStr = f.speed_mph != null ? f.speed_mph.toFixed(1) : '—';
         pill.innerHTML = timeStr + '<span class="pill-speed">' + mphStr + ' mph · ' + f.direction_deg + '°</span>';
-        pill.title = f.timestamp + ' — ' + mphStr + ' mph from ' + f.direction_deg + '°';
+        pill.title = f.timestamp_utc + ' — ' + mphStr + ' mph from ' + f.direction_deg + '°';
 
         pill.addEventListener('click', () => selectTimeSlot(idx));
 
@@ -1208,13 +1213,13 @@
             const pill = document.createElement('button');
             pill.className = 'time-pill';
             pill.dataset.idx = idx;
-            const hour = parseInt(f.timestamp.split('T')[1], 10);
+            const hour = localHourOf(f);
             const ampm = hour >= 12 ? 'PM' : 'AM';
             const displayHour = hour % 12 || 12;
-            const timeStr = displayHour + ':00 ' + ampm;
+            const timeStr = (localDayLabel(f) !== 'Today' ? localDayLabel(f) + ' ' : '') + displayHour + ':00 ' + ampm;
             const mphStr = f.speed_mph != null ? f.speed_mph.toFixed(1) : '—';
             pill.innerHTML = timeStr + '<span class="pill-speed">' + mphStr + ' mph · ' + f.direction_deg + '°</span>';
-            pill.title = f.timestamp + ' — ' + mphStr + ' mph from ' + f.direction_deg + '°';
+            pill.title = f.timestamp_utc + ' — ' + mphStr + ' mph from ' + f.direction_deg + '°';
             pill.addEventListener('click', () => selectTimeSlot(idx));
             $timePills.appendChild(pill);
           }
@@ -1358,21 +1363,12 @@
         // Build time selector
         buildTimePills(data.wind_forecast);
 
-        // Initial time slot — pick the forecast hour closest to now
+        // Initial time slot — the forecast entry closest to now (same algorithm as
+        // getCurrentWind, no separate hour heuristic that can disagree with it)
         if (data.wind_forecast && data.wind_forecast.length > 0) {
-          const nowLocalHour = new Date().getHours();
-          let bestIdx = 0;
-          let bestDiff = Infinity;
-          data.wind_forecast.forEach((f, i) => {
-            const forecastHour = parseInt(f.timestamp.split('T')[1], 10);
-            let diff = Math.abs(forecastHour - nowLocalHour);
-            if (diff > 12) diff = 24 - diff;
-            if (diff < bestDiff) {
-              bestDiff = diff;
-              bestIdx = i;
-            }
-          });
-          selectTimeSlot(bestIdx);
+          const currentWind = getCurrentWind(data.wind_forecast);
+          const currentIdx = data.wind_forecast.indexOf(currentWind);
+          selectTimeSlot(currentIdx >= 0 ? currentIdx : 0);
 
           // Scroll the active pill into view (delay for DOM settle)
           setTimeout(() => {
