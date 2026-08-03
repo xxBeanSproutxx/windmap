@@ -1,11 +1,11 @@
-const CACHE_NAME = 'blue-lake-wave-v26';
+const CACHE_NAME = 'blue-lake-wave-v27';
 const STATIC_ASSETS = [
-  '/',
-  '/lake.html',
-  '/manifest.json',
-  '/icon-192.png',
-  '/icon-512.png',
-  '/icon.svg'
+  './',
+  './lake.html',
+  './manifest.json',
+  './icon-192.png',
+  './icon-512.png',
+  './icon.svg'
 ];
 
 self.addEventListener('install', (event) => {

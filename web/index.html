@@ -6,6 +6,9 @@
   <title>Lake Dashboard · Wave Forecast</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon-192.png">
   <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
   <style>
     /* ── Reset & Base ── */
@@ -624,5 +627,6 @@
 })();
 </script>
 
+<script>navigator.serviceWorker.register('sw.js').catch(function(){});</script>
 </body>
 </html>

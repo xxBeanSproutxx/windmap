@@ -10,9 +10,9 @@
   <title>Blue Lake · Wave Forecast</title>
 
   <!-- PWA -->
-  <link rel="manifest" href="/manifest.json">
-  <link rel="icon" type="image/svg+xml" href="/icon.svg">
-  <link rel="apple-touch-icon" href="/icon-192.png">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon-192.png">
 
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -680,7 +680,7 @@
 
   <!-- Header -->
   <header class="header">
-    <a href="/" class="header-back-link">← Dashboard</a>
+    <a href="index.html" class="header-back-link">← Dashboard</a>
     <div class="header-brand">
       <div class="brand-icon"><svg width="16" height="12" viewBox="0 0 16 12"><path d="M0 6c2-3 4 3 6 0s4-3 6 0 4 3 4 0" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></div>
     </div>
@@ -1515,7 +1515,7 @@
 
       // Register service worker for offline caching
       if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(function() {});
+        navigator.serviceWorker.register('sw.js').catch(function() {});
       }
 
       // ── PWA install prompt ──
