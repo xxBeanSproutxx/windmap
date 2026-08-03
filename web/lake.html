@@ -27,37 +27,22 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      /* Design tokens — dark mode */
-      --bg: #0b1220;                 /* page — deep slate-navy */
-      --surface: #141d30;            /* cards / HUD */
-      --surface-2: #1b2740;          /* raised / inactive pills */
-      --border: rgba(255,255,255,0.08);
-      --text: #e6edf7;
-      --text-muted: #8ea0b8;
+      --bg: #ffffff;
+      --heading: #061b31;
       --accent: #533afd;
       --accent-light: #7c6fff;
-      --radius-sm: 8px;
-      --radius: 12px;
-      --radius-lg: 16px;
-      --radius-pill: 999px;
-      --shadow: 0 4px 24px rgba(2, 6, 18, 0.45);
-      --shadow-lg: 0 12px 40px rgba(2, 6, 18, 0.55);
+      --body: #64748d;
+      --border: #e5edf5;
+      --card-shadow: 0 2px 12px rgba(50,50,93,0.15), 0 1px 2px rgba(0,0,0,0.04);
+      --card-shadow-lg: 0 8px 30px rgba(50,50,93,0.25), 0 2px 8px rgba(0,0,0,0.06);
+      --radius-sm: 4px;
+      --radius: 6px;
+      --radius-lg: 10px;
       --font: 'Source Sans 3', system-ui, -apple-system, sans-serif;
       --font-mono: 'Source Code Pro', 'SF Mono', monospace;
       --impact-high: #ea2261;
       --impact-medium: #f59e0b;
       --impact-low: #15be53;
-      /* Legacy aliases — used by injected tooltip styles & inline styles */
-      --heading: var(--text);
-      --body: var(--text-muted);
-      --card-shadow: var(--shadow);
-      --card-shadow-lg: var(--shadow-lg);
-      /* Layout math: header + time bar heights drive map clip & HUD offsets */
-      --header-h: 62px;
-      --timebar-h: 66px;
-      --top-offset: calc(var(--header-h) + env(safe-area-inset-top, 0px) + var(--timebar-h));
-
-      color-scheme: dark;
     }
 
     html, body {
@@ -65,51 +50,39 @@
       width: 100%;
       font-family: var(--font);
       font-weight: 400;
-      color: var(--text);
+      color: var(--body);
       background: var(--bg);
       overflow: hidden;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
 
-    /* ── Header (glassy HUD) ── */
+    /* ── Header ── */
     .header {
       position: absolute;
       top: 0;
       left: 0;
       right: 0;
       z-index: 1000;
-      min-height: var(--header-h);
-      background: rgba(11, 18, 32, 0.72);
-      -webkit-backdrop-filter: blur(12px) saturate(140%);
-      backdrop-filter: blur(12px) saturate(140%);
+      background: var(--bg);
       border-bottom: 1px solid var(--border);
-      padding: calc(8px + env(safe-area-inset-top, 0px)) 20px 8px;
+      padding: 10px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: 12px;
-      box-shadow: 0 8px 24px rgba(2, 6, 18, 0.35);
+      box-shadow: 0 1px 3px rgba(50,50,93,0.08);
     }
 
     .header-back-link {
       font-family: var(--font);
       font-size: 13px;
       font-weight: 400;
-      color: var(--accent-light);
+      color: var(--accent);
       text-decoration: none;
       white-space: nowrap;
       margin-right: 4px;
       flex-shrink: 0;
-      padding: 8px 10px;
-      margin: -8px -10px;
-      border-radius: var(--radius-pill);
-      transition: background 0.15s ease, color 0.15s ease;
-    }
-
-    .header-back-link:hover {
-      background: rgba(83, 58, 253, 0.15);
-      color: var(--text);
     }
 
     .header-brand {
@@ -122,8 +95,8 @@
     .header-brand .brand-icon {
       width: 28px;
       height: 28px;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
-      border-radius: 8px;
+      background: linear-gradient(135deg, var(--accent) 0%, #7c6fff 100%);
+      border-radius: var(--radius-sm);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -132,7 +105,6 @@
       font-size: 14px;
       font-weight: 600;
       flex-shrink: 0;
-      box-shadow: 0 4px 12px rgba(83, 58, 253, 0.35);
     }
 
     /* Lake selector dropdown */
@@ -140,49 +112,48 @@
       font-family: var(--font);
       font-size: 14px;
       font-weight: 400;
-      color: var(--text);
-      background-color: var(--surface);
+      color: var(--heading);
+      background: var(--bg);
       border: 1px solid var(--border);
-      border-radius: var(--radius-pill);
-      padding: 6px 32px 6px 14px;
+      border-radius: var(--radius);
+      padding: 6px 30px 6px 10px;
       appearance: none;
       -webkit-appearance: none;
       -moz-appearance: none;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%238ea0b8'/%3E%3C/svg%3E");
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23533afd'/%3E%3C/svg%3E");
       background-repeat: no-repeat;
-      background-position: right 12px center;
+      background-position: right 10px center;
       background-size: 10px 6px;
       cursor: pointer;
-      transition: border-color 0.15s ease, background-color 0.15s ease;
+      transition: border-color 0.15s ease;
       max-width: 180px;
-      min-height: 44px;
+      min-height: 36px;
       touch-action: manipulation;
     }
 
     .lake-select:hover {
-      border-color: var(--accent-light);
-      background-color: var(--surface-2);
+      border-color: var(--accent);
     }
 
     .lake-select:focus {
       outline: none;
       border-color: var(--accent);
-      box-shadow: 0 0 0 2px rgba(83,58,253,0.25);
+      box-shadow: 0 0 0 2px rgba(83,58,253,0.15);
     }
 
     @media (max-width: 640px) {
       .lake-select {
         font-size: 12px;
-        max-width: 110px;
-        padding: 4px 26px 4px 10px;
-        min-height: 44px;
+        max-width: 130px;
+        padding: 4px 24px 4px 8px;
+        min-height: 32px;
       }
     }
 
     .header-meta {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 16px;
       flex-shrink: 0;
     }
 
@@ -191,7 +162,7 @@
       align-items: center;
       gap: 6px;
       font-size: 13px;
-      color: var(--text-muted);
+      color: var(--body);
       font-weight: 400;
     }
 
@@ -203,12 +174,12 @@
 
     .header-stat .stat-value {
       font-weight: 600;
-      color: var(--text);
+      color: var(--heading);
       font-variant-numeric: tabular-nums;
     }
 
     .header-stat .stat-label {
-      color: var(--text-muted);
+      color: var(--body);
       font-weight: 300;
       margin-left: 2px;
     }
@@ -218,24 +189,22 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.5px;
-      padding: 6px 12px;
-      border-radius: var(--radius-pill);
-      background: rgba(83,58,253,0.18);
-      color: var(--accent-light);
-      border: 1px solid var(--border);
-      white-space: nowrap;
+      padding: 4px 10px;
+      border-radius: 100px;
+      background: rgba(83,58,253,0.08);
+      color: var(--accent);
     }
 
     .landcover-toggle {
       font-family: var(--font);
       font-size: 12px;
-      font-weight: 500;
-      padding: 8px 14px;
+      font-weight: 400;
+      padding: 8px 12px;
       min-height: 44px;
-      border-radius: var(--radius-pill);
+      border-radius: 100px;
       border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
+      background: var(--bg);
+      color: var(--body);
       cursor: pointer;
       transition: all 0.15s ease;
       white-space: nowrap;
@@ -246,16 +215,16 @@
     }
 
     .landcover-toggle:hover {
-      border-color: var(--accent-light);
-      color: var(--text);
-      background: var(--surface-2);
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(83,58,253,0.04);
     }
 
     .landcover-toggle.active {
       background: var(--accent);
       color: #fff;
       border-color: var(--accent);
-      box-shadow: 0 4px 14px rgba(83,58,253,0.4);
+      box-shadow: 0 2px 6px rgba(83,58,253,0.3);
       font-weight: 600;
     }
 
@@ -265,10 +234,10 @@
       min-width: 44px;
       min-height: 44px;
       font-size: 18px;
-      border-radius: var(--radius-pill);
+      border-radius: 100px;
       border: 1px solid var(--border);
-      background: var(--surface);
-      color: var(--text);
+      background: var(--bg);
+      color: var(--accent);
       cursor: pointer;
       display: flex;
       align-items: center;
@@ -281,33 +250,30 @@
     }
 
     .refresh-btn:hover {
-      background: var(--surface-2);
+      background: var(--accent);
       color: #fff;
-      border-color: var(--accent-light);
-      box-shadow: 0 4px 14px rgba(83,58,253,0.35);
+      border-color: var(--accent);
+      box-shadow: 0 2px 6px rgba(83,58,253,0.3);
     }
 
     .refresh-btn:active {
       transform: scale(0.95);
     }
 
-    /* ── Time Selector (glassy) ── */
+    /* ── Time Selector ── */
     .time-selector-bar {
       position: absolute;
-      top: calc(var(--header-h) + env(safe-area-inset-top, 0px));
+      top: 82px;
       left: 0;
       right: 0;
       z-index: 999;
-      min-height: var(--timebar-h);
-      background: rgba(11, 18, 32, 0.85);
-      -webkit-backdrop-filter: blur(12px) saturate(140%);
-      backdrop-filter: blur(12px) saturate(140%);
+      background: var(--bg);
       border-bottom: 1px solid var(--border);
       padding: 10px 24px;
       display: flex;
       align-items: center;
       gap: 8px;
-      box-shadow: 0 8px 24px rgba(2, 6, 18, 0.35);
+      box-shadow: 0 1px 2px rgba(50,50,93,0.04);
     }
 
     .time-pills-scroll {
@@ -328,7 +294,7 @@
       right: 0;
       bottom: 0;
       width: 48px;
-      background: linear-gradient(to right, transparent, rgba(11, 18, 32, 0.85) 70%);
+      background: linear-gradient(to right, transparent, var(--bg) 70%);
       pointer-events: none;
       z-index: 1;
     }
@@ -336,7 +302,7 @@
     .time-selector-label {
       font-size: 12px;
       font-weight: 600;
-      color: var(--text-muted);
+      color: var(--body);
       text-transform: uppercase;
       letter-spacing: 0.8px;
       flex-shrink: 0;
@@ -348,12 +314,12 @@
       font-family: var(--font);
       font-size: 13px;
       font-weight: 400;
-      padding: 8px 16px;
+      padding: 10px 14px;
       min-height: 44px;
-      border-radius: var(--radius-pill);
+      border-radius: 100px;
       border: 1px solid var(--border);
-      background: var(--surface-2);
-      color: var(--text);
+      background: var(--bg);
+      color: #4b5563;
       cursor: pointer;
       transition: all 0.15s ease;
       white-space: nowrap;
@@ -362,9 +328,9 @@
     }
 
     .time-pill:hover {
-      border-color: var(--accent-light);
-      color: var(--text);
-      background: #223050;
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(83,58,253,0.04);
     }
 
     .time-pill.active {
@@ -372,7 +338,15 @@
       color: #fff;
       border-color: var(--accent);
       font-weight: 600;
-      box-shadow: 0 4px 14px rgba(83,58,253,0.4);
+    }
+
+    .time-pill.active::before {
+      content: '● ';
+      font-size: 8px;
+      vertical-align: middle;
+      margin-right: 2px;
+      color: inherit;
+      opacity: 0.9;
     }
 
     .time-pill .pill-speed {
@@ -390,50 +364,20 @@
       right: 0;
       bottom: 0;
       z-index: 1;
-      clip-path: inset(var(--top-offset) 0 0 0);
+      clip-path: inset(82px 0 0 0);
     }
 
-    /* ── Leaflet dark chrome ── */
-    .leaflet-container { background: #0d1526; }
-
-    .leaflet-control-zoom {
-      border: 1px solid var(--border) !important;
-      border-radius: var(--radius) !important;
-      overflow: hidden;
-      box-shadow: var(--shadow) !important;
-    }
-
-    .leaflet-bar a {
-      background: var(--surface) !important;
-      color: var(--text) !important;
-      border-bottom: 1px solid var(--border) !important;
-    }
-
-    .leaflet-bar a:last-child { border-bottom: none !important; }
-
-    .leaflet-bar a:hover { background: var(--surface-2) !important; }
-
-    .leaflet-control-attribution {
-      background: rgba(11, 18, 32, 0.65) !important;
-      color: var(--text-muted) !important;
-      font-size: 10px !important;
-    }
-
-    .leaflet-control-attribution a { color: var(--accent-light) !important; }
-
-    /* ── Legend (glass card) ── */
+    /* ── Legend ── */
     .legend {
       position: absolute;
       bottom: 28px;
       left: 24px;
       z-index: 1000;
-      background: rgba(20, 29, 48, 0.82);
-      -webkit-backdrop-filter: blur(12px) saturate(140%);
-      backdrop-filter: blur(12px) saturate(140%);
+      background: var(--bg);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
+      border-radius: var(--radius-lg);
       padding: 14px 16px;
-      box-shadow: var(--shadow-lg);
+      box-shadow: var(--card-shadow-lg);
       min-width: 180px;
       padding-bottom: calc(14px + env(safe-area-inset-bottom, 0px));
     }
@@ -443,7 +387,7 @@
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.8px;
-      color: var(--text-muted);
+      color: var(--body);
       margin-bottom: 10px;
     }
 
@@ -453,7 +397,7 @@
       gap: 8px;
       font-size: 13px;
       font-weight: 400;
-      color: var(--text);
+      color: var(--heading);
       margin-bottom: 6px;
       min-height: 44px;
     }
@@ -493,7 +437,7 @@
       right: 0;
       bottom: 0;
       z-index: 2000;
-      background: rgba(11, 18, 32, 0.9);
+      background: rgba(255,255,255,0.92);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -502,12 +446,12 @@
     }
 
     .no-data-card {
-      background: var(--surface);
+      background: var(--bg);
       border: 1px solid var(--border);
       border-radius: var(--radius-lg);
       padding: 40px 48px;
       text-align: center;
-      box-shadow: var(--shadow-lg);
+      box-shadow: var(--card-shadow-lg);
       max-width: 420px;
     }
 
@@ -515,36 +459,35 @@
       width: 56px;
       height: 56px;
       border-radius: 50%;
-      background: rgba(83,58,253,0.18);
+      background: rgba(83,58,253,0.08);
       display: flex;
       align-items: center;
       justify-content: center;
       margin: 0 auto 16px;
       font-size: 24px;
-      color: var(--accent-light);
     }
 
     .no-data-card h2 {
       font-family: var(--font);
       font-weight: 300;
       font-size: 20px;
-      color: var(--text);
+      color: var(--heading);
       margin-bottom: 8px;
     }
 
     .no-data-card p {
       font-size: 14px;
-      color: var(--text-muted);
+      color: var(--body);
       line-height: 1.5;
     }
 
     .no-data-card code {
       font-family: var(--font-mono);
       font-size: 12px;
-      background: var(--surface-2);
+      background: #f8fafc;
       padding: 3px 7px;
       border-radius: var(--radius-sm);
-      color: var(--accent-light);
+      color: var(--accent);
       border: 1px solid var(--border);
     }
 
@@ -554,10 +497,10 @@
       font-size: 14px;
       font-weight: 600;
       padding: 10px 24px;
-      border-radius: var(--radius-pill);
+      border-radius: 100px;
       border: 2px solid var(--accent);
       background: transparent;
-      color: var(--accent-light);
+      color: var(--accent);
       cursor: pointer;
       transition: all 0.15s ease;
       touch-action: manipulation;
@@ -567,7 +510,7 @@
     .retry-btn:hover {
       background: var(--accent);
       color: #fff;
-      box-shadow: 0 4px 14px rgba(83,58,253,0.4);
+      box-shadow: 0 2px 6px rgba(83,58,253,0.3);
     }
 
     /* ── Loading Spinner ── */
@@ -578,7 +521,7 @@
       right: 0;
       z-index: 3000;
       height: 3px;
-      background: linear-gradient(90deg, var(--accent), var(--accent-light), var(--accent));
+      background: linear-gradient(90deg, var(--accent), #7c6fff, var(--accent));
       background-size: 200% 100%;
       animation: loadingSlide 1.5s ease-in-out infinite;
       opacity: 0;
@@ -612,42 +555,34 @@
     .loading-spinner .spinner-ring {
       width: 48px;
       height: 48px;
-      border: 3px solid rgba(124, 111, 255, 0.2);
-      border-top-color: var(--accent-light);
+      border: 3px solid rgba(83, 58, 253, 0.15);
+      border-top-color: var(--accent);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      box-shadow: var(--shadow);
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    /* ── Wind badge on map (glass card) ── */
+    /* ── Wind badge on map ── */
     .map-wind-indicator {
       position: absolute;
-      top: calc(var(--top-offset) + 16px);
+      top: 140px;
       right: 24px;
       z-index: 1000;
-      background: rgba(20, 29, 48, 0.82);
-      -webkit-backdrop-filter: blur(12px) saturate(140%);
-      backdrop-filter: blur(12px) saturate(140%);
+      background: var(--bg);
       border: 1px solid var(--border);
       border-radius: var(--radius);
-      padding: 12px 16px;
-      box-shadow: var(--shadow);
+      padding: 10px 14px;
+      box-shadow: var(--card-shadow);
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
       font-size: 13px;
-      color: var(--text);
+      color: var(--heading);
       cursor: pointer;
       transition: all 0.2s ease;
-    }
-
-    .map-wind-indicator:hover {
-      border-color: var(--accent-light);
-      box-shadow: var(--shadow-lg);
     }
 
     .wind-arrow {
@@ -658,14 +593,14 @@
 
     /* ── Grid tooltip overrides ── */
     .grid-tooltip {
-      background: rgba(20, 29, 48, 0.95) !important;
+      background: rgba(255,255,255,0.95) !important;
       border: 1px solid var(--border) !important;
       border-radius: var(--radius-sm) !important;
-      box-shadow: var(--shadow) !important;
+      box-shadow: var(--card-shadow) !important;
       padding: 6px 10px !important;
       font-family: var(--font) !important;
       font-size: 12px !important;
-      color: var(--text) !important;
+      color: var(--heading) !important;
       line-height: 1.5 !important;
       font-weight: 400 !important;
       white-space: nowrap;
@@ -674,42 +609,31 @@
 
     /* ── Responsive ── */
     @media (max-width: 640px) {
-      :root {
-        --header-h: 52px;
-        --timebar-h: 58px;
-      }
       .header {
-        padding: calc(4px + env(safe-area-inset-top, 0px)) 10px 4px;
+        padding: 6px 10px;
         gap: 6px;
         flex-wrap: nowrap;
-        min-height: var(--header-h);
+        min-height: 44px;
       }
       .brand-icon { width: 22px; height: 22px; font-size: 11px; }
       .header-meta { gap: 6px; overflow: hidden; }
       .header-badge { display: none; }
-      .header-back-link { font-size: 12px; }
-      .refresh-btn { font-size: 16px; }
+      .refresh-btn { width: 36px; height: 36px; min-width: 36px; min-height: 36px; font-size: 16px; }
       .landcover-toggle {
-        font-size: 0;
-        width: 44px;
-        min-width: 44px;
-        padding: 0;
-        max-width: 44px;
-      }
-      .landcover-toggle::before {
-        content: attr(data-short);
-        font-size: 16px;
-        line-height: 1;
+        font-size: 11px;
+        padding: 6px 10px;
+        min-height: 36px;
       }
       .time-selector-bar {
+        top: 48px;
         padding: 6px 10px;
         gap: 4px;
       }
       .time-selector-label { font-size: 10px; margin-right: 8px; }
       .time-pill {
         font-size: 12px;
-        padding: 6px 12px;
-        min-height: 44px;
+        padding: 6px 10px;
+        min-height: 32px;
       }
       .time-pill .pill-speed {
         display: none;
@@ -723,14 +647,14 @@
       .legend-title { font-size: 10px; margin-bottom: 4px; }
       .legend-item { font-size: 11px; gap: 4px; min-height: 32px; }
       .legend-swatch { width: 10px; height: 10px; }
-      .map-wind-indicator { top: calc(var(--top-offset) + 12px); right: 8px; font-size: 11px; padding: 8px 10px; }
+      .map-wind-indicator { top: 94px; right: 8px; font-size: 11px; padding: 6px 8px; }
     }
 
     @media (max-width: 420px) {
       .landcover-toggle {
-        font-size: 0;
-        padding: 0;
-        min-height: 44px;
+        font-size: 11px;
+        padding: 6px 8px;
+        min-height: 32px;
       }
     }
 
@@ -741,11 +665,6 @@
       .legend:not(.collapsed) .legend-item {
         display: flex;
       }
-    }
-
-    /* PWA install prompt — respect bottom safe area over its inline padding */
-    #pwa-install-prompt {
-      padding-bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
     }
   </style>
 </head>
@@ -805,6 +724,7 @@
 
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
   <script src="js/constants.js"></script>
   <script src="js/colors.js"></script>
   <script src="js/wind.js"></script>
@@ -886,11 +806,8 @@
     let landCoverLayer = null;  // ponytail: WMS toggle, in initMap not here
     let data = null;
     let staticData = null;
+    let turfLakePolygon = null;  // cached Turf polygon for grid clipping
     let currentTimeIdx = -1;
-    let heatmapCanvas = null;    // overlay canvas (smoothed heatmap)
-    let heatmapCtx = null;
-    let gridCanvas = null;       // offscreen coarse grid canvas (cached, reused)
-    let gridLayoutCache = null;  // { grid, layout }
 
     // ── DOM refs ──
     const $loadingBar = document.getElementById('loadingBar');
@@ -914,11 +831,10 @@
         attributionControl: false
       });
 
-      // Tile layer — CARTO dark basemap (retina-aware {r} placeholder)
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+      // Tile layer
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         maxZoom: 19,
-        subdomains: 'abcd',
-        attribution: '&copy; OpenStreetMap contributors &copy; CARTO'
+        attribution: '&copy; OpenStreetMap contributors'
       }).addTo(map);
 
       // Zoom control in bottom-right
@@ -929,9 +845,6 @@
         position: 'bottomright',
         prefix: false
       }).addTo(map);
-
-      // Heatmap overlay canvas (above tiles, below polygon overlays)
-      setupHeatmapCanvas();
 
       // NLCD 2021 land cover overlay (WMS, hidden by default)
       landCoverLayer = L.tileLayer.wms('https://www.mrlc.gov/geoserver/mrlc_display/NLCD_2021_Land_Cover_L48/wms', {
@@ -985,148 +898,98 @@
       return Math.max(0, dot) * normalizedFetch;
     }
 
-    // ── Heatmap overlay canvas (offscreen-canvas smoothing) ──
-    // The math grid is rendered onto a SMALL offscreen canvas — one colored
-    // block per grid cell at its grid position (no lake clipping here; cells
-    // outside the lake are cut by the canvas clip below). The offscreen is
-    // then blitted onto the overlay canvas clipped to the lake polygon
-    // outline. Canvas image smoothing interpolates between cells, so the
-    // blocky per-cell polygon look becomes a smooth color field. The
-    // underlying grid math is untouched.
-    const GRID_CANVAS_SCALE = 4;  // offscreen px per grid cell
-
-    function setupHeatmapCanvas() {
-      // Pane z-index 300: above tiles (200), below polygon overlays (400).
-      // NB: Leaflet 1.9.4 createPane() takes no zIndex arg and its generic
-      // .leaflet-pane rule sets 400, so pin the inline style explicitly.
-      const pane = map.createPane('heatmapPane');
-      pane.style.zIndex = '300';
-      heatmapCanvas = document.createElement('canvas');
-      heatmapCanvas.id = 'heatmapCanvas';
-      heatmapCanvas.style.position = 'absolute';
-      heatmapCanvas.style.left = '0';
-      heatmapCanvas.style.top = '0';
-      heatmapCanvas.style.pointerEvents = 'none';  // map gestures pass through
-      pane.appendChild(heatmapCanvas);
-      heatmapCtx = heatmapCanvas.getContext('2d');
-      map.on('moveend zoomend viewreset resize', redrawHeatmapCanvas);
-    }
-
-    // Derive grid columns/rows from the regular lat/lon spacing of grid_cells
-    function getGridLayout(grid) {
-      if (gridLayoutCache && gridLayoutCache.grid === grid) return gridLayoutCache.layout;
-      let minLat = Infinity, maxLat = -Infinity, minLon = Infinity, maxLon = -Infinity;
-      const lats = {}, lons = {};
-      for (let i = 0; i < grid.length; i++) {
-        const c = grid[i];
-        if (c.lat < minLat) minLat = c.lat;
-        if (c.lat > maxLat) maxLat = c.lat;
-        if (c.lon < minLon) minLon = c.lon;
-        if (c.lon > maxLon) maxLon = c.lon;
-        lats[Math.round(c.lat * 1e6)] = 1;
-        lons[Math.round(c.lon * 1e6)] = 1;
+    // ── Cached Turf lake polygon for grid clipping ──
+    function getTurfLakePolygon() {
+      if (turfLakePolygon) return turfLakePolygon;
+      if (!data || !data.lake_polygon || data.lake_polygon.length < 3) return null;
+      // data.lake_polygon is [lon, lat] pairs — already GeoJSON order
+      const coords = data.lake_polygon.map(p => [p[0], p[1]]);
+      // Close the ring if not already closed
+      const first = coords[0], last = coords[coords.length - 1];
+      if (first[0] !== last[0] || first[1] !== last[1]) {
+        coords.push([first[0], first[1]]);
       }
-      const nRows = Object.keys(lats).length;
-      const nCols = Object.keys(lons).length;
-      const layout = {
-        nCols: nCols,
-        nRows: nRows,
-        minLat: minLat,
-        maxLat: maxLat,
-        minLon: minLon,
-        maxLon: maxLon,
-        latSpan: nRows > 1 ? (maxLat - minLat) / (nRows - 1) : GRID_CELL_SIZE,
-        lonSpan: nCols > 1 ? (maxLon - minLon) / (nCols - 1) : GRID_CELL_SIZE
-      };
-      gridLayoutCache = { grid: grid, layout: layout };
-      return layout;
-    }
-
-    // Fill the cached offscreen canvas — one colored block per grid cell
-    function buildGridCanvas(grid, layout, scoreFn) {
-      const w = Math.max(1, layout.nCols) * GRID_CANVAS_SCALE;
-      const h = Math.max(1, layout.nRows) * GRID_CANVAS_SCALE;
-      if (!gridCanvas || gridCanvas.width !== w || gridCanvas.height !== h) {
-        gridCanvas = document.createElement('canvas');
-        gridCanvas.width = w;
-        gridCanvas.height = h;
-      }
-      const ctx = gridCanvas.getContext('2d');
-      ctx.clearRect(0, 0, w, h);
-      for (let i = 0; i < grid.length; i++) {
-        const cell = grid[i];
-        const col = Math.round((cell.lon - layout.minLon) / layout.lonSpan);
-        const row = Math.round((layout.maxLat - cell.lat) / layout.latSpan);
-        if (col < 0 || col >= layout.nCols || row < 0 || row >= layout.nRows) continue;
-        ctx.fillStyle = gridImpactColor(scoreFn(cell));
-        ctx.fillRect(col * GRID_CANVAS_SCALE, row * GRID_CANVAS_SCALE, GRID_CANVAS_SCALE, GRID_CANVAS_SCALE);
-      }
-    }
-
-    // Blit the smoothed field onto the overlay, clipped to the lake outline
-    function redrawHeatmapCanvas() {
-      if (!heatmapCanvas || !map || !data || !data.lake_polygon || data.lake_polygon.length < 3) return;
-      if (!gridLayoutCache || !gridCanvas) return;
-      const size = map.getSize();
-      if (size.x === 0 || size.y === 0) return;
-      const dpr = window.devicePixelRatio || 1;
-      const bw = Math.max(1, Math.round(size.x * dpr));
-      const bh = Math.max(1, Math.round(size.y * dpr));
-      if (heatmapCanvas.width !== bw || heatmapCanvas.height !== bh) {
-        heatmapCanvas.width = bw;
-        heatmapCanvas.height = bh;
-        heatmapCanvas.style.width = size.x + 'px';
-        heatmapCanvas.style.height = size.y + 'px';
-      }
-      const ctx = heatmapCtx;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, size.x, size.y);
-
-      // Clip to the lake polygon outline (projected like the old polygons)
-      ctx.save();
-      ctx.beginPath();
-      const poly = data.lake_polygon;  // [lon, lat] pairs
-      for (let i = 0; i < poly.length; i++) {
-        const p = map.latLngToLayerPoint([poly[i][1], poly[i][0]]);
-        if (i === 0) ctx.moveTo(p.x, p.y);
-        else ctx.lineTo(p.x, p.y);
-      }
-      ctx.closePath();
-      ctx.clip();
-
-      // Destination: grid bounding box expanded by half a cell (cell areas)
-      const layout = gridLayoutCache.layout;
-      const halfLat = layout.latSpan / 2;
-      const halfLon = layout.lonSpan / 2;
-      const tl = map.latLngToLayerPoint([layout.maxLat + halfLat, layout.minLon - halfLon]);
-      const br = map.latLngToLayerPoint([layout.minLat - halfLat, layout.maxLon + halfLon]);
-      const dw = br.x - tl.x;
-      const dh = br.y - tl.y;
-      if (dw > 0 && dh > 0) {
-        ctx.imageSmoothingEnabled = true;  // interpolate between cells → smooth field
-        ctx.drawImage(gridCanvas, tl.x, tl.y, dw, dh);
-      }
-      ctx.restore();
-    }
-
-    // Shared render entry: score each cell, fill offscreen, blit clipped
-    function renderGridField(grid, scoreFn) {
-      clearGridHeatmap();
-      if (!grid || grid.length === 0) return;
-      const layout = getGridLayout(grid);
-      buildGridCanvas(grid, layout, scoreFn);
-      redrawHeatmapCanvas();
-    }
-
-    // ── Draw grid heatmap (precomputed cell.impact_score) ──
-    function drawGridHeatmap(grid) {
-      renderGridField(grid, function(cell) { return cell.impact_score; });
+      turfLakePolygon = turf.polygon([coords]);
+      return turfLakePolygon;
     }
 
     // ── Grid heatmap full redraw with recomputed impact ──
     function redrawGridHeatmap(grid, windSpeedMs, windDirDeg) {
-      renderGridField(grid, function(cell) {
-        return cellImpact(cell, windSpeedMs, windDirDeg, data.lake_polygon);
+      clearGridHeatmap();
+
+      if (!grid || grid.length === 0) return;
+
+      const lakePolygon = data.lake_polygon;  // [lon, lat] pairs
+
+      grid.forEach(cell => {
+        const impactScore = cellImpact(cell, windSpeedMs, windDirDeg, data.lake_polygon);
+        const color = gridImpactColor(impactScore);
+        const half = GRID_CELL_SIZE / 2;
+
+        // Build cell polygon in GeoJSON [lon, lat] order
+        const cellCoords = [
+          [cell.lon - half, cell.lat - half],
+          [cell.lon + half, cell.lat - half],
+          [cell.lon + half, cell.lat + half],
+          [cell.lon - half, cell.lat + half],
+          [cell.lon - half, cell.lat - half]
+        ];
+        const cellPoly = turf.polygon([cellCoords]);
+        const lakePoly = getTurfLakePolygon();
+        if (!lakePoly) return;
+
+        // Clip cell to lake boundary
+        const clipped = turf.intersect(cellPoly, lakePoly);
+        if (!clipped) return;  // cell entirely outside lake
+
+        // Convert GeoJSON [lon, lat] back to Leaflet [lat, lon]
+        const leafletCoords = clipped.geometry.coordinates[0].map(c => [c[1], c[0]]);
+
+        const poly = L.polygon(leafletCoords, {
+          color: color,
+          weight: 0.5,
+          opacity: 0.6,
+          fillColor: color,
+          fillOpacity: 0.55,
+          smoothFactor: 0
+        }).addTo(map);
+
+        let tipText = '<strong>Fetch:</strong> ' + ((cell.fetch_km || 0) * 0.621371).toFixed(2) + ' mi<br>'
+          + '<strong>Impact:</strong> ' + (impactScore * 100).toFixed(0) + '%';
+
+        // Show wave height estimate for reference
+        const waveH = 0.017 * (windSpeedMs * computeShieldFactor(
+          cell.shore_distance_m, cell.shore_normal_deg, windDirDeg,
+          cell.nlcd_reduction != null ? cell.nlcd_reduction : 0.5
+        )) * Math.sqrt((cell.fetch_km || 0) * 1000);
+        tipText += '<br><strong>Wave:</strong> ' + (waveH * 3.28084).toFixed(1) + ' ft';
+
+        const shieldFactor = computeShieldFactor(
+          cell.shore_distance_m, cell.shore_normal_deg, windDirDeg,
+          cell.nlcd_reduction != null ? cell.nlcd_reduction : 0.5
+        );
+        if (shieldFactor < 0.99) {
+          tipText += '<br><strong>Shield:</strong> ' + (shieldFactor * 100).toFixed(0) + '%';
+        }
+        if (cell.shore_distance_m != null && cell.shore_distance_m < 150) {
+          tipText += '<br><strong>Shore:</strong> ' + (cell.shore_distance_m * 3.28084).toFixed(0) + ' ft';
+        }
+
+        poly.bindTooltip(tipText,
+          { direction: 'top', className: 'grid-tooltip', sticky: true }
+        );
+
+        poly.on('click', function() {
+          if (selectedCell && selectedCell !== this) {
+            selectedCell.setStyle({weight: 0.5, opacity: 0.6, fillOpacity: 0.55});
+          }
+          this.setStyle({weight: 3, opacity: 1.0, fillOpacity: 0.65});
+          this.bringToFront();
+          this.openTooltip();
+          selectedCell = this;
+        });
+
+        gridHeatmapLayers.push(poly);
       });
     }
 
@@ -1179,10 +1042,78 @@
         });
     }
 
-    // ── Clear grid heatmap (no-op: canvas overlay replaces per-cell layers) ──
+    // ── Draw grid heatmap ──
     function clearGridHeatmap() {
       gridHeatmapLayers.forEach(l => map.removeLayer(l));
       gridHeatmapLayers = [];
+    }
+
+    function drawGridHeatmap(grid) {
+      clearGridHeatmap();
+
+      if (!grid || grid.length === 0) return;
+
+      const lakePolygon = data.lake_polygon;
+
+      grid.forEach(cell => {
+        const impactScore = cell.impact_score;
+        const color = gridImpactColor(impactScore);
+        const half = GRID_CELL_SIZE / 2;
+
+        // Build cell polygon in GeoJSON [lon, lat] order
+        const cellCoords = [
+          [cell.lon - half, cell.lat - half],
+          [cell.lon + half, cell.lat - half],
+          [cell.lon + half, cell.lat + half],
+          [cell.lon - half, cell.lat + half],
+          [cell.lon - half, cell.lat - half]
+        ];
+        const cellPoly = turf.polygon([cellCoords]);
+        const lakePoly = getTurfLakePolygon();
+        if (!lakePoly) return;
+
+        // Clip cell to lake boundary
+        const clipped = turf.intersect(cellPoly, lakePoly);
+        if (!clipped) return;  // cell entirely outside lake
+
+        // Convert GeoJSON [lon, lat] back to Leaflet [lat, lon]
+        const leafletCoords = clipped.geometry.coordinates[0].map(c => [c[1], c[0]]);
+
+        const poly = L.polygon(leafletCoords, {
+          color: color,
+          weight: 0.5,
+          opacity: 0.6,
+          fillColor: color,
+          fillOpacity: 0.55,
+          smoothFactor: 0
+        }).addTo(map);
+
+        const tipText = '<strong>Fetch:</strong> ' + ((cell.fetch_km || 0) * 0.621371).toFixed(2) + ' mi<br>' +
+                  '<strong>Wave:</strong> ' + ((cell.wave_height_m || 0) * 3.28084).toFixed(1) + ' ft<br>' +
+                  '<strong>Impact:</strong> ' + ((cell.impact_score || 0) * 100).toFixed(0) + '%';
+        let finalTip = tipText;
+        if (cell.shield_factor != null && cell.shield_factor < 0.99) {
+          finalTip += '<br><strong>Shield:</strong> ' + (cell.shield_factor * 100).toFixed(0) + '%';
+        }
+        if (cell.shore_distance_m != null && cell.shore_distance_m < 150) {
+          finalTip += '<br><strong>Shore:</strong> ' + (cell.shore_distance_m * 3.28084).toFixed(0) + ' ft';
+        }
+        poly.bindTooltip(finalTip,
+          { direction: 'top', className: 'grid-tooltip', sticky: true }
+        );
+
+        poly.on('click', function() {
+          if (selectedCell && selectedCell !== this) {
+            selectedCell.setStyle({weight: 0.5, opacity: 0.6, fillOpacity: 0.55});
+          }
+          this.setStyle({weight: 3, opacity: 1.0, fillOpacity: 0.65});
+          this.bringToFront();
+          this.openTooltip();
+          selectedCell = this;
+        });
+
+        gridHeatmapLayers.push(poly);
+      });
     }
 
     // ── Draw shoreline segments ──
@@ -1364,7 +1295,7 @@
       // Reset state and reload
       staticData = null;
       data = null;
-      gridLayoutCache = null;  // invalidate grid layout cache
+      turfLakePolygon = null;  // invalidate Turf cache
       currentTimeIdx = -1;
       $windCard.style.top = '';   // reset to CSS default
 
@@ -1397,7 +1328,7 @@
         if (!forecast || forecast.length === 0) throw new Error('No wind forecast');
 
         // Build the combined data object the render pipeline expects
-        gridLayoutCache = null;  // invalidate grid layout cache (new grid array)
+        turfLakePolygon = null;  // invalidate Turf cache
         data = {
           lake_polygon: staticData.lake.polygon,
           grid_cells: staticData.grid,
