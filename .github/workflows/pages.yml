@@ -16,6 +16,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/configure-pages@v5
+      - name: Copy lake data into web root
+        run: cp -r data web/data
       - uses: actions/upload-pages-artifact@v3
         with:
           path: web
