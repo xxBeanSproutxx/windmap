@@ -1,4 +1,4 @@
-const CACHE_NAME = 'blue-lake-wave-v29';
+const CACHE_NAME = 'blue-lake-wave-v30';
 const STATIC_ASSETS = [
   './',
   './lake.html',
@@ -28,10 +28,12 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
-  // Network-first for HTML — always get the latest
+  // Network-first for HTML — always get the latest (bypass HTTP cache: GitHub
+  // Pages sends max-age=600 on HTML, which would otherwise serve stale pages
+  // for up to 10 minutes after a deploy)
   if (event.request.destination === 'document' || event.request.url.endsWith('/')) {
     event.respondWith(
-      fetch(event.request)
+      fetch(event.request, { cache: 'no-store' })
         .then((response) => {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
