@@ -31,3 +31,16 @@
   --color-destructive: #F87171;
   --color-ring: #38BDF8;
 }
+@layer components {
+  .dot {
+    @apply inline-block w-2 h-2 rounded-full shrink-0;
+  }
+  .dot.loading { @apply bg-accent animate-pulse; }
+  .dot.ready { @apply bg-impact-low; }
+  .dot.error { @apply bg-destructive; }
+  .card-thumb svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+  }
+}

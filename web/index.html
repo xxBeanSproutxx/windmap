@@ -4,349 +4,100 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Lake Dashboard · Wave Forecast</title>
+  <script>try{var t=localStorage.getItem('blw-theme');if(t==='dark'||(!t&&matchMedia('(prefers-color-scheme: dark)').matches))document.documentElement.classList.add('dark')}catch(e){}</script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="manifest" href="manifest.json">
   <link rel="icon" type="image/svg+xml" href="icon.svg">
   <link rel="apple-touch-icon" href="icon-192.png">
-  <link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
-  <style>
-    /* ── Reset & Base ── */
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #ffffff;
-      --heading: #061b31;
-      --accent: #533afd;
-      --body: #64748d;
-      --border: #e5edf5;
-      --card-shadow: 0 2px 12px rgba(50,50,93,0.15);
-      --radius: 6px;
-      --radius-lg: 10px;
-      --font: 'Source Sans 3', system-ui, -apple-system, sans-serif;
-      --impact-very-high: #db2777;
-      --impact-high: #ea2261;
-      --impact-medium: #f59e0b;
-      --impact-low: #15be53;
-    }
-
-    html, body {
-      min-height: 100%;
-      font-family: var(--font);
-      font-weight: 400;
-      color: var(--body);
-      background: #f6f8fc;
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
-    }
-
-    /* ── Header ── */
-    .header {
-      background: var(--bg);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 20px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-      box-shadow: 0 1px 3px rgba(50,50,93,0.08);
-      position: sticky;
-      top: 0;
-      z-index: 100;
-    }
-
-    .header-brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .header-brand .brand-icon {
-      width: 32px;
-      height: 32px;
-      background: linear-gradient(135deg, var(--accent) 0%, #7c6fff 100%);
-      border-radius: var(--radius);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #fff;
-      font-size: 16px;
-      font-weight: 600;
-      flex-shrink: 0;
-    }
-
-    .header-title {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--heading);
-      letter-spacing: -0.01em;
-    }
-
-    /* ── Status bar ── */
-    .status-bar {
-      padding: 10px 20px;
-      font-size: 13px;
-      color: var(--body);
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg);
-    }
-
-    .status-bar .dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .status-bar .dot.loading { background: #f59e0b; animation: pulse 1.5s ease-in-out infinite; }
-    .status-bar .dot.ready { background: #15be53; }
-    .status-bar .dot.error { background: #ea2261; }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.4; }
-    }
-
-    /* ── Main content ── */
-    .main {
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
-      max-width: 640px;
-      margin: 0 auto;
-    }
-
-    /* ── Lake card ── */
-    .lake-card-link {
-      text-decoration: none;
-      color: inherit;
-      display: block;
-    }
-
-    .lake-card {
-      background: var(--bg);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--card-shadow);
-      padding: 0;
-      display: flex;
-      flex-direction: row;
-      align-items: stretch;
-      border-left: 4px solid var(--border);
-      transition: transform 0.15s ease, box-shadow 0.15s ease;
-      cursor: pointer;
-      overflow: hidden;
-    }
-
-    .lake-card:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 4px 16px rgba(50,50,93,0.2);
-    }
-
-    .lake-card:active { transform: scale(0.985); }
-
-    .lake-card.impact-very-high { border-left-color: var(--impact-very-high); }
-    .lake-card.impact-high   { border-left-color: var(--impact-high); }
-    .lake-card.impact-medium { border-left-color: var(--impact-medium); }
-    .lake-card.impact-low    { border-left-color: var(--impact-low); }
-    .lake-card.unavailable   { border-left-color: #94a3b8; opacity: 0.7; }
-
-    .lake-card-top {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .card-thumb {
-      width: 90px;
-      flex-shrink: 0;
-      align-self: stretch;
-      background-color: #e8edf2;
-      background-size: contain;
-      background-position: center;
-      background-repeat: no-repeat;
-      border-radius: var(--radius-lg) 0 0 var(--radius-lg);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      overflow: hidden;
-    }
-
-    .card-thumb svg {
-      width: 100%;
-      height: 100%;
-      display: block;
-    }
-
-    .card-body {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      padding: 18px;
-      min-width: 0;
-    }
-
-    .lake-name {
-      font-size: 18px;
-      font-weight: 600;
-      color: var(--heading);
-      letter-spacing: -0.01em;
-    }
-
-    .impact-badge {
-      font-size: 12px;
-      font-weight: 600;
-      padding: 4px 10px;
-      border-radius: 100px;
-      white-space: nowrap;
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-      flex-shrink: 0;
-    }
-
-    .impact-badge.very-high { background: var(--impact-very-high); color: #fff; }
-    .impact-badge.high   { background: var(--impact-high); color: #fff; }
-    .impact-badge.medium { background: var(--impact-medium); color: #fff; }
-    .impact-badge.low    { background: var(--impact-low); color: #fff; }
-    .impact-badge.unavailable { background: #94a3b8; color: #fff; }
-
-    .lake-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 8px;
-    }
-
-    .stat {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-    }
-
-    .stat-label {
-      font-size: 11px;
-      font-weight: 400;
-      color: var(--body);
-      letter-spacing: 0.02em;
-    }
-
-    .stat-value {
-      font-size: 16px;
-      font-weight: 600;
-      color: var(--heading);
-    }
-
-    .stat-value.small { font-size: 14px; }
-
-    /* ── Loading state ── */
-    .skeleton {
-      background: var(--bg);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--card-shadow);
-      padding: 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      border-left: 4px solid var(--border);
-    }
-
-    .skeleton-line {
-      height: 16px;
-      background: linear-gradient(90deg, var(--border) 25%, #f0f3f7 50%, var(--border) 75%);
-      background-size: 200% 100%;
-      border-radius: 4px;
-      animation: shimmer 1.5s ease-in-out infinite;
-    }
-
-    @keyframes shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
-    .skeleton-line.title { width: 60%; height: 20px; }
-    .skeleton-line.badge { width: 28%; height: 14px; }
-    .skeleton-line.stat  { width: 40%; }
-
-    .skeleton-stats {
-      display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 8px;
-    }
-
-    /* ── Error / empty state ── */
-    .empty-state {
-      text-align: center;
-      padding: 60px 20px;
-      color: var(--body);
-    }
-
-    .empty-state h2 {
-      font-size: 20px;
-      font-weight: 600;
-      color: var(--heading);
-      margin-bottom: 8px;
-    }
-
-    .retry-btn {
-      margin-top: 16px;
-      padding: 10px 24px;
-      font-family: var(--font);
-      font-size: 14px;
-      font-weight: 600;
-      color: #fff;
-      background: var(--accent);
-      border: none;
-      border-radius: var(--radius);
-      cursor: pointer;
-    }
-
-    .retry-btn:hover { opacity: 0.9; }
-
-    /* ── Rank number ── */
-    .rank {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--body);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-  </style>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="tailwind.css">
 </head>
-<body>
+<body class="min-h-dvh bg-bg font-sans text-ink">
 
-<header class="header">
-  <div class="header-brand">
-    <div class="brand-icon"><svg width="16" height="12" viewBox="0 0 16 12"><path d="M0 6c2-3 4 3 6 0s4-3 6 0 4 3 4 0" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg></div>
-    <h1 class="header-title">Lake Dashboard</h1>
+<header class="sticky top-0 z-50 bg-bg/80 backdrop-blur border-b border-border dark:bg-bg/80">
+  <div class="max-w-5xl mx-auto flex items-center justify-between gap-3 px-4 py-3">
+    <div class="flex items-center gap-2.5 min-w-0">
+      <div class="w-8 h-8 shrink-0 rounded-md bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
+        <svg width="16" height="12" viewBox="0 0 16 12" class="w-4 h-4" aria-hidden="true"><path d="M0 6c2-3 4 3 6 0s4-3 6 0 4 3 4 0" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
+      </div>
+      <h1 class="text-lg font-semibold text-ink tracking-tight truncate">Lake Dashboard</h1>
+    </div>
+    <button id="theme-toggle" type="button" aria-label="Toggle dark mode" aria-pressed="false" class="inline-flex items-center justify-center w-11 h-11 shrink-0 rounded-full border border-border bg-card text-ink cursor-pointer transition-colors duration-200 hover:bg-muted-bg focus-visible:ring-2 ring-ring focus-visible:outline-none motion-safe:transition-colors motion-safe:duration-200">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-5 h-5 dark:hidden" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3v2.25m6.364.386-1.591 1.591M21 12h-2.25m-.386 6.364-1.591-1.591M12 18.75V21m-4.773-4.227-1.591 1.591M5.25 12H3m4.227-4.773L5.636 5.636M15.75 12a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0Z"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="hidden w-5 h-5 dark:block" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.72 9.72 0 0 1 18 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 0 0 3 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 0 0 9.002-5.998Z"/></svg>
+    </button>
   </div>
 </header>
 
-<div class="status-bar" id="statusBar">
-  <span class="dot loading"></span>
-  <span id="statusText">Fetching lake conditions…</span>
-</div>
+<main class="max-w-5xl mx-auto px-4 py-4 space-y-4">
+  <div id="statusBar" class="flex items-center gap-2 px-4 py-3 text-sm text-muted bg-card border border-border rounded-xl shadow-sm">
+    <span class="dot loading"></span>
+    <span id="statusText">Fetching lake conditions…</span>
+  </div>
 
-<main class="main" id="lakeList">
-  <!-- Skeleton placeholders -->
-  <div class="skeleton"><div class="skeleton-line title"></div><div class="skeleton-stats"><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div></div></div>
-  <div class="skeleton"><div class="skeleton-line title"></div><div class="skeleton-stats"><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div></div></div>
-  <div class="skeleton"><div class="skeleton-line title"></div><div class="skeleton-stats"><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div></div></div>
-  <div class="skeleton"><div class="skeleton-line title"></div><div class="skeleton-stats"><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div></div></div>
-  <div class="skeleton"><div class="skeleton-line title"></div><div class="skeleton-stats"><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div></div></div>
-  <div class="skeleton"><div class="skeleton-line title"></div><div class="skeleton-stats"><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div></div></div>
-  <div class="skeleton"><div class="skeleton-line title"></div><div class="skeleton-stats"><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div><div class="skeleton-line stat"></div></div></div>
+  <div id="lakeList" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <div class="bg-card border border-border rounded-xl shadow-sm p-4 space-y-3">
+      <div class="h-5 w-3/5 rounded bg-muted-bg animate-pulse"></div>
+      <div class="grid grid-cols-3 gap-2">
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+      </div>
+    </div>
+    <div class="bg-card border border-border rounded-xl shadow-sm p-4 space-y-3">
+      <div class="h-5 w-3/5 rounded bg-muted-bg animate-pulse"></div>
+      <div class="grid grid-cols-3 gap-2">
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+      </div>
+    </div>
+    <div class="bg-card border border-border rounded-xl shadow-sm p-4 space-y-3">
+      <div class="h-5 w-3/5 rounded bg-muted-bg animate-pulse"></div>
+      <div class="grid grid-cols-3 gap-2">
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+      </div>
+    </div>
+    <div class="bg-card border border-border rounded-xl shadow-sm p-4 space-y-3">
+      <div class="h-5 w-3/5 rounded bg-muted-bg animate-pulse"></div>
+      <div class="grid grid-cols-3 gap-2">
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+      </div>
+    </div>
+    <div class="bg-card border border-border rounded-xl shadow-sm p-4 space-y-3">
+      <div class="h-5 w-3/5 rounded bg-muted-bg animate-pulse"></div>
+      <div class="grid grid-cols-3 gap-2">
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+      </div>
+    </div>
+    <div class="bg-card border border-border rounded-xl shadow-sm p-4 space-y-3">
+      <div class="h-5 w-3/5 rounded bg-muted-bg animate-pulse"></div>
+      <div class="grid grid-cols-3 gap-2">
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+        <div class="h-4 rounded bg-muted-bg animate-pulse"></div>
+      </div>
+    </div>
+  </div>
 </main>
+
+<footer class="max-w-5xl mx-auto px-4 pb-8 text-center text-xs text-muted">
+  Blue Lake Wave · live surface conditions for inland lakes
+</footer>
 
 <script src="js/constants.js"></script>
 <script src="js/colors.js"></script>
 <script src="js/wind.js"></script>
 <script src="js/fetch.js"></script>
 <script src="js/main.js"></script>
+<script src="js/theme.js" defer></script>
 <script>
 (function() {
   'use strict';
@@ -384,50 +135,55 @@
   }
 
   // ── Card HTML ──
+  const IMPACT_CHIP = {
+    'very-high': 'bg-impact-high/15 text-impact-high',
+    'high': 'bg-impact-high/15 text-impact-high',
+    'medium': 'bg-impact-medium/15 text-impact-medium',
+    'low': 'bg-impact-low/15 text-impact-low'
+  };
+
   function renderLakeCard(lake, result, rank, lakeId) {
     const name = lake.name;
-    let cardClass, badgeClass, badgeText, speedStr, coverStr, impactStr;
+    let badgeClass, badgeText, speedStr, coverStr, impactStr;
 
     if (result.error) {
-      cardClass = 'unavailable';
-      badgeClass = 'unavailable';
+      badgeClass = 'bg-muted-bg text-muted';
       badgeText = 'Unavailable';
       speedStr = '—';
       coverStr = '—';
       impactStr = result.error;
     } else {
       const cat = classifyImpact(result.avgImpact);
-      cardClass = 'impact-' + cat;
-      badgeClass = cat;
+      badgeClass = IMPACT_CHIP[cat] || IMPACT_CHIP['low'];
       badgeText = impactLabel(cat);
       speedStr = result.speed_mph.toFixed(1) + ' mph';
       coverStr = (result.highPct * 100).toFixed(0) + '%';
       impactStr = (result.avgImpact * 100).toFixed(0) + '%';
     }
 
-    return '<a href="lake.html#lake=' + lake.id + '" class="lake-card-link">' +
-      '<div class="lake-card ' + cardClass + '">' +
-        '<div class="card-thumb" data-lake-id="' + lake.id + '"></div>' +
-        '<div class="card-body">' +
-        '<div class="lake-card-top">' +
+    return '<a href="lake.html#lake=' + lake.id + '" class="block group">' +
+      '<div class="flex bg-card border border-border rounded-xl shadow-sm overflow-hidden cursor-pointer hover:shadow-md hover:-translate-y-0.5 motion-safe:transition-all motion-safe:duration-200">' +
+        '<div class="card-thumb w-[90px] shrink-0 self-stretch bg-muted-bg bg-contain bg-center bg-no-repeat flex items-center justify-center overflow-hidden" data-lake-id="' + lake.id + '"></div>' +
+        '<div class="flex-1 flex flex-col gap-3 p-4 min-w-0">' +
+        '<div class="flex items-start justify-between gap-3">' +
           '<div>' +
-            '<div class="rank">#' + rank + '</div>' +
-            '<div class="lake-name">' + name + '</div>' +
+            '<div class="text-[11px] font-semibold uppercase tracking-wider text-muted">#' + rank + '</div>' +
+            '<div class="text-lg font-semibold text-ink tracking-tight">' + name + '</div>' +
           '</div>' +
-          '<span class="impact-badge ' + badgeClass + '">' + badgeText + '</span>' +
+          '<span class="text-xs font-semibold uppercase tracking-wide whitespace-nowrap px-2.5 py-1 rounded-full ' + badgeClass + '">' + badgeText + '</span>' +
         '</div>' +
-        '<div class="lake-stats">' +
-          '<div class="stat">' +
-            '<span class="stat-label">Wind</span>' +
-            '<span class="stat-value small">' + speedStr + '</span>' +
+        '<div class="grid grid-cols-3 gap-2">' +
+          '<div class="flex flex-col gap-0.5">' +
+            '<span class="text-[11px] text-muted">Wind</span>' +
+            '<span class="text-sm font-semibold text-ink">' + speedStr + '</span>' +
           '</div>' +
-          '<div class="stat">' +
-            '<span class="stat-label">Exposed</span>' +
-            '<span class="stat-value small">' + coverStr + '</span>' +
+          '<div class="flex flex-col gap-0.5">' +
+            '<span class="text-[11px] text-muted">Exposed</span>' +
+            '<span class="text-sm font-semibold text-ink">' + coverStr + '</span>' +
           '</div>' +
-          '<div class="stat">' +
-            '<span class="stat-label">Impact</span>' +
-            '<span class="stat-value small">' + impactStr + '</span>' +
+          '<div class="flex flex-col gap-0.5">' +
+            '<span class="text-[11px] text-muted">Impact</span>' +
+            '<span class="text-sm font-semibold text-ink">' + impactStr + '</span>' +
           '</div>' +
         '</div>' +
         '</div>' +
@@ -594,10 +350,10 @@
     $statusDot.className = 'dot error';
     $statusText.textContent = 'Failed to load';
     $lakeList.innerHTML =
-      '<div class="empty-state">' +
-        '<h2>Could not load lakes</h2>' +
+      '<div class="text-center py-16 text-muted">' +
+        '<h2 class="text-xl font-semibold text-ink mb-2">Could not load lakes</h2>' +
         '<p>' + msg + '</p>' +
-        '<button class="retry-btn" onclick="location.reload()">Retry</button>' +
+        '<button class="mt-4 px-6 py-3 bg-primary text-white rounded-full font-semibold cursor-pointer focus-visible:ring-2 ring-ring focus-visible:outline-none" onclick="location.reload()">Retry</button>' +
       '</div>';
   }
 
