@@ -38,11 +38,11 @@
   <!-- Header -->
   <header class="flex w-full items-center gap-2 px-3 pt-[max(0.625rem,env(safe-area-inset-top))] pb-2.5 bg-bg/95 backdrop-blur border-b border-border z-20 shrink-0">
     <a href="index.html" class="text-sm font-medium text-primary whitespace-nowrap shrink-0 hover:underline focus-visible:ring-2 ring-ring focus-visible:outline-none rounded">← Dashboard</a>
-    <div class="flex items-center gap-2 min-w-0 shrink-0">
+    <div class="flex items-center gap-2 flex-1 min-w-0">
       <div class="w-7 h-7 shrink-0 rounded bg-gradient-to-br from-primary to-secondary flex items-center justify-center">
         <svg width="16" height="12" viewBox="0 0 16 12" class="w-3.5 h-3.5" aria-hidden="true"><path d="M0 6c2-3 4 3 6 0s4-3 6 0 4 3 4 0" stroke="white" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>
       </div>
-      <select id="lakeSelect" class="max-w-[180px] min-h-[44px] rounded-md border border-border bg-card px-3 py-2 text-sm text-ink cursor-pointer focus-visible:ring-2 ring-ring focus-visible:outline-none max-[640px]:max-w-[130px] max-[640px]:text-xs"></select>
+      <h1 id="lakeName" class="min-h-[44px] flex items-center truncate text-base font-semibold text-ink min-w-0"></h1>
     </div>
     <div class="flex items-center gap-2 shrink-0">
       <span id="impactBadge" class="text-[11px] font-semibold uppercase tracking-wide px-2.5 py-1 rounded-full bg-primary/10 text-primary">—</span>
@@ -833,32 +833,10 @@
         }
       }
 
-      // Populate lake selector dropdown
-      const $lakeSelect = document.getElementById('lakeSelect');
-      if (manifest && manifest.length > 1) {
-        manifest.forEach(function(l) {
-          const opt = document.createElement('option');
-          opt.value = l.id;
-          opt.textContent = l.name;
-          if (l.id === lakeId) opt.selected = true;
-          $lakeSelect.appendChild(opt);
-        });
-        $lakeSelect.style.display = '';
-        $lakeSelect.addEventListener('change', function() {
-          switchLake(this.value);
-        });
-      } else if (manifest && manifest.length === 1) {
-        // Single lake: show but disable
-        const opt = document.createElement('option');
-        opt.value = manifest[0].id;
-        opt.textContent = manifest[0].name;
-        opt.selected = true;
-        $lakeSelect.appendChild(opt);
-        $lakeSelect.style.display = '';
-      } else {
-        // No manifest: hide selector
-        $lakeSelect.style.display = 'none';
-      }
+      // Show resolved lake name in header (display only; pick a lake from the dashboard)
+      const $lakeName = document.getElementById('lakeName');
+      const found = manifest.find(l => l.id === lakeId);
+      if ($lakeName) $lakeName.textContent = found ? found.name : lakeId;
 
       // Update title for initial lake
       if (currentLake) {
