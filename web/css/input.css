@@ -31,6 +31,11 @@
   --color-destructive: #F87171;
   --color-ring: #38BDF8;
 }
+
+/* Map container matches theme instead of Leaflet's default #ddd (visible while tiles load / offline) */
+.leaflet-container {
+  background: var(--color-bg);
+}
 @layer components {
   .dot {
     @apply inline-block w-2 h-2 rounded-full shrink-0;
