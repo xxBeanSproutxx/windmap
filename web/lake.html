@@ -233,7 +233,9 @@
         center: getLakeCenter(),
         zoom: DEFAULT_ZOOM,
         zoomControl: false,
-        attributionControl: false
+        attributionControl: false,
+        zoomSnap: 0.25,
+        zoomDelta: 0.25
       });
 
       // Flex-sized container — Leaflet measures lazily, refresh size after layout
