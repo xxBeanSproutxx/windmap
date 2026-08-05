@@ -112,10 +112,10 @@
     const DEFAULT_ZOOM = 14;
     const GRID_CELL_SIZE = 0.0004; // degrees — matches compute engine spacing
 
-    // ── Theme-aware basemap (light_all / dark_matter) ──
+    // ── Theme-aware basemap (light_all / dark_all) ──
     const BASEMAPS = {
       light: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-      dark: 'https://{s}.basemaps.cartocdn.com/dark_matter/{z}/{x}/{y}{r}.png'
+      dark:  'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
     };
     let tileLayer = null;
     let tileFallbackUsed = false;
