@@ -586,7 +586,8 @@
         const timeStr = pillTimeLabel(f);
 
         const mphStr = f.speed_mph != null ? f.speed_mph.toFixed(1) : '—';
-        pill.innerHTML = timeStr + '<span class="pill-speed">' + mphStr + ' mph · ' + f.direction_deg + '°</span>';
+        const arrow = '<svg class="pill-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform:rotate(' + ((f.direction_deg || 0) - 180) + 'deg)"><path d="M12 20V4"/><path d="m6 10 6-6 6 6"/></svg>';
+        pill.innerHTML = timeStr + '<span class="pill-speed">' + arrow + mphStr + ' mph · ' + f.direction_deg + '°</span>';
         pill.title = f.timestamp_utc + ' — ' + mphStr + ' mph from ' + f.direction_deg + '°';
 
         pill.addEventListener('click', () => selectTimeSlot(idx));
@@ -609,7 +610,8 @@
             pill.dataset.idx = idx;
             const timeStr = pillTimeLabel(f);
             const mphStr = f.speed_mph != null ? f.speed_mph.toFixed(1) : '—';
-            pill.innerHTML = timeStr + '<span class="pill-speed">' + mphStr + ' mph · ' + f.direction_deg + '°</span>';
+            const arrow = '<svg class="pill-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform:rotate(' + ((f.direction_deg || 0) - 180) + 'deg)"><path d="M12 20V4"/><path d="m6 10 6-6 6 6"/></svg>';
+            pill.innerHTML = timeStr + '<span class="pill-speed">' + arrow + mphStr + ' mph · ' + f.direction_deg + '°</span>';
             pill.title = f.timestamp_utc + ' — ' + mphStr + ' mph from ' + f.direction_deg + '°';
             pill.addEventListener('click', () => selectTimeSlot(idx));
             $timePills.appendChild(pill);
