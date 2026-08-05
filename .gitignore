@@ -4,3 +4,5 @@ lake_data_sim.json
 data/lake_data.json
 web/data
 .venv/
+node_modules/
+.hermes/

@@ -1,0 +1,11 @@
+{
+  "name": "blue-lake-wave",
+  "private": true,
+  "scripts": {
+    "build:css": "tailwindcss -i web/css/input.css -o web/tailwind.css --minify"
+  },
+  "devDependencies": {
+    "tailwindcss": "^4.1.0",
+    "@tailwindcss/cli": "^4.1.0"
+  }
+}
