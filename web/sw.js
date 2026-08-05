@@ -3,6 +3,8 @@ const STATIC_ASSETS = [
   './',
   './lake.html',
   './manifest.json',
+  './tailwind.css',
+  './js/theme.js',
   './icon-192.png',
   './icon-512.png',
   './icon.svg'
