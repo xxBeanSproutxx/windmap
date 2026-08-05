@@ -43,4 +43,40 @@
     height: 100%;
     display: block;
   }
+  .time-pill {
+    @apply shrink-0 font-sans text-[13px] font-normal px-3.5 py-2.5 min-h-[44px] rounded-full border border-border bg-card text-ink cursor-pointer transition-colors duration-200 whitespace-nowrap select-none touch-manipulation;
+  }
+  .time-pill:hover { @apply border-primary text-primary; }
+  .time-pill.active { @apply bg-primary text-white border-primary font-semibold; }
+  .time-pill.active::before { content: '● '; font-size: 8px; vertical-align: middle; margin-right: 2px; opacity: .9; }
+  .time-pill .pill-speed { @apply block text-[10px] opacity-70 mt-[-1px]; }
+  .time-pills-scroll { scrollbar-width: none; }
+  .time-pills-scroll::-webkit-scrollbar { display: none; }
+  .wind-arrow { transition: transform .3s ease; }
+  .loading-bar.visible { opacity: 1; }
+  .loading-spinner.visible { opacity: 1; }
+  .legend-title { cursor: pointer; }
+  .legend-title::after { content: ' ▾'; font-size: 9px; opacity: .5; }
+  .legend.collapsed .legend-title::after { content: ' ▸'; }
+  .legend.collapsed .legend-item { display: none; }
+  .legend.collapsed .legend-title { margin-bottom: 0; }
+  #landcoverToggle.active { @apply bg-primary text-white border-primary; }
+  .leaflet-control-zoom a { font-size: 1rem; }
+  .grid-tooltip {
+    background: var(--color-card) !important;
+    border: 1px solid var(--color-border) !important;
+    border-radius: 4px !important;
+    box-shadow: 0 2px 12px rgba(50,50,93,0.15) !important;
+    padding: 6px 10px !important;
+    font-family: var(--font-sans) !important;
+    font-size: 12px !important;
+    color: var(--color-ink) !important;
+    line-height: 1.5 !important;
+    font-weight: 400 !important;
+    white-space: nowrap;
+    z-index: 10000 !important;
+  }
+  .leaflet-tooltip {
+    white-space: nowrap;
+  }
 }
