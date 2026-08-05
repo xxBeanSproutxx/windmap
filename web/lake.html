@@ -73,7 +73,14 @@
   </div>
 
   <!-- Map -->
-  <div id="map" class="relative z-0 order-3 w-full flex-1 min-h-0"></div>
+  <div id="map" class="relative z-0 order-3 w-full flex-1 min-h-0">
+    <!-- Floating wind-direction arrow (points where the wind blows) -->
+    <div id="windArrowFloat" class="pointer-events-none absolute right-3 top-3 z-[1000] flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card/85 backdrop-blur shadow-sm" aria-hidden="true">
+      <svg id="windArrowIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="w-[18px] h-[18px] text-primary">
+        <path d="M12 20V4"/><path d="m6 10 6-6 6 6"/>
+      </svg>
+    </div>
+  </div>
 
   <!-- Legend -->
   <div id="legend" class="absolute bottom-3 left-6 z-[1000] rounded-xl border border-border bg-card/85 backdrop-blur shadow-lg px-4 py-3.5 min-w-[180px] pb-[calc(14px+env(safe-area-inset-bottom,0px))] max-[640px]:bottom-2.5 max-[640px]:left-2 max-[640px]:px-2.5 max-[640px]:py-2 max-[640px]:min-w-0">
@@ -531,6 +538,12 @@
       $impactBadge.textContent = impactLabel(cat);
       $impactBadge.style.background = impactColor(cat) + '18';
       $impactBadge.style.color = impactColor(cat);
+
+      // Floating wind-direction arrow — points where the wind blows (from − 180)
+      const $windArrowIcon = document.getElementById('windArrowIcon');
+      if ($windArrowIcon) {
+        $windArrowIcon.style.transform = 'rotate(' + ((wind.direction_deg || 0) - 180) + 'deg)';
+      }
     }
 
     // Full pill label: "Today 8:00 PM", "Tomorrow 7:00 AM", "Sat 8/1 7:00 AM".
@@ -586,8 +599,7 @@
         const timeStr = pillTimeLabel(f);
 
         const mphStr = f.speed_mph != null ? f.speed_mph.toFixed(1) : '—';
-        const arrow = '<svg class="pill-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform:rotate(' + ((f.direction_deg || 0) - 180) + 'deg)"><path d="M12 20V4"/><path d="m6 10 6-6 6 6"/></svg>';
-        pill.innerHTML = timeStr + '<span class="pill-speed">' + arrow + mphStr + ' mph · ' + f.direction_deg + '°</span>';
+        pill.innerHTML = timeStr + '<span class="pill-speed">' + mphStr + ' mph · ' + f.direction_deg + '°</span>';
         pill.title = f.timestamp_utc + ' — ' + mphStr + ' mph from ' + f.direction_deg + '°';
 
         pill.addEventListener('click', () => selectTimeSlot(idx));
@@ -610,8 +622,7 @@
             pill.dataset.idx = idx;
             const timeStr = pillTimeLabel(f);
             const mphStr = f.speed_mph != null ? f.speed_mph.toFixed(1) : '—';
-            const arrow = '<svg class="pill-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="transform:rotate(' + ((f.direction_deg || 0) - 180) + 'deg)"><path d="M12 20V4"/><path d="m6 10 6-6 6 6"/></svg>';
-            pill.innerHTML = timeStr + '<span class="pill-speed">' + arrow + mphStr + ' mph · ' + f.direction_deg + '°</span>';
+            pill.innerHTML = timeStr + '<span class="pill-speed">' + mphStr + ' mph · ' + f.direction_deg + '°</span>';
             pill.title = f.timestamp_utc + ' — ' + mphStr + ' mph from ' + f.direction_deg + '°';
             pill.addEventListener('click', () => selectTimeSlot(idx));
             $timePills.appendChild(pill);
