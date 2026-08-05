@@ -18,6 +18,10 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://a.basemaps.cartocdn.com" crossorigin>
+  <link rel="preconnect" href="https://b.basemaps.cartocdn.com" crossorigin>
+  <link rel="preconnect" href="https://c.basemaps.cartocdn.com" crossorigin>
+  <link rel="preconnect" href="https://d.basemaps.cartocdn.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Leaflet CSS -->
@@ -114,6 +118,19 @@
       dark: 'https://{s}.basemaps.cartocdn.com/dark_matter/{z}/{x}/{y}{r}.png'
     };
     let tileLayer = null;
+    let tileFallbackUsed = false;
+
+    function armTileFallback(layer) {
+      layer.off('tileerror', onTileError);      // avoid stacking handlers
+      layer.on('tileerror', onTileError);
+    }
+    function onTileError(ev) {
+      if (tileFallbackUsed) return;             // fall back at most once per page
+      tileFallbackUsed = true;
+      const dark = document.documentElement.classList.contains('dark');
+      const url = dark ? BASEMAPS.light : BASEMAPS.dark;   // swap to the OTHER theme's basemap
+      tileLayer.setUrl(url);
+    }
 
     function setBasemap() {
       const dark = document.documentElement.classList.contains('dark');
@@ -126,6 +143,7 @@
       } else {
         tileLayer.setUrl(url);
       }
+      armTileFallback(tileLayer);
     }
 
     // ── Lake state ──
@@ -222,6 +240,7 @@
 
       // Flex-sized container — Leaflet measures lazily, refresh size after layout
       setTimeout(() => map.invalidateSize(), 0);
+      map.whenReady(() => map.invalidateSize());
 
       // Basemap tile layer (theme-aware)
       setBasemap();
