@@ -43,6 +43,32 @@
   max-width: none !important;
   height: auto !important;
 }
+
+/* Theme the Leaflet zoom control + attribution (Leaflet defaults are hard white) */
+.leaflet-bar {
+  border-color: var(--color-border);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+}
+.leaflet-bar a {
+  background: var(--color-card);
+  color: var(--color-ink);
+  border-bottom-color: var(--color-border);
+}
+.leaflet-bar a:hover {
+  background: var(--color-muted-bg);
+  color: var(--color-primary);
+}
+.leaflet-bar a.leaflet-disabled {
+  background: var(--color-muted-bg);
+  color: var(--color-muted);
+}
+.leaflet-control-attribution {
+  background: var(--color-card) !important;
+  color: var(--color-muted);
+}
+.leaflet-control-attribution a {
+  color: var(--color-secondary);
+}
 @layer components {
   .dot {
     @apply inline-block w-2 h-2 rounded-full shrink-0;
