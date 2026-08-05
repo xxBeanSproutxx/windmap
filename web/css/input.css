@@ -36,6 +36,13 @@
 .leaflet-container {
   background: var(--color-bg);
 }
+
+/* Tailwind preflight (img { max-width:100%; height:auto }) squashes retina @2x Leaflet
+   tiles — restore Leaflet's intrinsic tile sizing */
+.leaflet-container img {
+  max-width: none !important;
+  height: auto !important;
+}
 @layer components {
   .dot {
     @apply inline-block w-2 h-2 rounded-full shrink-0;
