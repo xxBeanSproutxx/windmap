@@ -77,12 +77,17 @@
 
   <!-- Legend -->
   <div id="legend" class="absolute bottom-3 left-6 z-[1000] rounded-xl border border-border bg-card/85 backdrop-blur shadow-lg px-4 py-3.5 min-w-[180px] pb-[calc(14px+env(safe-area-inset-bottom,0px))] max-[640px]:bottom-2.5 max-[640px]:left-2 max-[640px]:px-2.5 max-[640px]:py-2 max-[640px]:min-w-0">
-    <div class="legend-title text-[11px] font-semibold uppercase tracking-wider text-muted mb-2.5 select-none">Surface Impact</div>
-    <div class="legend-item flex items-center gap-2 text-[13px] font-normal text-ink mb-1.5 min-h-[44px] max-[640px]:text-[11px] max-[640px]:gap-1 max-[640px]:min-h-[32px]"><span class="legend-swatch w-3 h-3 rounded-sm shrink-0 max-[640px]:w-2.5 max-[640px]:h-2.5" style="background:#db2777"></span>Very High (≥0.80)</div>
-    <div class="legend-item flex items-center gap-2 text-[13px] font-normal text-ink mb-1.5 min-h-[44px] max-[640px]:text-[11px] max-[640px]:gap-1 max-[640px]:min-h-[32px]"><span class="legend-swatch w-3 h-3 rounded-sm shrink-0 max-[640px]:w-2.5 max-[640px]:h-2.5" style="background:#ef4444"></span>High (0.60–0.80)</div>
-    <div class="legend-item flex items-center gap-2 text-[13px] font-normal text-ink mb-1.5 min-h-[44px] max-[640px]:text-[11px] max-[640px]:gap-1 max-[640px]:min-h-[32px]"><span class="legend-swatch w-3 h-3 rounded-sm shrink-0 max-[640px]:w-2.5 max-[640px]:h-2.5" style="background:#f97316"></span>Elevated (0.40–0.60)</div>
-    <div class="legend-item flex items-center gap-2 text-[13px] font-normal text-ink mb-1.5 min-h-[44px] max-[640px]:text-[11px] max-[640px]:gap-1 max-[640px]:min-h-[32px]"><span class="legend-swatch w-3 h-3 rounded-sm shrink-0 max-[640px]:w-2.5 max-[640px]:h-2.5" style="background:#eab308"></span>Moderate (0.20–0.40)</div>
-    <div class="legend-item flex items-center gap-2 text-[13px] font-normal text-ink min-h-[44px] max-[640px]:text-[11px] max-[640px]:gap-1 max-[640px]:min-h-[32px]"><span class="legend-swatch w-3 h-3 rounded-sm shrink-0 max-[640px]:w-2.5 max-[640px]:h-2.5" style="background:#10b981"></span>Low (0.00–0.20)</div>
+    <button id="legendToggle" type="button" aria-expanded="false" class="flex w-full items-center justify-between gap-2 min-h-[44px] cursor-pointer select-none text-left">
+      <span class="text-[11px] font-semibold uppercase tracking-wider text-muted">Surface Impact</span>
+      <svg id="legendChevron" class="w-4 h-4 text-muted transition-transform duration-200" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+    </button>
+    <div id="legendBody" class="hidden mt-2.5">
+      <div class="legend-item flex items-center gap-2 text-[13px] font-normal text-ink mb-1.5 min-h-[44px] max-[640px]:text-[11px] max-[640px]:gap-1 max-[640px]:min-h-[32px]"><span class="legend-swatch w-3 h-3 rounded-sm shrink-0 max-[640px]:w-2.5 max-[640px]:h-2.5" style="background:#db2777"></span>Very High (≥0.80)</div>
+      <div class="legend-item flex items-center gap-2 text-[13px] font-normal text-ink mb-1.5 min-h-[44px] max-[640px]:text-[11px] max-[640px]:gap-1 max-[640px]:min-h-[32px]"><span class="legend-swatch w-3 h-3 rounded-sm shrink-0 max-[640px]:w-2.5 max-[640px]:h-2.5" style="background:#ef4444"></span>High (0.60–0.80)</div>
+      <div class="legend-item flex items-center gap-2 text-[13px] font-normal text-ink mb-1.5 min-h-[44px] max-[640px]:text-[11px] max-[640px]:gap-1 max-[640px]:min-h-[32px]"><span class="legend-swatch w-3 h-3 rounded-sm shrink-0 max-[640px]:w-2.5 max-[640px]:h-2.5" style="background:#f97316"></span>Elevated (0.40–0.60)</div>
+      <div class="legend-item flex items-center gap-2 text-[13px] font-normal text-ink mb-1.5 min-h-[44px] max-[640px]:text-[11px] max-[640px]:gap-1 max-[640px]:min-h-[32px]"><span class="legend-swatch w-3 h-3 rounded-sm shrink-0 max-[640px]:w-2.5 max-[640px]:h-2.5" style="background:#eab308"></span>Moderate (0.20–0.40)</div>
+      <div class="legend-item flex items-center gap-2 text-[13px] font-normal text-ink min-h-[44px] max-[640px]:text-[11px] max-[640px]:gap-1 max-[640px]:min-h-[32px]"><span class="legend-swatch w-3 h-3 rounded-sm shrink-0 max-[640px]:w-2.5 max-[640px]:h-2.5" style="background:#10b981"></span>Low (0.00–0.20)</div>
+    </div>
   </div>
 
   <!-- Leaflet JS -->
@@ -858,17 +863,16 @@
         }
       });
 
-      // Legend: click title to toggle collapse
-      const $legend = document.getElementById('legend');
-      const $legendTitle = $legend.querySelector('.legend-title');
-      $legendTitle.style.cursor = 'pointer';
-      $legendTitle.addEventListener('click', function(e) {
-        e.stopPropagation();
-        $legend.classList.toggle('collapsed');
-      });
-      // Default collapsed on mobile
-      if (window.innerWidth < 500) {
-        $legend.classList.add('collapsed');
+      // Legend: click header to toggle collapse
+      const $legendToggle = document.getElementById('legendToggle');
+      const $legendBody = document.getElementById('legendBody');
+      const $legendChevron = document.getElementById('legendChevron');
+      if ($legendToggle && $legendBody) {
+        $legendToggle.addEventListener('click', () => {
+          const open = $legendBody.classList.toggle('hidden') === false;
+          $legendToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+          if ($legendChevron) $legendChevron.classList.toggle('rotate-180', open);
+        });
       }
       loadData();
 
