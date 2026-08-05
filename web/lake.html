@@ -85,15 +85,6 @@
     <div class="legend-item flex items-center gap-2 text-[13px] font-normal text-ink min-h-[44px] max-[640px]:text-[11px] max-[640px]:gap-1 max-[640px]:min-h-[32px]"><span class="legend-swatch w-3 h-3 rounded-sm shrink-0 max-[640px]:w-2.5 max-[640px]:h-2.5" style="background:#10b981"></span>Low (0.00–0.20)</div>
   </div>
 
-  <!-- Wind indicator card -->
-  <div class="map-wind-indicator order-2 flex w-full items-center gap-2 px-3 py-2 bg-card/60 border-b border-border text-[13px] text-ink cursor-pointer z-10 shrink-0" id="windCard">
-    <svg class="wind-arrow w-6 h-6" id="windArrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--color-primary)">
-      <line x1="12" y1="20" x2="12" y2="4"/>
-      <polyline points="7,8 12,4 17,8"/>
-    </svg>
-    <span id="windCardText"></span>
-  </div>
-
   <!-- Leaflet JS -->
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script src="https://unpkg.com/@turf/turf@6/turf.min.js"></script>
@@ -225,9 +216,6 @@
     const $impactBadge = document.getElementById('impactBadge');
     const $timePills = document.getElementById('timePills');
     const $timeBar = document.getElementById('timeBar');
-    const $windCard = document.getElementById('windCard');
-    const $windCardText = document.getElementById('windCardText');
-    const $windArrow = document.getElementById('windArrow');
 
     // ── Init map ──
     function initMap() {
@@ -528,7 +516,6 @@
     function updateWindUI(wind) {
       if (!wind) {
         $impactBadge.textContent = '—';
-        $windCard.style.display = 'none';
         return;
       }
 
@@ -539,11 +526,6 @@
       $impactBadge.textContent = impactLabel(cat);
       $impactBadge.style.background = impactColor(cat) + '18';
       $impactBadge.style.color = impactColor(cat);
-
-      // Wind card on map
-      $windCard.style.display = 'flex';
-      $windCardText.textContent = (wind.speed_mph ?? '—') + ' mph from ' + (wind.direction_deg ?? '—') + '°';
-      $windArrow.style.transform = 'rotate(' + ((wind.direction_deg || 0) - 180) + 'deg)';
     }
 
     // Full pill label: "Today 8:00 PM", "Tomorrow 7:00 AM", "Sat 8/1 7:00 AM".
@@ -702,7 +684,6 @@
       data = null;
       turfLakePolygon = null;  // invalidate Turf cache
       currentTimeIdx = -1;
-      $windCard.style.top = '';   // reset to CSS default
 
       await loadData();
 
