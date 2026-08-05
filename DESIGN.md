@@ -1,88 +1,102 @@
 # Blue Lake Wave Forecast — Design System
 
-Inspired by [Stripe](https://stripe.com)'s design language. Reference: `popular-web-designs` skill (Stripe).
+Compiled Tailwind v4 design system (CSS-first, no `tailwind.config.js`).
+Input `web/css/input.css` → output `web/tailwind.css` (committed, minified).
+Build: `npm run build:css`.
+
+Class-based dark mode: `<html class="dark">`. Tokens are CSS variables, so the
+`.dark { --color-* }` overrides flip every utility automatically. The compiled
+`web/tailwind.css` is committed — GitHub Pages keeps serving static `web/` with
+zero pipeline changes.
 
 ## Typography
 
 | Token | Value |
 |-------|-------|
-| Body / Headings | `Source Sans 3`, system-ui, -apple-system, sans-serif |
-| Mono / Data | `Source Code Pro`, SF Mono, monospace |
-| Weights | 300 (light), 400 (regular), 600 (semibold) |
+| Body / Headings | `Fira Sans`, system-ui, sans-serif |
+| Data / Numbers | `Fira Code`, monospace |
+| Body weights | 300 (light), 400 (regular), 500 (medium), 600 (semibold), 700 (bold) |
 
 Sourced from Google Fonts:
 ```html
-<link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@400;500&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 ```
 
-## Colors
-
-### Brand
+## Colors — Light (default)
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `--accent` | `#533afd` | Primary purple — buttons, links, active states |
-| `--accent-light` | `#7c6fff` | Hover / subtle accent variants |
-| `--heading` | `#061b31` | Dark navy — headings, labels |
-| `--body` | `#64748d` | Slate — body text, secondary information |
-| `--border` | `#e5edf5` | Light blue-gray — card borders, dividers |
+| `--color-primary` | `#0284C7` | Sky blue — buttons, links, active |
+| `--color-secondary` | `#0EA5E9` | Sky lighter |
+| `--color-accent` | `#F59E0B` | Amber/sun — CTA, highlights |
+| `--color-bg` | `#F0F9FF` | Page background |
+| `--color-card` | `#FFFFFF` | Surfaces |
+| `--color-ink` | `#0F172A` | Headings/body |
+| `--color-muted` | `#64748B` | Secondary text |
+| `--color-muted-bg` | `#EFF7FB` | Subtle fills |
+| `--color-border` | `#E0F0F8` | Hairlines |
+| `--color-destructive` | `#DC2626` | Errors |
+| `--color-ring` | `#0284C7` | Focus rings |
 
-### Impact Tiers (Wave Hazard)
-
-| Tier | Color | Condition | Meaning |
-|------|-------|-----------|---------|
-| High | `#ea2261` | Impact score > 0.40 | Rough — avoid or use extreme caution |
-| Medium | `#f59e0b` | Impact score 0.15–0.40 | Choosy — manage risk |
-| Low | `#15be53` | Impact score < 0.15 | Calm — good kayaking/fishing |
-
-## CSS Custom Properties
-
-```css
-:root {
-  --bg: #ffffff;
-  --heading: #061b31;
-  --accent: #533afd;
-  --accent-light: #7c6fff;
-  --body: #64748d;
-  --border: #e5edf5;
-  --card-shadow: 0 2px 12px rgba(50,50,93,0.15), 0 1px 2px rgba(0,0,0,0.04);
-  --card-shadow-lg: 0 8px 30px rgba(50,50,93,0.25), 0 2px 8px rgba(0,0,0,0.06);
-  --radius-sm: 4px;
-  --radius: 6px;
-  --radius-lg: 10px;
-  --font: 'Source Sans 3', system-ui, -apple-system, sans-serif;
-  --font-mono: 'Source Code Pro', 'SF Mono', monospace;
-  --impact-high: #ea2261;
-  --impact-medium: #f59e0b;
-  --impact-low: #15be53;
-}
-```
-
-## Spacing
+## Colors — Dark (`.dark`)
 
 | Token | Value | Usage |
 |-------|-------|-------|
-| `--radius-sm` | `4px` | Small elements (pills, badges) |
-| `--radius` | `6px` | Standard — cards, inputs, buttons |
-| `--radius-lg` | `10px` | Large — modals, panels |
+| `--color-primary` | `#38BDF8` | Brighter sky for dark contrast |
+| `--color-secondary` | `#7DD3FC` | |
+| `--color-accent` | `#FBBF24` | Brighter amber |
+| `--color-bg` | `#0F172A` | Deep navy |
+| `--color-card` | `#1E293B` | |
+| `--color-ink` | `#F8FAFC` | |
+| `--color-muted` | `#94A3B8` | |
+| `--color-muted-bg` | `#1E293B` | |
+| `--color-border` | `#334155` | |
+| `--color-destructive` | `#F87171` | |
+| `--color-ring` | `#38BDF8` | |
 
-Card shadows use a subtle dual-layer approach (small offset + large blur) for depth without heavy borders.
+## Impact Tiers (Wave Hazard)
+
+Unchanged in both themes — identical values in light and dark.
+
+| Token | Value | Condition | Meaning |
+|-------|-------|-----------|---------|
+| `--color-impact-high` | `#ea2261` | Impact score > 0.40 | Rough — avoid or use extreme caution |
+| `--color-impact-medium` | `#f59e0b` | Impact score 0.15–0.40 | Choosy — manage risk |
+| `--color-impact-low` | `#15be53` | Impact score < 0.15 | Calm — good kayaking/fishing |
+
+Impact chips use translucent tier fills: `bg-impact-low/15 text-impact-low` style.
+The heatmap 5-anchor gradient (green/yellow/orange/red/magenta) in `web/js/colors.js` is untouched.
+
+## Theme Toggle
+
+- `web/js/theme.js` wires the `#theme-toggle` button (44×44px min, sun + moon SVGs).
+- Inline no-flash snippet in both HTML `<head>`s reads `localStorage['blw-theme']`
+  and falls back to `prefers-color-scheme`.
+- Basemap follows the theme: light → CARTO `light_all`, dark → CARTO `dark_matter`
+  (MutationObserver in `lake.html` swaps the Leaflet tile layer).
+
+## Spacing & Layout
+
+| Token | Value | Usage |
+|-------|-------|-------|
+| `rounded-sm/md/xl` | `4px / 6px / 12px` | Pills, standard, cards/modals |
+| `shadow-sm` | `0 1px 3px` | Subtle lift |
+| `shadow-md` | `0 4px 6px` | Cards, buttons |
+| `shadow-lg` | `0 10px 15px` | Modals, dropdowns |
 
 ## Breakpoints
 
 | Width | Target |
 |-------|--------|
-| ≤ 1024px | Tablet — collapse sidebar, reduce padding |
-| ≤ 640px | Large phone — single column, larger touch targets |
-| ≤ 420px | Small phone — ultra-compact, `data-short` attributes for text truncation |
-
-## Land Cover Toggle
-
-The land cover toggle button uses a `data-short="🌲"` attribute for ultra-compact display on screens ≤ 420px wide, where the full text label would overflow.
+| `sm` (≥ 640px) | Lake card grid 1→2 cols, compact header controls |
+| `lg` (≥ 1024px) | Lake card grid 2→3 cols |
+| ≤ 420px | Ultra-compact, `max-[420px]:` variants for text truncation |
 
 ## Principles
 
-1. **High contrast, low clutter** — Dark navy headings on white, slate body text. No decorative noise.
+1. **High contrast, low clutter** — Token-based, adaptive light/dark. No decorative noise.
 2. **Data-first** — The heatmap is the hero. Chrome recedes until needed.
 3. **Touch-friendly** — Minimum 44px touch targets. No hover-dependent interactions.
 4. **Mobile-native** — Designed for single-hand phone use on the water. Desktop is secondary.
+5. **Accessible** — Visible `focus-visible` rings (`ring-ring`), `prefers-reduced-motion`
+   respected via `motion-safe:` variants, no emoji as icons (SVG only).
