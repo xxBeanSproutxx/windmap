@@ -87,9 +87,14 @@ async function fetchLakeWind(lat, lon) {
             if (obsResp.ok) {
               const sd = await obsResp.json();
               const sp = sd.properties;
-              if (sp && sp.windSpeed && sp.windDirection) {
+              // NOTE: windSpeed/windDirection objects ALWAYS exist in NWS obs,
+              // but .value can be null (stalled/missing vane, QC-flagged).
+              // Capture speed unconditionally; only capture direction when real.
+              if (sp && sp.windSpeed) {
                 stationSpeedKmh = sp.windSpeed.value;
-                stationDirDeg = sp.windDirection.value;
+                if (sp.windDirection && sp.windDirection.value != null) {
+                  stationDirDeg = sp.windDirection.value;
+                }
               }
             }
           }
@@ -124,6 +129,8 @@ async function fetchLakeWind(lat, lon) {
 
     // Apply station observation to the time slot closest to now
     // (not blindly to forecast[0], which getCurrentWind() may skip)
+    // Speed is applied whenever valid; direction only when the station
+    // actually reported one (its vane can be missing/stalled → null).
     if (stationSpeedKmh != null && stationSpeedKmh > 0) {
       const now = Date.now();
       let closestIdx = 0;
@@ -135,7 +142,9 @@ async function fetchLakeWind(lat, lon) {
       const entry = forecast[closestIdx];
       entry.speed_ms = Math.round(stationSpeedKmh * KMH_TO_MS * 100) / 100;
       entry.speed_mph = Math.round(stationSpeedKmh * KMH_TO_MPH * 10) / 10;
-      entry.direction_deg = stationDirDeg;
+      if (stationDirDeg != null) {
+        entry.direction_deg = stationDirDeg;
+      }
     }
 
     return forecast;
