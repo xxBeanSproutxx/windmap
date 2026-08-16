@@ -6,3 +6,5 @@ web/data
 .venv/
 node_modules/
 .hermes/
+# Added by code-review-graph
+.code-review-graph/
