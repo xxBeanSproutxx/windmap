@@ -1,0 +1,13 @@
+{
+  "mcp": {
+    "code-review-graph": {
+      "type": "local",
+      "command": [
+        "/home/reid/.venvs/crg/bin/code-review-graph",
+        "serve",
+        "--repo",
+        "/home/reid/projects/blue-lake-wave"
+      ]
+    }
+  }
+}
