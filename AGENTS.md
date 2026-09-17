@@ -32,7 +32,9 @@ Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
 
 ### Workflow
 
-1. The graph auto-updates on file changes (via hooks).
+1. The graph is refreshed from file events by the CRG watch daemon (300 ms debounce) — NOT by
+   hooks, which never fire in headless `opencode run`. For a manual repair, run `git add -A`
+   first (update indexes staged changes only).
 2. Use `detect_changes_tool` for code review.
 3. Use `get_affected_flows_tool` to understand impact.
 4. Use `query_graph_tool` pattern="tests_for" to check coverage.
