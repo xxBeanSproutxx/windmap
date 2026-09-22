@@ -38,3 +38,11 @@ Fall back to Grep/Glob/Read **only** when the graph doesn't cover what you need.
 2. Use `detect_changes_tool` for code review.
 3. Use `get_affected_flows_tool` to understand impact.
 4. Use `query_graph_tool` pattern="tests_for" to check coverage.
+
+### Which agent are you? (routing)
+- OpenCode session: the MCP tools above ARE in your catalog — use them.
+- Hermes subagent session: those MCP tools are NOT in your catalog — do not
+  search for them, do not fall back to blind grep. Query the graph by CLI,
+  ONE single read-only command (loops/multi-command scripts trigger approval
+  prompts): `/home/reid/.venvs/crg/bin/code-review-graph query --repo <repo-path> callers_of <qualified-name>`
+  (verbs: callers_of, callees_of, tests_for, file_summary).
