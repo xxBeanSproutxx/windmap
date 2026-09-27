@@ -1,3 +1,8 @@
+---
+type: note
+title: Blue Lake Wave Forecast — Design System
+---
+
 # Blue Lake Wave Forecast — Design System
 
 Compiled Tailwind v4 design system (CSS-first, no `tailwind.config.js`).
